@@ -1,9 +1,7 @@
 import typing as ty
 
+import dynapydantic
 import my_animal
-import pluggy
-
-hookimpl = pluggy.HookimplMarker("dynapydantic")
 
 class Dog(my_animal.Animal):
     type: ty.Literal["Dog"] = "Dog"
@@ -12,6 +10,6 @@ class Dog(my_animal.Animal):
     def speak(self) -> None:
         print("woof" if self.bark_volume < 50 else "WOOF")
 
-@hookimpl
+@dynapydantic.hookimpl
 def register_models() -> list[my_animal.Animal]:
     return [Dog]
