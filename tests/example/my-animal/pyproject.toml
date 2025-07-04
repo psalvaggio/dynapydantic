@@ -1,0 +1,10 @@
+[project]
+name = "my-animal"
+version = "0.1.0"
+dependencies = ["dynapydantic"]
+
+[project.scripts]
+my-animal = "my_animal.cli:cli"
+
+[project.entry-points."dynapydantic.plugins"]
+my-animal = "my_animal"
