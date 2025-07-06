@@ -70,26 +70,41 @@ class DynamicBaseModel(pydantic.BaseModel):
 
                 class _DynapydanticSpec:
                     @cls.__HOOKSPEC__
-                    def register_models() -> list[type[cls]]:
-                        f"""Return a list of {cls.__name__} subclasses."""
-                        pass
-                cls.__HOOKSPEC_CLS__ = _DynapydanticSpec
+                    def register_models() -> None:
+                        """Plugin hook for model registration
 
+                        Any subclasses declared on the import path to get to
+                        this function will be registered. If no special logic is
+                        needed, the function never actually needs to be defined,
+                        just set:
+                        [project.entry-points."{pluggy_hook}"]
+                        your-package = "your_package[.optional_import_subpath]"
+                        in your plugin package's pyproject.toml and any models
+                        declared on that path will get registered.
+
+                        If the function does exist, it will be called, so
+                        additional classes may be dynamically declared inside
+                        the function.
+                        """
+                        pass
+
+                cls.__HOOKSPEC_CLS__ = _DynapydanticSpec
 
                 def _load_plugins():
                     import pluggy
+
                     pm = pluggy.PluginManager(pluggy_hook)
                     pm.add_hookspecs(cls.__HOOKSPEC_CLS__)
                     pm.load_setuptools_entrypoints(pluggy_hook)
                     for plugin in pm.get_plugins():
                         if hasattr(plugin, "register_models"):
-                            for model_cls in plugin.register_models():
-                                if issubclass(model_cls, DynamicBaseModel):
-                                    model_cls.register(model_cls)
+                            plugin.register_models()
+                        elif callable(plugin):
+                            plugin()
+
                 cls.load_plugins = staticmethod(_load_plugins)
 
-                cls.hookimpl: ty.ClassVar[pluggy.HookimplMarker] = \
-                    pluggy.HookimplMarker(pluggy_hook)
+                cls.hookimpl = pluggy.HookimplMarker(pluggy_hook)
             return
 
         if pluggy_hook is not None:
@@ -123,7 +138,9 @@ class DynamicBaseModel(pydantic.BaseModel):
                 )
                 raise RuntimeError(msg)
 
-            if (other := base.__SUBCLASSES__.get(value)) is not None:
+            if (
+                other := base.__SUBCLASSES__.get(value)
+            ) is not None and other is not cls:
                 msg = (
                     f'{cls.__name__}.{disc} is set to "{value}", which '
                     "is already in use by another subclass ({other})."
@@ -133,22 +150,26 @@ class DynamicBaseModel(pydantic.BaseModel):
             base.__SUBCLASSES__[value] = cls
 
     @classmethod
-    def union(cls):
+    def union(cls, *, annotated: bool = True):
         if DynamicBaseModel not in cls.__bases__:
             msg = "union() can only be called on direct children of DynamicBaseModel"
             raise TypeError(msg)
 
-        return ty.Annotated[
-            ty.Union[
-                tuple(
-                    (
-                        ty.Annotated[x, pydantic.Tag(v)]
-                        for v, x in cls.__SUBCLASSES__.items()
+        return (
+            ty.Annotated[
+                ty.Union[
+                    tuple(
+                        (
+                            ty.Annotated[x, pydantic.Tag(v)]
+                            for v, x in cls.__SUBCLASSES__.items()
+                        )
                     )
-                )
-            ],
-            pydantic.Field(discriminator=cls.__DISCRIMINATOR__),
-        ]
+                ],
+                pydantic.Field(discriminator=cls.__DISCRIMINATOR__),
+            ]
+            if annotated
+            else ty.Union[tuple(cls.__SUBCLASSES__.values())]
+        )
 
     @classmethod
     def registered_subclasses(cls) -> dict[str, type]:

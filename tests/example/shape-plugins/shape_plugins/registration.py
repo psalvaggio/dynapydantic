@@ -1,8 +1,16 @@
-import base_package
+import typing as ty
 
-from .plugin_classes import Quad, Rectangle, Square
+import base_package
 
 
 @base_package.Shape.hookimpl
-def register_models() -> list[base_package.Shape]:
-    return [Rectangle, Square, Quad]
+def register_models() -> None:
+    from .plugin_classes import Quad, Rectangle, Square
+
+    class Triangle(base_package.Shape):
+        type: ty.Literal["Triangle"] = "Triangle"
+        base: float
+        height: float
+
+        def area(self) -> float:
+             return 0.5 * self.base * self.height
