@@ -7,7 +7,7 @@ class Shape(
     abc.ABC,
     dynapydantic.DynamicBaseModel,
     discriminator_field="type",
-    pluggy_hook="shape.plugins",
+    plugin_entry_point="shape.plugins",
 ):
     @abc.abstractmethod
     def area(self) -> float:

@@ -3,7 +3,6 @@ import typing as ty
 import base_package
 
 
-@base_package.Shape.hookimpl
 def register_models() -> None:
     from .plugin_classes import Quad, Rectangle, Square
 

@@ -16,6 +16,5 @@ class Horse(base_package.Animal):
         print("neigh")
 
 # A no-op hook like this does not need to be explicitly defined
-#@base_package.Animal.hookimpl
 #def register_models() -> None:
     #pass

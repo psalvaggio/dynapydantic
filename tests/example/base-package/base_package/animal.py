@@ -7,7 +7,7 @@ class Animal(
     abc.ABC,
     dynapydantic.DynamicBaseModel,
     discriminator_field="type",
-    pluggy_hook="animal.plugins",
+    plugin_entry_point="animal.plugins",
 ):
     @abc.abstractmethod
     def speak(self) -> None:

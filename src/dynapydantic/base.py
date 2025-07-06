@@ -34,7 +34,7 @@ class DynamicBaseModel(pydantic.BaseModel):
         *args,
         discriminator_field: str | None = None,
         exclude_from_union: bool | None = None,
-        pluggy_hook: str | None = None,
+        plugin_entry_point: str | None = None,
         **kwargs,
     ):
         super().__init_subclass__(*args, **kwargs)
@@ -45,7 +45,7 @@ class DynamicBaseModel(pydantic.BaseModel):
         *args,
         discriminator_field: str | None = None,
         exclude_from_union: bool | None = None,
-        pluggy_hook: bool | None = None,
+        plugin_entry_point: str | None = None,
         **kwargs,
     ):
         if DynamicBaseModel in cls.__bases__:
@@ -63,54 +63,26 @@ class DynamicBaseModel(pydantic.BaseModel):
             cls.__SUBCLASSES__: ty.ClassVar[dict[str, type[cls]]] = {}
             cls.__DISCRIMINATOR__: ty.ClassVar[str] = discriminator_field
 
-            if pluggy_hook:
-                import pluggy
-
-                cls.__HOOKSPEC__ = pluggy.HookspecMarker(pluggy_hook)
-
-                class _DynapydanticSpec:
-                    @cls.__HOOKSPEC__
-                    def register_models() -> None:
-                        """Plugin hook for model registration
-
-                        Any subclasses declared on the import path to get to
-                        this function will be registered. If no special logic is
-                        needed, the function never actually needs to be defined,
-                        just set:
-                        [project.entry-points."{pluggy_hook}"]
-                        your-package = "your_package[.optional_import_subpath]"
-                        in your plugin package's pyproject.toml and any models
-                        declared on that path will get registered.
-
-                        If the function does exist, it will be called, so
-                        additional classes may be dynamically declared inside
-                        the function.
-                        """
-                        pass
-
-                cls.__HOOKSPEC_CLS__ = _DynapydanticSpec
+            if plugin_entry_point:
+                cls.__PLUGIN_ENTRY_POINT__ = plugin_entry_point
 
                 def _load_plugins():
-                    import pluggy
+                    from importlib.metadata import entry_points
 
-                    pm = pluggy.PluginManager(pluggy_hook)
-                    pm.add_hookspecs(cls.__HOOKSPEC_CLS__)
-                    pm.load_setuptools_entrypoints(pluggy_hook)
-                    for plugin in pm.get_plugins():
-                        if hasattr(plugin, "register_models"):
-                            plugin.register_models()
-                        elif callable(plugin):
+                    for ep in entry_points().select(group=plugin_entry_point):
+                        plugin = ep.load()
+                        if callable(plugin):
                             plugin()
+                        elif hasattr(ep, "register_models"):
+                            plugin.register_models()
 
                 cls.load_plugins = staticmethod(_load_plugins)
-
-                cls.hookimpl = pluggy.HookimplMarker(pluggy_hook)
             return
 
-        if pluggy_hook is not None:
+        if plugin_entry_point is not None:
             msg = (
-                "pluggy_hook can only be specified on direct subclasses of "
-                "DynamicBaseModel"
+                "plugin_entry_point can only be specified on direct subclasses "
+                "of DynamicBaseModel"
             )
             raise RuntimeError(msg)
         if exclude_from_union:
