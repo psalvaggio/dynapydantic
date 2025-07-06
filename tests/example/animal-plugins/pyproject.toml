@@ -1,0 +1,7 @@
+[project]
+name = "animal-plugins"
+version = "0.1.0"
+dependencies = ["base-package", "dynapydantic"]
+
+[project.entry-points."dynapydantic.plugins"]
+animal-plugins = "animal_plugins"

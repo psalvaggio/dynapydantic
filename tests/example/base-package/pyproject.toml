@@ -1,10 +1,10 @@
 [project]
-name = "my-animal"
+name = "base-package"
 version = "0.1.0"
 dependencies = ["dynapydantic"]
 
 [project.scripts]
-my-animal = "my_animal.cli:cli"
+base-package = "base_package.cli:cli"
 
 [project.entry-points."dynapydantic.plugins"]
-my-animal = "my_animal"
+base-package = "base_package"

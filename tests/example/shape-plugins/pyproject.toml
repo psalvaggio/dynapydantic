@@ -1,0 +1,7 @@
+[project]
+name = "shape-plugins"
+version = "0.1.0"
+dependencies = ["base-package", "dynapydantic"]
+
+[project.entry-points."dynapydantic.plugins"]
+shape-plugins = "shape_plugins.registration"
