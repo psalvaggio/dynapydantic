@@ -34,6 +34,7 @@ class DynamicBaseModel(pydantic.BaseModel):
         *args,
         discriminator_field: str | None = None,
         exclude_from_union: bool | None = None,
+        pluggy_hook: str | None = None,
         **kwargs,
     ):
         super().__init_subclass__(*args, **kwargs)
@@ -44,6 +45,7 @@ class DynamicBaseModel(pydantic.BaseModel):
         *args,
         discriminator_field: str | None = None,
         exclude_from_union: bool | None = None,
+        pluggy_hook: bool | None = None,
         **kwargs,
     ):
         if DynamicBaseModel in cls.__bases__:
@@ -60,8 +62,42 @@ class DynamicBaseModel(pydantic.BaseModel):
                 raise RuntimeError(msg)
             cls.__SUBCLASSES__: ty.ClassVar[dict[str, type[cls]]] = {}
             cls.__DISCRIMINATOR__: ty.ClassVar[str] = discriminator_field
+
+            if pluggy_hook:
+                import pluggy
+
+                cls.__HOOKSPEC__ = pluggy.HookspecMarker(pluggy_hook)
+
+                class _DynapydanticSpec:
+                    @cls.__HOOKSPEC__
+                    def register_models() -> list[type[cls]]:
+                        f"""Return a list of {cls.__name__} subclasses."""
+                        pass
+                cls.__HOOKSPEC_CLS__ = _DynapydanticSpec
+
+
+                def _load_plugins():
+                    import pluggy
+                    pm = pluggy.PluginManager(pluggy_hook)
+                    pm.add_hookspecs(cls.__HOOKSPEC_CLS__)
+                    pm.load_setuptools_entrypoints(pluggy_hook)
+                    for plugin in pm.get_plugins():
+                        if hasattr(plugin, "register_models"):
+                            for model_cls in plugin.register_models():
+                                if issubclass(model_cls, DynamicBaseModel):
+                                    model_cls.register(model_cls)
+                cls.load_plugins = staticmethod(_load_plugins)
+
+                cls.hookimpl: ty.ClassVar[pluggy.HookimplMarker] = \
+                    pluggy.HookimplMarker(pluggy_hook)
             return
 
+        if pluggy_hook is not None:
+            msg = (
+                "pluggy_hook can only be specified on direct subclasses of "
+                "DynamicBaseModel"
+            )
+            raise RuntimeError(msg)
         if exclude_from_union:
             return
 

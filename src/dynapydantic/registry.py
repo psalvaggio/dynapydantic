@@ -12,6 +12,3 @@ def load_plugins():
             for model_cls in plugin.register_models():
                 if issubclass(model_cls, DynamicBaseModel):
                     model_cls.register(model_cls)
-
-def get_registered_subclasses() -> dict[str, type[DynamicBaseModel]]:
-    return DynamicBaseModel._registry.copy()

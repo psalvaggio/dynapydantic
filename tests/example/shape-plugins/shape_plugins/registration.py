@@ -1,8 +1,8 @@
-import dynapydantic
+import base_package
 
 from .plugin_classes import Quad, Rectangle, Square
 
 
-@dynapydantic.hookimpl
-def register_models() -> list[dynapydantic.DynamicBaseModel]:
+@base_package.Shape.hookimpl
+def register_models() -> list[base_package.Shape]:
     return [Rectangle, Square, Quad]

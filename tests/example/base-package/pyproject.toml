@@ -6,5 +6,5 @@ dependencies = ["dynapydantic"]
 [project.scripts]
 base-package = "base_package.cli:cli"
 
-[project.entry-points."dynapydantic.plugins"]
-base-package = "base_package"
+#[project.entry-points."dynapydantic.plugins"]
+#base-package = "base_package"

@@ -5,8 +5,10 @@ from .cat import Cat
 from .circle import Circle
 from .shape import Shape
 
-@dynapydantic.hookimpl
-def register_models() -> list[dynapydantic.DynamicBaseModel]:
-    return [Animal]
+#@dynapydantic.hookimpl
+#def register_models() -> list[dynapydantic.DynamicBaseModel]:
+    #return [Animal]
 
-dynapydantic.load_plugins()
+#dynapydantic.load_plugins()
+Animal.load_plugins()
+Shape.load_plugins()
