@@ -15,12 +15,6 @@ dependencies = [
     "ruff>=0.12.2",
 ]
 
-[project.scripts]
-dynapydantic = "dynapydantic.cli:cli"
-
-[project.entry-points."dynapydantic.plugins"]
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
