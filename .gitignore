@@ -5,9 +5,13 @@ build/
 dist/
 wheels/
 *.egg-info
+.coverage*
 
 # Virtual environments
 .venv
 
 # Editor-related files
 *.swp
+
+# OS files
+.DS_Store

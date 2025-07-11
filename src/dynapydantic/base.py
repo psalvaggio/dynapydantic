@@ -3,7 +3,8 @@
 import typing as ty
 
 import pydantic
-import pydantic_core
+
+from .tracking_group import TrackingGroup
 
 
 def direct_children_of_base_in_mro(derived: type, base: type) -> list[type]:
@@ -11,166 +12,104 @@ def direct_children_of_base_in_mro(derived: type, base: type) -> list[type]:
 
     Parameters
     ----------
-    derived : type
+    derived
         The class whose MRO is being examined.
-    base : type
+    base
         The base class to find direct subclasses of.
 
     Returns
     -------
-    list[type]
-        Classes in derived's MRO that are direct subclasses of base.
+    Classes in derived's MRO that are direct subclasses of base.
     """
     return [cls for cls in derived.__mro__ if cls is not base and base in cls.__bases__]
 
 
+_T = ty.TypeVar("_T", bound=pydantic.BaseModel)
+
+
 class DynamicBaseModel(pydantic.BaseModel):
-    """
-    Base class for dynamically registered Pydantic models.
-    """
+    """Subclass-tracking BaseModel"""
 
     def __init_subclass__(
-        cls,
-        *args,
-        discriminator_field: str | None = None,
-        exclude_from_union: bool | None = None,
-        plugin_entry_point: str | None = None,
-        discriminator_value_generator: ty.Callable[[type], str] | None = None,
-        **kwargs,
-    ):
-        super().__init_subclass__(*args, **kwargs)
+        cls, *args, exclude_from_union: bool | None = None, **kwargs
+    ) -> None:
+        """Subclass hook"""
+        # Intercept any kwargs that are intended for TrackingGroup
+        super().__pydantic_init_subclass__(
+            *args,
+            **{k: v for k, v in kwargs.items() if k not in TrackingGroup.model_fields},
+        )
 
     @classmethod
     def __pydantic_init_subclass__(
-        cls,
-        *args,
-        discriminator_field: str | None = None,
-        exclude_from_union: bool | None = None,
-        plugin_entry_point: str | None = None,
-        discriminator_value_generator: ty.Callable[[type], str] | None = None,
-        **kwargs,
+        cls, *args, exclude_from_union: bool | None = None, **kwargs
     ):
+        """Pydantic subclass hook"""
         if DynamicBaseModel in cls.__bases__:
-            if discriminator_field is None:
-                msg = (
-                    "Direct children of DynamicBaseModel must pass discriminator_field"
-                )
-                raise RuntimeError(msg)
-            if exclude_from_union is not None:
-                msg = (
-                    "exclude_from_union should not be set by direct children "
-                    "of DynamicBaseModel"
-                )
-                raise RuntimeError(msg)
-            cls.__SUBCLASSES__: ty.ClassVar[dict[str, type[cls]]] = {}
-            cls.__DISCRIMINATOR__: ty.ClassVar[str] = discriminator_field
+            # Intercept any kwargs that are intended for TrackingGroup
+            super().__pydantic_init_subclass__(
+                *args,
+                **{
+                    k: v
+                    for k, v in kwargs.items()
+                    if k not in TrackingGroup.model_fields
+                },
+            )
 
-            if plugin_entry_point:
-                cls.__PLUGIN_ENTRY_POINT__ = plugin_entry_point
+            if isinstance(getattr(cls, "tracking_config", None), TrackingGroup):
+                cls.__DYNAPYDANTIC__ = cls.tracking_config
+            else:
+                try:
+                    cls.__DYNAPYDANTIC__: TrackingGroup = TrackingGroup.model_validate(
+                        {"name": f"{cls.__name__}-subclasses"} | kwargs
+                    )
+                except pydantic.ValidationError as e:
+                    msg = (
+                        "DynamicBaseModel subclasses must either have a "
+                        "tracking_config: ClassVar[dynapydantic.TrackingGroup] "
+                        "member or pass kwargs sufficient to construct a "
+                        "dynapydantic.TrackingGroup in the class declaration. "
+                        "The latter approach produced the following "
+                        f"ValidationError:\n{e}"
+                    )
+                    raise RuntimeError(msg) from e
+
+            # Promote the tracking group's methods to the parent class
+            if cls.__DYNAPYDANTIC__.plugin_entry_point is not None:
 
                 def _load_plugins():
-                    from importlib.metadata import entry_points
-
-                    for ep in entry_points().select(group=plugin_entry_point):
-                        plugin = ep.load()
-                        if callable(plugin):
-                            plugin()
-                        elif hasattr(ep, "register_models"):
-                            plugin.register_models()
+                    """Load plugins to register more models"""
+                    cls.__DYNAPYDANTIC__.load_plugins()
 
                 cls.load_plugins = staticmethod(_load_plugins)
-            cls.__DISCRIMINATOR_VALUE_GENERATOR__ = discriminator_value_generator
+
+            def _union(*, annotated: bool = True) -> ty.GenericAlias:
+                """Get the union of all tracked subclasses
+
+                Parameters
+                ----------
+                annotated
+                    Whether this should be an annotated union for usage as a
+                    pydantic field annotation, or a plain typing.Union for a
+                    regular type annotation.
+                """
+                return cls.__DYNAPYDANTIC__.union(annotated=annotated)
+
+            cls.union = staticmethod(_union)
+
+            def _subclasses() -> dict[str, type[cls]]:
+                """A mapping of discriminator values to registered model"""
+                return cls.__DYNAPYDANTIC__.models
+
+            cls.registered_subclasses = staticmethod(_subclasses)
+
             return
 
-        if plugin_entry_point is not None:
-            msg = (
-                "plugin_entry_point can only be specified on direct subclasses "
-                "of DynamicBaseModel"
-            )
-            raise RuntimeError(msg)
-        if discriminator_value_generator is not None:
-            msg = (
-                "discriminator_value_generator can only be specified on direct "
-                "subclasses of DynamicBaseModel"
-            )
-            raise RuntimeError(msg)
+        super().__pydantic_init_subclass__(*args, **kwargs)
+
         if exclude_from_union:
             return
 
         supers = direct_children_of_base_in_mro(cls, DynamicBaseModel)
         for base in supers:
-            disc = base.__DISCRIMINATOR__
-            field = cls.model_fields.get(disc)
-            if field is None:
-                if base.__DISCRIMINATOR_VALUE_GENERATOR__ is not None:
-                    val = base.__DISCRIMINATOR_VALUE_GENERATOR__(cls)
-                    cls.model_fields[disc] = pydantic.fields.FieldInfo(
-                        default=val,
-                        annotation=ty.Literal[val],
-                        frozen=True
-                    )
-                    cls.model_rebuild(force=True)
-                    field = cls.model_fields[disc]
-                else:
-                    msg = (
-                        f"{cls.__name__} is derived from {base.__name__}, "
-                        "which is a DynamicBaseModel with discrimantor field "
-                        f'"{disc}" and no discriminator_value_generator. '
-                        f'Therefore, it must define a "{disc}" field. If this '
-                        "model is not intended to be a tracked subclass and "
-                        "included in the subclass union, pass "
-                        "exclude_from_config=True."
-                    )
-                    raise RuntimeError(msg)
-
-            value = field.default
-            if value == pydantic_core.PydanticUndefined:
-                msg = (
-                    f"{cls.__name__}.{disc} had no default value, it must "
-                    "have one which is unique among all subclasses."
-                )
-                raise RuntimeError(msg)
-
-            if (
-                other := base.__SUBCLASSES__.get(value)
-            ) is not None and other is not cls:
-                msg = (
-                    f'{cls.__name__}.{disc} is set to "{value}", which '
-                    "is already in use by another subclass ({other})."
-                )
-                raise RuntimeError(msg)
-
-            base.__SUBCLASSES__[value] = cls
-
-    @classmethod
-    def union(cls, *, annotated: bool = True):
-        if DynamicBaseModel not in cls.__bases__:
-            msg = "union() can only be called on direct children of DynamicBaseModel"
-            raise TypeError(msg)
-
-        return (
-            ty.Annotated[
-                ty.Union[
-                    tuple(
-                        (
-                            ty.Annotated[x, pydantic.Tag(v)]
-                            for v, x in cls.__SUBCLASSES__.items()
-                        )
-                    )
-                ],
-                pydantic.Field(discriminator=cls.__DISCRIMINATOR__),
-            ]
-            if annotated
-            else ty.Union[tuple(cls.__SUBCLASSES__.values())]
-        )
-
-    @classmethod
-    def registered_subclasses(cls) -> dict[str, type]:
-        if DynamicBaseModel not in cls.__bases__:
-            msg = (
-                "registered_subclasses() can only be called on direct children "
-                "of DynamicBaseModel"
-            )
-            raise TypeError(msg)
-
-        return cls.__SUBCLASSES__
+            base.__DYNAPYDANTIC__.register_model(cls)

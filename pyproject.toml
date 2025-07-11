@@ -11,9 +11,18 @@ dependencies = [
     "click>=8.2.1",
     "pip>=25.1.1",
     "pydantic>=2.11.7",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "pytest-xdist>=3.8.0",
+    "python-lsp-server>=1.13.0",
     "ruff>=0.12.2",
 ]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "--cov=dynapydantic --cov-report=html --cov-branch"
