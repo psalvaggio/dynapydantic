@@ -2,6 +2,7 @@
 
 import importlib.metadata
 import math
+import pathlib
 from unittest.mock import patch
 
 import pydantic
@@ -10,10 +11,10 @@ import pytest
 
 def setup_env(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that the plugin example works"""
+    d = pathlib.Path(__file__).parent
     # Put our example into the PYTHONPATH
-    monkeypatch.syspath_prepend("./example/base-package")
-    monkeypatch.syspath_prepend("./example/animal-plugins")
-    monkeypatch.syspath_prepend("./example/shape-plugins")
+    for pkg in ("base-package", "animal-plugins", "shape-plugins"):
+        monkeypatch.syspath_prepend(d / "example" / pkg)
 
     # Mock out the entrypoints that are in the pyproject.toml's
     animal_ep = importlib.metadata.EntryPoint(

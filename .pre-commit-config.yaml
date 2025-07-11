@@ -3,7 +3,7 @@ repos:
     rev: v0.12.3
     hooks:
       - id: ruff-check
-        args: [--fix]  # Auto-fix issues when possible
+        args: [--fix]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -24,3 +24,8 @@ repos:
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: trailing-whitespace
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.7.20
+    hooks:
+      - id: uv-lock
