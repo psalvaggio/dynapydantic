@@ -33,6 +33,10 @@ jobs:
         run: |
           uv run mike deploy ${{ steps.vars.outputs.version }} --update-aliases latest --push
           uv run mike set-default latest --push
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
       - name: Deploy dev version from main
         if: github.ref == 'refs/heads/main'
         run: uv run mike deploy dev --push --update-aliases
