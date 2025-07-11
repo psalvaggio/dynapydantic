@@ -1024,6 +1024,20 @@
               Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
 
         <p>Subclass-tracking BaseModel</p>
+<p>This will inject a TrackingGroup into your class and automate the
+registration of subclasses.</p>
+<p>Inheriting from this class will augment your class with the following
+members functions:
+1. registered_subclasses() -&gt; dict[str, type[cls]]:
+    This will return a mapping of discriminator value to the corresponding
+    sublcass. See TrackingGroup.models for details.
+2. union() -&gt; typing.GenericAlias:
+    This will return an (optionally) annotated subclass union. See
+    TrackingGroup.union() for details.
+3. load_plugins() -&gt; None:
+    If plugin_entry_point was specified, then this method will load plugin
+    packages to discover additional subclasses. See
+    TrackingGroup.load_plugins for more details.</p>
 
     
 
@@ -1122,8 +1136,42 @@
 <span class="normal">116</span>
 <span class="normal">117</span>
 <span class="normal">118</span>
-<span class="normal">119</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SubclassTrackingModel</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subclass-tracking BaseModel&quot;&quot;&quot;</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SubclassTrackingModel</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subclass-tracking BaseModel</span>
+
+<span class="sd">    This will inject a TrackingGroup into your class and automate the</span>
+<span class="sd">    registration of subclasses.</span>
+
+<span class="sd">    Inheriting from this class will augment your class with the following</span>
+<span class="sd">    members functions:</span>
+<span class="sd">    1. registered_subclasses() -&gt; dict[str, type[cls]]:</span>
+<span class="sd">        This will return a mapping of discriminator value to the corresponding</span>
+<span class="sd">        sublcass. See TrackingGroup.models for details.</span>
+<span class="sd">    2. union() -&gt; typing.GenericAlias:</span>
+<span class="sd">        This will return an (optionally) annotated subclass union. See</span>
+<span class="sd">        TrackingGroup.union() for details.</span>
+<span class="sd">    3. load_plugins() -&gt; None:</span>
+<span class="sd">        If plugin_entry_point was specified, then this method will load plugin</span>
+<span class="sd">        packages to discover additional subclasses. See</span>
+<span class="sd">        TrackingGroup.load_plugins for more details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
@@ -1244,18 +1292,18 @@
 
             <details class="quote">
               <summary>Source code in <code>src/dynapydantic/subclass_tracking_model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">,</span>
     <span class="o">*</span><span class="n">args</span><span class="p">,</span>
     <span class="n">exclude_from_union</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1293,24 +1341,7 @@
 
             <details class="quote">
               <summary>Source code in <code>src/dynapydantic/subclass_tracking_model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 44</span>
-<span class="normal"> 45</span>
-<span class="normal"> 46</span>
-<span class="normal"> 47</span>
-<span class="normal"> 48</span>
-<span class="normal"> 49</span>
-<span class="normal"> 50</span>
-<span class="normal"> 51</span>
-<span class="normal"> 52</span>
-<span class="normal"> 53</span>
-<span class="normal"> 54</span>
-<span class="normal"> 55</span>
-<span class="normal"> 56</span>
-<span class="normal"> 57</span>
-<span class="normal"> 58</span>
-<span class="normal"> 59</span>
-<span class="normal"> 60</span>
-<span class="normal"> 61</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 61</span>
 <span class="normal"> 62</span>
 <span class="normal"> 63</span>
 <span class="normal"> 64</span>
@@ -1368,7 +1399,24 @@
 <span class="normal">116</span>
 <span class="normal">117</span>
 <span class="normal">118</span>
-<span class="normal">119</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">__pydantic_init_subclass__</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">,</span>
     <span class="o">*</span><span class="n">args</span><span class="p">,</span>
