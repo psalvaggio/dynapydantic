@@ -35,6 +35,7 @@ class DynamicBaseModel(pydantic.BaseModel):
         discriminator_field: str | None = None,
         exclude_from_union: bool | None = None,
         plugin_entry_point: str | None = None,
+        discriminator_value_generator: ty.Callable[[type], str] | None = None,
         **kwargs,
     ):
         super().__init_subclass__(*args, **kwargs)
@@ -46,6 +47,7 @@ class DynamicBaseModel(pydantic.BaseModel):
         discriminator_field: str | None = None,
         exclude_from_union: bool | None = None,
         plugin_entry_point: str | None = None,
+        discriminator_value_generator: ty.Callable[[type], str] | None = None,
         **kwargs,
     ):
         if DynamicBaseModel in cls.__bases__:
@@ -77,12 +79,19 @@ class DynamicBaseModel(pydantic.BaseModel):
                             plugin.register_models()
 
                 cls.load_plugins = staticmethod(_load_plugins)
+            cls.__DISCRIMINATOR_VALUE_GENERATOR__ = discriminator_value_generator
             return
 
         if plugin_entry_point is not None:
             msg = (
                 "plugin_entry_point can only be specified on direct subclasses "
                 "of DynamicBaseModel"
+            )
+            raise RuntimeError(msg)
+        if discriminator_value_generator is not None:
+            msg = (
+                "discriminator_value_generator can only be specified on direct "
+                "subclasses of DynamicBaseModel"
             )
             raise RuntimeError(msg)
         if exclude_from_union:
@@ -93,15 +102,27 @@ class DynamicBaseModel(pydantic.BaseModel):
             disc = base.__DISCRIMINATOR__
             field = cls.model_fields.get(disc)
             if field is None:
-                msg = (
-                    f"{cls.__name__} is derived from {base.__name__}, "
-                    "which is a DynamicBaseModel with discrimantor field "
-                    f'"{disc}". Therefore, it must define a "{disc}" field. '
-                    "If this model is not intended to be a tracked subclass "
-                    "and included in the subclass union, pass "
-                    "exclude_from_config=True."
-                )
-                raise RuntimeError(msg)
+                if base.__DISCRIMINATOR_VALUE_GENERATOR__ is not None:
+                    val = base.__DISCRIMINATOR_VALUE_GENERATOR__(cls)
+                    cls.model_fields[disc] = pydantic.fields.FieldInfo(
+                        default=val,
+                        annotation=ty.Literal[val],
+                        frozen=True
+                    )
+                    cls.model_rebuild(force=True)
+                    field = cls.model_fields[disc]
+                else:
+                    msg = (
+                        f"{cls.__name__} is derived from {base.__name__}, "
+                        "which is a DynamicBaseModel with discrimantor field "
+                        f'"{disc}" and no discriminator_value_generator. '
+                        f'Therefore, it must define a "{disc}" field. If this '
+                        "model is not intended to be a tracked subclass and "
+                        "included in the subclass union, pass "
+                        "exclude_from_config=True."
+                    )
+                    raise RuntimeError(msg)
+
             value = field.default
             if value == pydantic_core.PydanticUndefined:
                 msg = (

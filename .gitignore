@@ -8,3 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Editor-related files
+*.swp
