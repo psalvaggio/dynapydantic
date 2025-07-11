@@ -26,7 +26,24 @@ def direct_children_of_base_in_mro(derived: type, base: type) -> list[type]:
 
 
 class SubclassTrackingModel(pydantic.BaseModel):
-    """Subclass-tracking BaseModel"""
+    """Subclass-tracking BaseModel
+
+    This will inject a TrackingGroup into your class and automate the
+    registration of subclasses.
+
+    Inheriting from this class will augment your class with the following
+    members functions:
+    1. registered_subclasses() -> dict[str, type[cls]]:
+        This will return a mapping of discriminator value to the corresponding
+        sublcass. See TrackingGroup.models for details.
+    2. union() -> typing.GenericAlias:
+        This will return an (optionally) annotated subclass union. See
+        TrackingGroup.union() for details.
+    3. load_plugins() -> None:
+        If plugin_entry_point was specified, then this method will load plugin
+        packages to discover additional subclasses. See
+        TrackingGroup.load_plugins for more details.
+    """
 
     def __init_subclass__(
         cls,
