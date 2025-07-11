@@ -4,6 +4,4 @@ version = "0.1.0"
 dependencies = ["base-package"]
 
 [project.entry-points."shape.plugins"]
-# It can be either of these
 shape-plugins = "shape_plugins.registration:register_models"
-# shape-plugins = "shape_plugins.registration"

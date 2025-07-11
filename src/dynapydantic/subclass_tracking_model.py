@@ -4,6 +4,7 @@ import typing as ty
 
 import pydantic
 
+from .exceptions import ConfigurationError
 from .tracking_group import TrackingGroup
 
 
@@ -27,7 +28,7 @@ def direct_children_of_base_in_mro(derived: type, base: type) -> list[type]:
 _T = ty.TypeVar("_T", bound=pydantic.BaseModel)
 
 
-class DynamicBaseModel(pydantic.BaseModel):
+class SubclassTrackingModel(pydantic.BaseModel):
     """Subclass-tracking BaseModel"""
 
     def __init_subclass__(
@@ -45,7 +46,7 @@ class DynamicBaseModel(pydantic.BaseModel):
         cls, *args, exclude_from_union: bool | None = None, **kwargs
     ):
         """Pydantic subclass hook"""
-        if DynamicBaseModel in cls.__bases__:
+        if SubclassTrackingModel in cls.__bases__:
             # Intercept any kwargs that are intended for TrackingGroup
             super().__pydantic_init_subclass__(
                 *args,
@@ -65,14 +66,14 @@ class DynamicBaseModel(pydantic.BaseModel):
                     )
                 except pydantic.ValidationError as e:
                     msg = (
-                        "DynamicBaseModel subclasses must either have a "
+                        "SubclassTrackingModel subclasses must either have a "
                         "tracking_config: ClassVar[dynapydantic.TrackingGroup] "
                         "member or pass kwargs sufficient to construct a "
                         "dynapydantic.TrackingGroup in the class declaration. "
                         "The latter approach produced the following "
                         f"ValidationError:\n{e}"
                     )
-                    raise RuntimeError(msg) from e
+                    raise ConfigurationError(msg) from e
 
             # Promote the tracking group's methods to the parent class
             if cls.__DYNAPYDANTIC__.plugin_entry_point is not None:
@@ -110,6 +111,6 @@ class DynamicBaseModel(pydantic.BaseModel):
         if exclude_from_union:
             return
 
-        supers = direct_children_of_base_in_mro(cls, DynamicBaseModel)
+        supers = direct_children_of_base_in_mro(cls, SubclassTrackingModel)
         for base in supers:
             base.__DYNAPYDANTIC__.register_model(cls)

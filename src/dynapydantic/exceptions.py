@@ -11,3 +11,7 @@ class RegistrationError(Error):
 
 class AmbiguousDiscriminatorValueError(Error):
     """Occurs when the discriminator value is ambiguous"""
+
+
+class ConfigurationError(Error):
+    """Occurs when the user misconfigured a tracking setup"""

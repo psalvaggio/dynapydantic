@@ -180,3 +180,9 @@ def test_that_the_union_works() -> None:
     except pydantic.ValidationError as e:
         assert e.error_count() == 1
         assert e.errors()[0]["loc"] == ("field", "B", "a")
+
+
+def test_that_load_plugins_doesnt_raise_on_no_entrypoint() -> None:
+    """load_plugins() should be a noop in this case"""
+    group = dynapydantic.TrackingGroup(name="Test", discriminator_field="type")
+    group.load_plugins()

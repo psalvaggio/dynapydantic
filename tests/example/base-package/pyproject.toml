@@ -1,7 +1,7 @@
 [project]
 name = "base-package"
 version = "0.1.0"
-dependencies = ["dynapydantic"]
+dependencies = ["dynapydantic", "click"]
 
 [project.scripts]
 base-package = "base_package.cli:cli"

@@ -1,13 +1,19 @@
-"""dynapydantic - dynamic inheritance trees for pydantic models"""
+"""dynapydantic - dynamic tracking of pydantic models"""
 
-from .base import DynamicBaseModel
-from .exceptions import AmbiguousDiscriminatorValueError, Error, RegistrationError
+from .exceptions import (
+    AmbiguousDiscriminatorValueError,
+    ConfigurationError,
+    Error,
+    RegistrationError,
+)
+from .subclass_tracking_model import SubclassTrackingModel
 from .tracking_group import TrackingGroup
 
 __all__ = [
     "AmbiguousDiscriminatorValueError",
-    "DynamicBaseModel",
+    "ConfigurationError",
     "Error",
     "RegistrationError",
+    "SubclassTrackingModel",
     "TrackingGroup",
 ]
