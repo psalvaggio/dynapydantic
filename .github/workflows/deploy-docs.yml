@@ -28,15 +28,15 @@ jobs:
           VERSION=${GITHUB_REF#refs/tags/}
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
         if: startsWith(github.ref, 'refs/tags/')
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
       - name: Deploy tagged release
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           uv run mike deploy ${{ steps.vars.outputs.version }} --update-aliases latest --push
           uv run mike set-default latest --push
-      - name: Set Git identity
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
       - name: Deploy dev version from main
         if: github.ref == 'refs/heads/main'
         run: uv run mike deploy dev --push --update-aliases
