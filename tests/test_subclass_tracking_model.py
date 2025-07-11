@@ -2,16 +2,21 @@
 
 import typing as ty
 
-import dynapydantic
 import pydantic
 import pytest
 
+import dynapydantic
+
 
 class SimpleKwargBase(dynapydantic.SubclassTrackingModel, discriminator_field="name"):
+    """Initialize the TrackingGroup via kwargs"""
+
     a: int
 
 
 class SimpleConfigBase(dynapydantic.SubclassTrackingModel):
+    """Initialize the TrackingGroup via a class var"""
+
     tracking_config: ty.ClassVar[dynapydantic.TrackingGroup] = (
         dynapydantic.TrackingGroup(
             name="SimpleConfigBase-subclasses",
@@ -23,7 +28,7 @@ class SimpleConfigBase(dynapydantic.SubclassTrackingModel):
 
 
 @pytest.mark.parametrize("cls", [SimpleKwargBase, SimpleConfigBase])
-def test_basic(cls) -> None:
+def test_basic(cls: type[dynapydantic.SubclassTrackingModel]) -> None:
     """Test the basic usage of SubclassTrackingModel"""
 
     class Derived1(cls):
@@ -44,10 +49,12 @@ def test_basic(cls) -> None:
         root: cls.union()
 
     assert Parse.model_validate({"name": "A", "a": 1, "b": 2}).root == Derived1(
-        a=1, b=2
+        a=1,
+        b=2,
     )
     assert Parse.model_validate({"name": "B", "a": 1, "b": 2}).root == Derived2(
-        a=1, b=2
+        a=1,
+        b=2,
     )
     assert "C" not in cls.registered_subclasses()
 

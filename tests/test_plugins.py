@@ -10,7 +10,6 @@ import pytest
 
 def setup_env(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that the plugin example works"""
-
     # Put our example into the PYTHONPATH
     monkeypatch.syspath_prepend("./example/base-package")
     monkeypatch.syspath_prepend("./example/animal-plugins")
@@ -18,7 +17,9 @@ def setup_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
     # Mock out the entrypoints that are in the pyproject.toml's
     animal_ep = importlib.metadata.EntryPoint(
-        name="animal-plugins", value="animal_plugins", group="animal.plugins"
+        name="animal-plugins",
+        value="animal_plugins",
+        group="animal.plugins",
     )
     shape_ep = importlib.metadata.EntryPoint(
         name="shape-plugins",
@@ -39,7 +40,8 @@ def setup_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
         mock_entry_points.return_value = MockEps()
 
-        import base_package  # noqa: F401 (import while the mocks are in place)
+        # import while the mocks are in place
+        import base_package  # noqa: F401, PLC0415
 
 
 @pytest.mark.parametrize(
@@ -51,12 +53,14 @@ def setup_env(monkeypatch: pytest.MonkeyPatch) -> None:
     ],
 )
 def test_animal_subclasses(
-    animal_json: str, result: str, monkeypatch: pytest.MonkeyPatch
+    animal_json: str,
+    result: str,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test that the plugin example works"""
     setup_env(monkeypatch)
 
-    import base_package
+    import base_package  # noqa: PLC0415
 
     class Parse(pydantic.RootModel):
         root: base_package.Animal.union()
@@ -70,18 +74,19 @@ def test_animal_subclasses(
     [
         ('{"type": "Rect", "width": 5, "length": 10}', 50),
         ('{"type": "Square", "side": 5}', 25),
-        ('{"type": "Square", "side": 5}', 25),
         ('{"type": "Circle", "radius": 1}', math.pi),
+        ('{"type": "Triangle", "base": 5, "height": 4}', 10),
     ],
 )
 def test_shape_subclasses(
-    shape_json: str, result: int | float, monkeypatch: pytest.MonkeyPatch
+    shape_json: str,
+    result: float,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test that the plugin example works"""
-
     setup_env(monkeypatch)
 
-    import base_package
+    import base_package  # noqa: PLC0415
 
     class Parse(pydantic.RootModel):
         root: base_package.Shape.union()

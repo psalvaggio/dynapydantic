@@ -10,7 +10,9 @@ from .exceptions import AmbiguousDiscriminatorValueError, RegistrationError
 
 
 def _inject_discriminator_field(
-    cls: type[pydantic.BaseModel], disc_field: str, value: str
+    cls: type[pydantic.BaseModel],
+    disc_field: str,
+    value: str,
 ) -> pydantic.fields.FieldInfo:
     """Injects the discriminator field into the given model
 
@@ -24,7 +26,9 @@ def _inject_discriminator_field(
         Value of the discriminator field
     """
     cls.model_fields[disc_field] = pydantic.fields.FieldInfo(
-        default=value, annotation=ty.Literal[value], frozen=True
+        default=value,
+        annotation=ty.Literal[value],
+        frozen=True,
     )
     cls.model_rebuild(force=True)
     return cls.model_fields[disc_field]
@@ -38,10 +42,10 @@ class TrackingGroup(pydantic.BaseModel):
             "Name of the tracking group. This is for human display, so it "
             "doesn't technically need to be globally unique, but it should be "
             "meaningfully named, as it will be used in error messages."
-        )
+        ),
     )
     discriminator_field: str = pydantic.Field(
-        description="Name of the discriminator field"
+        description="Name of the discriminator field",
     )
     plugin_entry_point: str | None = pydantic.Field(
         None,
@@ -56,10 +60,13 @@ class TrackingGroup(pydantic.BaseModel):
     )
     discriminator_value_generator: ty.Callable[[type], str] | None = pydantic.Field(
         None,
-        description="A callable that produces default values for the discriminator field",
+        description=(
+            "A callable that produces default values for the discriminator field"
+        ),
     )
     models: dict[str, type[pydantic.BaseModel]] = pydantic.Field(
-        {}, description="The tracked models"
+        {},
+        description="The tracked models",
     )
 
     def load_plugins(self) -> None:
@@ -67,7 +74,7 @@ class TrackingGroup(pydantic.BaseModel):
         if self.plugin_entry_point is None:
             return
 
-        from importlib.metadata import entry_points
+        from importlib.metadata import entry_points  # noqa: PLC0415
 
         for ep in entry_points().select(group=self.plugin_entry_point):
             plugin = ep.load()
@@ -75,9 +82,10 @@ class TrackingGroup(pydantic.BaseModel):
                 plugin()
 
     def register(
-        self, discriminator_value: str | None = None
+        self,
+        discriminator_value: str | None = None,
     ) -> ty.Callable[[type], type]:
-        """Decorator for registering models
+        """Register a model into this group (decorator)
 
         Parameters
         ----------
@@ -95,7 +103,9 @@ class TrackingGroup(pydantic.BaseModel):
                     _inject_discriminator_field(cls, disc, discriminator_value)
                 elif self.discriminator_value_generator is not None:
                     _inject_discriminator_field(
-                        cls, disc, self.discriminator_value_generator(cls)
+                        cls,
+                        disc,
+                        self.discriminator_value_generator(cls),
                     )
                 else:
                     msg = (
@@ -123,12 +133,20 @@ class TrackingGroup(pydantic.BaseModel):
         return _wrapper
 
     def register_model(self, cls: type[pydantic.BaseModel]) -> None:
-        """Registers the given model"""
+        """Register the given model into this group
+
+        Parameters
+        ----------
+        cls
+            The model to register
+        """
         disc = self.discriminator_field
         if cls.model_fields.get(self.discriminator_field) is None:
             if self.discriminator_value_generator is not None:
                 _inject_discriminator_field(
-                    cls, disc, self.discriminator_value_generator(cls)
+                    cls,
+                    disc,
+                    self.discriminator_value_generator(cls),
                 )
             else:
                 msg = (
@@ -173,16 +191,13 @@ class TrackingGroup(pydantic.BaseModel):
         """Return the union of all registered models"""
         return (
             ty.Annotated[
-                ty.Union[
+                ty.Union[  # noqa: UP007
                     tuple(
-                        (
-                            ty.Annotated[x, pydantic.Tag(v)]
-                            for v, x in self.models.items()
-                        )
+                        ty.Annotated[x, pydantic.Tag(v)] for v, x in self.models.items()
                     )
                 ],
                 pydantic.Field(discriminator=self.discriminator_field),
             ]
             if annotated
-            else ty.Union[tuple(self.models.values())]
+            else ty.Union[tuple(self.models.values())]  # noqa: UP007
         )

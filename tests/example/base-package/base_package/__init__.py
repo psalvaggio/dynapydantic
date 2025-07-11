@@ -1,3 +1,5 @@
+"""Base package to demonstrate plugin discovery"""
+
 from .animal import Animal
 from .cat import Cat
 from .circle import Circle

@@ -25,14 +25,14 @@ def direct_children_of_base_in_mro(derived: type, base: type) -> list[type]:
     return [cls for cls in derived.__mro__ if cls is not base and base in cls.__bases__]
 
 
-_T = ty.TypeVar("_T", bound=pydantic.BaseModel)
-
-
 class SubclassTrackingModel(pydantic.BaseModel):
     """Subclass-tracking BaseModel"""
 
     def __init_subclass__(
-        cls, *args, exclude_from_union: bool | None = None, **kwargs
+        cls,
+        *args,
+        exclude_from_union: bool | None = None,
+        **kwargs,
     ) -> None:
         """Subclass hook"""
         # Intercept any kwargs that are intended for TrackingGroup
@@ -43,8 +43,11 @@ class SubclassTrackingModel(pydantic.BaseModel):
 
     @classmethod
     def __pydantic_init_subclass__(
-        cls, *args, exclude_from_union: bool | None = None, **kwargs
-    ):
+        cls,
+        *args,
+        exclude_from_union: bool | None = None,
+        **kwargs,
+    ) -> None:
         """Pydantic subclass hook"""
         if SubclassTrackingModel in cls.__bases__:
             # Intercept any kwargs that are intended for TrackingGroup
@@ -62,7 +65,7 @@ class SubclassTrackingModel(pydantic.BaseModel):
             else:
                 try:
                     cls.__DYNAPYDANTIC__: TrackingGroup = TrackingGroup.model_validate(
-                        {"name": f"{cls.__name__}-subclasses"} | kwargs
+                        {"name": f"{cls.__name__}-subclasses"} | kwargs,
                     )
                 except pydantic.ValidationError as e:
                     msg = (
@@ -78,7 +81,7 @@ class SubclassTrackingModel(pydantic.BaseModel):
             # Promote the tracking group's methods to the parent class
             if cls.__DYNAPYDANTIC__.plugin_entry_point is not None:
 
-                def _load_plugins():
+                def _load_plugins() -> None:
                     """Load plugins to register more models"""
                     cls.__DYNAPYDANTIC__.load_plugins()
 
@@ -99,7 +102,7 @@ class SubclassTrackingModel(pydantic.BaseModel):
             cls.union = staticmethod(_union)
 
             def _subclasses() -> dict[str, type[cls]]:
-                """A mapping of discriminator values to registered model"""
+                """Return a mapping of discriminator values to registered model"""
                 return cls.__DYNAPYDANTIC__.models
 
             cls.registered_subclasses = staticmethod(_subclasses)

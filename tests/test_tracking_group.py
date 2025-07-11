@@ -2,14 +2,14 @@
 
 import typing as ty
 
-import dynapydantic
 import pydantic
 import pytest
+
+import dynapydantic
 
 
 def test_tracking_group() -> None:
     """Test basic usage of TrackingGroup"""
-
     # Make a simple 2 registered model setup
     group = dynapydantic.TrackingGroup(name="Test", discriminator_field="name")
 
@@ -24,7 +24,7 @@ def test_tracking_group() -> None:
 
     # Make sure the models and union look good
     assert group.models == {"A": A, "B": B}
-    assert group.union(annotated=False) is ty.Union[A, B]
+    assert group.union(annotated=False) is ty.Union[A, B]  # noqa: UP007
 
     annotated_union = group.union()
     assert ty.get_origin(annotated_union) is ty.Annotated
@@ -49,7 +49,7 @@ def test_no_default_val() -> None:
 
 
 def test_duplicate_discriminators() -> None:
-    """Test that registering different subclasses under the same identifier is an error"""
+    """Registering different subclasses under the same identifier is an error"""
     group = dynapydantic.TrackingGroup(name="Test", discriminator_field="name")
 
     @group.register("A")
@@ -67,7 +67,6 @@ def test_duplicate_discriminators() -> None:
 
 def test_no_discriminator() -> None:
     """Test cases where no discriminator is provided"""
-
     group = dynapydantic.TrackingGroup(name="Test", discriminator_field="name")
 
     class A(pydantic.BaseModel):
@@ -105,7 +104,6 @@ def test_discriminator_injection_from_register() -> None:
 
 def test_discriminator_injection_from_generator() -> None:
     """Test that the discriminator_value_generator can inject the field"""
-
     group = dynapydantic.TrackingGroup(
         name="Test",
         discriminator_field="name",
@@ -152,7 +150,6 @@ def test_register_with_manual_field_raises() -> None:
 
 def test_that_the_union_works() -> None:
     """Test that the union actually works as a pydantic annotation"""
-
     group = dynapydantic.TrackingGroup(
         name="Test",
         discriminator_field="type",
@@ -174,12 +171,11 @@ def test_that_the_union_works() -> None:
     assert UserModel(field={"type": "B", "a": 5}).field == B(a=5)
 
     # Make sure only the right model is tried in validation
-    try:
-        UserModel(field={"type": "B"}).field
-        pytest.fail("The above line should raise")
-    except pydantic.ValidationError as e:
-        assert e.error_count() == 1
-        assert e.errors()[0]["loc"] == ("field", "B", "a")
+    with pytest.raises(pydantic.ValidationError) as exc_info:
+        UserModel(field={"type": "B"})
+
+    assert exc_info.value.error_count() == 1
+    assert exc_info.value.errors()[0]["loc"] == ("field", "B", "a")
 
 
 def test_that_load_plugins_doesnt_raise_on_no_entrypoint() -> None:

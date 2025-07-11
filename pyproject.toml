@@ -26,3 +26,28 @@ build-backend = "hatchling.build"
 pythonpath = ["src"]
 testpaths = ["tests"]
 addopts = "--cov=dynapydantic --cov-report=html --cov-branch"
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D400", # docstrings end in .
+    "ANN002", # Annotations for *args
+    "ANN003", # Annotations for *kwargs
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.extend-per-file-ignores]
+"tests/**/*.py" = [
+    "S101", # asserts allowed in tests
+    "ARG", # Unused function args -> (fixtures can be unused)
+    "FBT", # Don't care about booleans as positional arguments in tests, e.g. via @pytest.mark.parametrize()
+    "PLR2004", # Magic value used in comparison
+]
+"**/cli.py" = [
+    "PLC0415", # imports in CLI functions improve load times
+]
