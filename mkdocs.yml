@@ -1,0 +1,53 @@
+site_name: dynapydantic
+repo_url: https://github.com/psalvaggio/dynapydantic
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            extensions:
+            - griffe_pydantic:
+              schema: true
+          setup_commands:
+            - import sys; sys.path.insert(0, "src")
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.details
+  - pymdownx.snippets
+
+nav:
+  - Home: README.md
+  - Reference:
+      - API: reference.md
+
+extra:
+  version:
+    provider: mike

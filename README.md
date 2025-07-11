@@ -3,9 +3,25 @@
 [![CI](https://github.com/psalvaggio/dynapydantic/actions/workflows/ci.yml/badge.svg)](https://github.com/psalvaggio/dynapydantic/actions/workflows/ci.yml)
 [![Pre-commit](https://github.com/psalvaggio/dynapydantic/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/psalvaggio/dynapydantic/actions/workflows/pre-commit.yml)
 
-This is a demonstration about how `pydantic` models can track their subclasses
-and round-trip through serialization, both within the package in which they are
-defined and in other packages via `pluggy`.
+`dynapydantic` is an extension to the [pydantic](https://pydantic.dev) Python
+package that allow for dynamic tracking of `pydantic.BaseModel` subclasses.
 
-This package is not intended for public use yet. It's strictly a
-proof-of-concept.
+Installation
+--
+This project can be installed via PyPI:
+```
+pip install dynapydantic
+```
+
+Usage
+--
+The core entity in this library is the `dynapydantic.TrackingGroup`:
+```python
+import dynapydantic
+import pydantic
+
+mygroup = dynapydantic.TrackingGroup(
+    name="mygroup",
+    discriminator_field=""
+)
+```
