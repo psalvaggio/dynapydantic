@@ -15,3 +15,6 @@ wheels/
 
 # OS files
 .DS_Store
+
+# MKDocs
+site
