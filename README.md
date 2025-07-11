@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/psalvaggio/dynapydantic/actions/workflows/ci.yml/badge.svg)](https://github.com/psalvaggio/dynapydantic/actions/workflows/ci.yml)
 [![Pre-commit](https://github.com/psalvaggio/dynapydantic/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/psalvaggio/dynapydantic/actions/workflows/pre-commit.yml)
+[![Docs](https://img.shields.io/badge/docs-your_page-blue?style=flat-square&logo=github&logoColor=white&link=https://psalvaggio.github.io/dynapydantic/dev/)](https://psalvaggio.github.io/dynapydantic/dev/)
+
 
 `dynapydantic` is an extension to the [pydantic](https://pydantic.dev) Python
 package that allow for dynamic tracking of `pydantic.BaseModel` subclasses.
