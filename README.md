@@ -4,6 +4,7 @@
 [![Pre-commit](https://github.com/psalvaggio/dynapydantic/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/psalvaggio/dynapydantic/actions/workflows/pre-commit.yml)
 [![Docs](https://img.shields.io/badge/docs-Docs-blue?style=flat-square&logo=github&logoColor=white&link=https://psalvaggio.github.io/dynapydantic/dev/)](https://psalvaggio.github.io/dynapydantic/dev/)
 [![PyPI - Version](https://img.shields.io/pypi/v/dynapydantic)](https://pypi.org/project/dynapydantic/)
+[![Coverage Status](https://coveralls.io/repos/github/psalvaggio/dynapydantic/badge.svg?branch=main)](https://coveralls.io/github/psalvaggio/dynapydantic?branch=main)
 
 
 `dynapydantic` is an extension to the [pydantic](https://pydantic.dev) Python
