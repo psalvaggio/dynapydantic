@@ -5,6 +5,7 @@
 [![Docs](https://img.shields.io/badge/docs-Docs-blue?style=flat-square&logo=github&logoColor=white&link=https://psalvaggio.github.io/dynapydantic/dev/)](https://psalvaggio.github.io/dynapydantic/dev/)
 [![PyPI - Version](https://img.shields.io/pypi/v/dynapydantic)](https://pypi.org/project/dynapydantic/)
 [![Coverage Status](https://coveralls.io/repos/github/psalvaggio/dynapydantic/badge.svg?branch=main)](https://coveralls.io/github/psalvaggio/dynapydantic?branch=main)
+[![Conda Version](https://img.shields.io/conda/v/conda-forge/dynapydantic)](https://anaconda.org/conda-forge/dynapydantic)
 
 
 `dynapydantic` is an extension to the [pydantic](https://pydantic.dev) Python
@@ -15,6 +16,10 @@ Installation
 This project can be installed via PyPI:
 ```
 pip install dynapydantic
+```
+or with `conda` via the `conda-forge` channel:
+```
+conda install dynapydantic
 ```
 
 Usage
