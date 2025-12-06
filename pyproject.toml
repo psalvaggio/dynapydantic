@@ -22,6 +22,7 @@ dev = [
     "pip>=25.1.1",
     "pre-commit>=4.2.0",
     "pymdown-extensions>=10.16",
+    "pyrefly>=0.44.1",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
     "pytest-xdist>=3.8.0",
