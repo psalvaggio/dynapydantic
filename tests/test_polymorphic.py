@@ -3,6 +3,7 @@
 import json
 
 import pydantic
+import pytest
 
 import dynapydantic
 
@@ -69,3 +70,22 @@ def test_polymorphic_round_trip_json() -> None:
     """Tests the JSON round-tripping behavior of Polymorphic"""
     m = Model(val=Derived1(a=2))
     assert Model.model_validate_json(m.model_dump_json()) == m
+
+
+def test_polymorphic_with_other_type() -> None:
+    """Polymorphic should only work on SubclassTrackingModel's"""
+    with pytest.raises(
+        pydantic.errors.PydanticSchemaGenerationError,
+        match="not a SubclassTrackingModel",
+    ):
+
+        class _Model(pydantic.BaseModel):
+            field: dynapydantic.Polymorphic[str]  # type: ignore[bad-specialization]
+
+    with pytest.raises(
+        pydantic.errors.PydanticSchemaGenerationError,
+        match="not a SubclassTrackingModel",
+    ):
+
+        class _Model(pydantic.BaseModel):
+            field: dynapydantic.Polymorphic[5]  # type: ignore[bad-specialization]

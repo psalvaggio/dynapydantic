@@ -6,7 +6,7 @@ from .subclass_tracking_model import SubclassTrackingModel
 
 ModelT = ty.TypeVar("ModelT", bound=SubclassTrackingModel)
 
-if ty.TYPE_CHECKING:
+if ty.TYPE_CHECKING:  # pragma: no cover
     Polymorphic = ty.Annotated[ModelT, ...]
 else:
 

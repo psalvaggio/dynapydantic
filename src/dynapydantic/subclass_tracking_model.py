@@ -147,9 +147,12 @@ class SubclassTrackingModel(pydantic.BaseModel):
             handler: GetCoreSchemaHandler,
         ) -> core_schema.CoreSchema:
             """Get the pydantic schema for this type"""
-            if not issubclass(source_type, SubclassTrackingModel):
+            if not isinstance(source_type, type) or not issubclass(
+                source_type,
+                SubclassTrackingModel,
+            ):
                 msg = (
-                    f"{source_type}.__name__ was not a SubclassTrackingModel, "
+                    f"{source_type} was not a SubclassTrackingModel, "
                     "so it is incompatible with dynapydantic.Polymorphic"
                 )
                 raise PydanticSchemaGenerationError(msg)

@@ -171,11 +171,7 @@ class TrackingGroup(pydantic.BaseModel):
             unique default value in the group.
         """
         disc = self.discriminator_field
-        field = cls.model_fields.get(disc)
-        if field is None:
-            msg = f'{cls.__name__} had no "{disc}" field'
-            raise RegistrationError(msg)
-        value = field.default
+        value = cls.model_fields[disc].default
         if value == pydantic_core.PydanticUndefined:
             msg = (
                 f"{cls.__name__}.{disc} had no default value, it must "
