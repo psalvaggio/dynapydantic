@@ -23,4 +23,7 @@ else:
 
         def __class_getitem__(cls, item: ModelT) -> ty.Any:  # noqa: ANN401
             """Get the annotation for the pydantic field"""
+            if not isinstance(item, type):
+                msg = f"dynapydantic.Polymorphic must be given a type, not {item}"
+                raise TypeError(msg)
             return ty.Annotated[item, SubclassTrackingModel.PydanticAdaptor]

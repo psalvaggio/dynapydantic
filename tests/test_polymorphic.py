@@ -82,10 +82,7 @@ def test_polymorphic_with_other_type() -> None:
         class _Model(pydantic.BaseModel):
             field: dynapydantic.Polymorphic[str]  # type: ignore[bad-specialization]
 
-    with pytest.raises(
-        pydantic.errors.PydanticSchemaGenerationError,
-        match="not a SubclassTrackingModel",
-    ):
+    with pytest.raises(TypeError, match="Polymorphic must be given a type"):
 
         class _Model(pydantic.BaseModel):
             field: dynapydantic.Polymorphic[5]  # type: ignore[bad-specialization]
