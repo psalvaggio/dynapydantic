@@ -315,6 +315,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="." class="md-nav__link md-nav__link--active">
         
   
@@ -331,6 +349,86 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#motiviation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Motiviation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How it works">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#trackinggroup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TrackingGroup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subclasstrackingmodel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SubclassTrackingModel
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -445,6 +543,75 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#motiviation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Motiviation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How it works">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#trackinggroup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TrackingGroup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subclasstrackingmodel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SubclassTrackingModel
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -469,15 +636,79 @@
 <a href="https://anaconda.org/conda-forge/dynapydantic"><img alt="Conda Version" src="https://img.shields.io/conda/v/conda-forge/dynapydantic" /></a></p>
 <p><code>dynapydantic</code> is an extension to the <a href="https://pydantic.dev">pydantic</a> Python
 package that allow for dynamic tracking of <code>pydantic.BaseModel</code> subclasses.</p>
-<h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h1>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
 <p>This project can be installed via PyPI:
 <div class="highlight"><pre><span></span><code>pip install dynapydantic
 </code></pre></div>
 or with <code>conda</code> via the <code>conda-forge</code> channel:
 <div class="highlight"><pre><span></span><code>conda install dynapydantic
 </code></pre></div></p>
-<h1 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h1>
-<h2 id="trackinggroup"><code>TrackingGroup</code><a class="headerlink" href="#trackinggroup" title="Permanent link">&para;</a></h2>
+<h2 id="motiviation">Motiviation<a class="headerlink" href="#motiviation" title="Permanent link">&para;</a></h2>
+<p>Consider the following simple class setup:
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="n">field</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="n">field</span><span class="p">:</span> <span class="nb">str</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">val</span><span class="p">:</span> <span class="n">Base</span>
+</code></pre></div>
+As expected, we can use <code>A</code>'s and <code>B</code>'s for <code>Model.val</code>:
+<div class="highlight"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">m</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">A</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">m</span>
+<span class="n">Model</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">A</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+</code></pre></div>
+However, we quickly run into trouble when serializing and validating:
+<div class="highlight"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">m</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
+<span class="p">{</span><span class="s1">&#39;base&#39;</span><span class="p">:</span> <span class="p">{}}</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">m</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">serialize_as_any</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="p">{</span><span class="s1">&#39;val&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;field&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}}</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">Model</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">serialize_as_any</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="n">Model</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">Base</span><span class="p">())</span>
+</code></pre></div></p>
+<p>Pydantic provides a solution for serialization via <code>serialize_as_any</code> (and
+its corresponding field annotation <code>SerializeAsAny</code>), but offers no native
+solution for the validation half. Currently, the canonical way of doing this
+is to annotate the field as a discriminated union of all subclasses. Often, a
+single field in the model is chosen as the "discriminator". This library,
+<code>dynapydantic</code>, automates this process.</p>
+<p>Let's reframe the above problem with <code>dynapydantic</code>:
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span>
+    <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
+    <span class="n">discriminator_field</span><span class="o">=</span><span class="s2">&quot;name&quot;</span><span class="p">,</span>
+    <span class="n">discriminator_value_generator</span><span class="o">=</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="n">field</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="n">field</span><span class="p">:</span> <span class="nb">str</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">val</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">]</span>
+</code></pre></div>
+Now, the same set of operations works as intended:
+<div class="highlight"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">m</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">A</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">m</span>
+<span class="n">Model</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">A</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">m</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
+<span class="p">{</span><span class="s1">&#39;val&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;field&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;A&#39;</span><span class="p">}}</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">Model</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">model_dump</span><span class="p">())</span>
+<span class="n">Model</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">A</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
+</code></pre></div></p>
+<h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
+<h3 id="trackinggroup"><code>TrackingGroup</code><a class="headerlink" href="#trackinggroup" title="Permanent link">&para;</a></h3>
 <p>The core entity in this library is the <code>dynapydantic.TrackingGroup</code>:
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ty</span>
 
@@ -509,23 +740,24 @@ or with <code>conda</code> via the <code>conda-forge</code> channel:
 </code></pre></div></p>
 <p>The <code>union()</code> method produces a <a href="https://docs.pydantic.dev/latest/concepts/unions/#discriminated-unions">discriminated union</a>
 of all registered <code>pydantic.BaseModel</code> subclasses. It also accepts an
-<code>annotated=False</code> keyword argument to produce a plain <code>typing.Union</code> for use in
-type annotations. This union is based on a discriminator field, which was
-configured by the <code>discriminator_field</code> argument to <code>TrackingGroup</code>. The field
-can be created by hand, as was shown with <code>B</code>, or <code>dynapydantic</code> will inject it
-for you, as was shown with <code>A</code>.</p>
+<code>annotated=False</code> keyword argument to produce a plain <code>typing.Union</code> for use
+in type annotations, but since this is a runtime-computed union, this will not
+work with static type checkers. This union is based on a discriminator field,
+which was configured by the <code>discriminator_field</code> argument to <code>TrackingGroup</code>.
+The field can be created by hand, as was shown with <code>B</code>, or <code>dynapydantic</code>
+will inject it for you, as was shown with <code>A</code>.</p>
 <p><code>TrackingGroup</code> has a few opt-in features to make it more powerful and easier to use:
 1. <code>discriminator_value_generator</code>: This parameter is a optional callback
   function that is called with each class that gets registered and produces a
   default value for the discriminator field. This allows the user to call
-  <code>register()</code> without a value for the discriminator. The most common value to
-  pass here would be <code>lambda cls: cls.__name__</code>, to use the name of the class as
-  the discriminator value.
+  <code>register()</code> without a value for the discriminator. For example, passing:
+  <code>lambda cls: cls.__name__</code> would use the name of the class as the
+   discriminator value.
 2. <code>plugin_entry_point</code>: This parameter indicates to <code>dynapydantic</code> that there
-  might be models to be discovered in other packages. Packages are discovered by
-  the Python entrypoint mechanism. See the <code>tests/example</code> directory for an
+  might be models to be discovered in other packages. Packages are discovered
+  by the Python entrypoint mechanism. See the <code>tests/example</code> directory for an
   example of how this works.</p>
-<h2 id="subclasstrackingmodel"><code>SubclassTrackingModel</code><a class="headerlink" href="#subclasstrackingmodel" title="Permanent link">&para;</a></h2>
+<h3 id="subclasstrackingmodel"><code>SubclassTrackingModel</code><a class="headerlink" href="#subclasstrackingmodel" title="Permanent link">&para;</a></h3>
 <p>The most common use case of this pattern is to automatically register subclasses
 of a given <code>pydantic.BaseModel</code>. This is supported via the use of
 <code>dynapydantic.SubclassTrackingModel</code>. For example:
@@ -544,7 +776,7 @@ of a given <code>pydantic.BaseModel</code>. This is supported via the use of
     <span class="c1"># The TrackingGroup can be specified here like model_config, or passed in</span>
     <span class="c1"># kwargs of the class declaration, just like how model_config works with</span>
     <span class="c1"># pydantic.BaseModel. If you do it like this, you have to give the tracking</span>
-    <span class="c1"># group a name</span>
+    <span class="c1"># group a name, whereas using kwargs will generate the name for you.</span>
     <span class="c1"># tracking_config: ty.ClassVar[dynapydantic.TrackingGroup] = dynapydantic.TrackingGroup(</span>
     <span class="c1">#     name=&quot;BaseSubclasses&quot;,</span>
     <span class="c1">#     discriminator_field=&quot;name&quot;,</span>
@@ -572,13 +804,18 @@ of a given <code>pydantic.BaseModel</code>. This is supported via the use of
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A model that can have any registered Base subclass&quot;&quot;&quot;</span>
-    <span class="n">field</span><span class="p">:</span> <span class="n">Base</span><span class="o">.</span><span class="n">union</span><span class="p">()</span>  <span class="c1"># call after all subclasses have been registered</span>
+    <span class="n">field</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">]</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Derived1&quot;</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}))</span>
 <span class="c1"># field=Derived1(a=4, name=&#39;Derived1&#39;)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Custom&quot;</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">}))</span>
 <span class="c1"># field=Derived2(name=&#39;Custom&#39;, a=5)</span>
-</code></pre></div></p>
+</code></pre></div>
+It is important to note that the subclasses that are supported are those that
+were defined <em>prior</em> to defining the model that uses <code>dynapydantic.Polymorphic</code>
+(<code>Model</code> in the above example). If you declare additional subclasses afterwards,
+you must call <code>.model_rebuild(force=True)</code> on the model that uses the subclass
+union.</p>
 
 
 
