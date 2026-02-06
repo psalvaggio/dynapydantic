@@ -1,5 +1,6 @@
 """Base class for dynamic pydantic models"""
 
+import contextlib
 import typing as ty
 
 import pydantic
@@ -30,7 +31,8 @@ def _inject_discriminator_field(
         annotation=ty.Literal[value],
         frozen=True,
     )
-    cls.model_rebuild(force=True)
+    with contextlib.suppress(pydantic.errors.PydanticUndefinedAnnotation):
+        cls.model_rebuild(force=True)
     return cls.model_fields[disc_field]
 
 
