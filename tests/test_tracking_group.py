@@ -165,7 +165,7 @@ def test_that_the_union_works() -> None:
         a: int
 
     class UserModel(pydantic.BaseModel):
-        field: group.union()
+        field: group.union()  # pyrefly: ignore
 
     assert UserModel(field={"type": "A", "a": 5}).field == A(a=5)
     assert UserModel(field={"type": "B", "a": 5}).field == B(a=5)

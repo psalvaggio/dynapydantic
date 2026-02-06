@@ -46,7 +46,7 @@ def test_basic(cls: type[dynapydantic.SubclassTrackingModel]) -> None:
     assert not hasattr(cls, "load_plugins")
 
     class Parse(pydantic.RootModel):
-        root: cls.union()
+        root: dynapydantic.Polymorphic[cls]
 
     assert Parse.model_validate({"name": "A", "a": 1, "b": 2}).root == Derived1(
         a=1,

@@ -24,14 +24,14 @@ def test_recursive_models_without_discriminator_value_generator() -> None:
         """Recursive subclass"""
 
         name: ty.Literal["C"] = "C"
-        c: "AUnion"
-
-    AUnion = A.union()  # noqa: N806
+        c: dynapydantic.Polymorphic[A]
 
     for cls in A.registered_subclasses().values():
-        cls.model_rebuild()
+        cls.model_rebuild(force=True)
 
     model = C(c=C(c=B(b=1)))
+    assert isinstance(model.c, C)
+    assert isinstance(model.c.c, B)
     assert model.c.c.b == 1
 
 
@@ -53,12 +53,12 @@ def test_recursive_models_with_model_value_generator() -> None:
     class C(A):
         """Recursive subclass"""
 
-        c: "AUnion"
-
-    AUnion = A.union()  # noqa: N806
+        c: dynapydantic.Polymorphic[A]
 
     for cls in A.registered_subclasses().values():
-        cls.model_rebuild()
+        cls.model_rebuild(force=True)
 
     model = C(c=C(c=B(b=1)))
+    assert isinstance(model.c, C)
+    assert isinstance(model.c.c, B)
     assert model.c.c.b == 1

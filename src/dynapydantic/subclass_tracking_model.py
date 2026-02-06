@@ -3,6 +3,9 @@
 import typing as ty
 
 import pydantic
+from pydantic import GetCoreSchemaHandler
+from pydantic.errors import PydanticSchemaGenerationError
+from pydantic_core import core_schema
 
 from .exceptions import ConfigurationError
 from .tracking_group import TrackingGroup
@@ -77,8 +80,8 @@ class SubclassTrackingModel(pydantic.BaseModel):
                 },
             )
 
-            if isinstance(getattr(cls, "tracking_config", None), TrackingGroup):
-                cls.__DYNAPYDANTIC__ = cls.tracking_config
+            if isinstance((tc := getattr(cls, "tracking_config", None)), TrackingGroup):
+                cls.__DYNAPYDANTIC__ = tc
             else:
                 try:
                     cls.__DYNAPYDANTIC__: TrackingGroup = TrackingGroup.model_validate(
@@ -118,7 +121,7 @@ class SubclassTrackingModel(pydantic.BaseModel):
 
             cls.union = staticmethod(_union)
 
-            def _subclasses() -> dict[str, type[cls]]:
+            def _subclasses() -> dict[str, type[pydantic.BaseModel]]:
                 """Return a mapping of discriminator values to registered model"""
                 return cls.__DYNAPYDANTIC__.models
 
@@ -134,3 +137,20 @@ class SubclassTrackingModel(pydantic.BaseModel):
         supers = direct_children_of_base_in_mro(cls, SubclassTrackingModel)
         for base in supers:
             base.__DYNAPYDANTIC__.register_model(cls)
+
+    class PydanticAdaptor:
+        """Pydantic type adaptor for SubclassTrackingModel"""
+
+        @staticmethod
+        def __get_pydantic_core_schema__(
+            source_type: ty.Any,  # noqa: ANN401
+            handler: GetCoreSchemaHandler,
+        ) -> core_schema.CoreSchema:
+            """Get the pydantic schema for this type"""
+            if not issubclass(source_type, SubclassTrackingModel):
+                msg = (
+                    f"{source_type}.__name__ was not a SubclassTrackingModel, "
+                    "so it is incompatible with dynapydantic.Polymorphic"
+                )
+                raise PydanticSchemaGenerationError(msg)
+            return handler(source_type.union())
