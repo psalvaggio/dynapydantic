@@ -1,5 +1,6 @@
 """Base class for dynamic pydantic models"""
 
+import inspect
 import typing as ty
 
 import pydantic
@@ -48,17 +49,18 @@ class SubclassTrackingModel(pydantic.BaseModel):
         TrackingGroup.load_plugins for more details.
     """
 
-    def __init_subclass__(
-        cls,
-        *args,
-        exclude_from_union: bool | None = None,
-        **kwargs,
-    ) -> None:
+    def __init_subclass__(cls, *args, **kwargs) -> None:
         """Subclass hook"""
-        # Intercept any kwargs that are intended for TrackingGroup
-        super().__pydantic_init_subclass__(
+        # Intercept any kwargs that are intended for TrackingGroup or
+        # __pydantic_init_subclass__
+        sig = inspect.signature(SubclassTrackingModel.__pydantic_init_subclass__)
+        super().__init_subclass__(
             *args,
-            **{k: v for k, v in kwargs.items() if k not in TrackingGroup.model_fields},
+            **{
+                k: v
+                for k, v in kwargs.items()
+                if k not in TrackingGroup.model_fields and k not in sig.parameters
+            },
         )
 
     @classmethod

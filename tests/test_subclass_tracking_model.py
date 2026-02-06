@@ -57,6 +57,11 @@ def test_basic(cls: type[dynapydantic.SubclassTrackingModel]) -> None:
         b=2,
     )
     assert "C" not in cls.registered_subclasses()
+    with pytest.raises(
+        pydantic.ValidationError,
+        match="does not match any of the expected tags",
+    ):
+        Parse.model_validate({"name": "C", "b": 5})
 
 
 def test_no_config_raises() -> None:
