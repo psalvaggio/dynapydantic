@@ -63,3 +63,11 @@ convention = "numpy"
 "**/cli.py" = [
     "PLC0415", # imports in CLI functions improve load times
 ]
+
+[tool.pyrefly]
+# We have a few embedded packages in our tests to test out plugins
+search-path = [
+    "tests/example/animal-plugins",
+    "tests/example/base-package",
+    "tests/example/shape-plugins",
+]

@@ -2,6 +2,8 @@
 
 import click
 
+import dynapydantic
+
 
 @click.group()
 def cli() -> None:
@@ -30,7 +32,7 @@ def parse_animal(animal_json: str) -> None:
     from . import Animal
 
     class Parse(pydantic.RootModel):
-        root: Animal.union()
+        root: dynapydantic.Polymorphic[Animal]
 
     parsed = Parse.model_validate_json(animal_json).root
     dumped = parsed.model_dump_json()
@@ -61,7 +63,7 @@ def parse_shape(shape_json: str) -> None:
     from . import Shape
 
     class Parse(pydantic.RootModel):
-        root: Shape.union()
+        root: dynapydantic.Polymorphic[Shape]
 
     parsed = Parse.model_validate_json(shape_json).root
     dumped = parsed.model_dump_json()

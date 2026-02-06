@@ -28,7 +28,7 @@ def _inject_discriminator_field(
     """
     cls.model_fields[disc_field] = pydantic.fields.FieldInfo(
         default=value,
-        annotation=ty.Literal[value],
+        annotation=ty.Literal[value],  # type: ignore[not-a-type]
         frozen=True,
     )
     with contextlib.suppress(pydantic.errors.PydanticUndefinedAnnotation):
@@ -97,7 +97,7 @@ class TrackingGroup(pydantic.BaseModel):
             discriminator field must be declared by hand.
         """
 
-        def _wrapper(cls: type[pydantic.BaseModel]) -> None:
+        def _wrapper(cls: type[pydantic.BaseModel]) -> type[pydantic.BaseModel]:
             disc = self.discriminator_field
             field = cls.model_fields.get(self.discriminator_field)
             if field is None:
@@ -171,8 +171,7 @@ class TrackingGroup(pydantic.BaseModel):
             unique default value in the group.
         """
         disc = self.discriminator_field
-        field = cls.model_fields.get(disc)
-        value = field.default
+        value = cls.model_fields[disc].default
         if value == pydantic_core.PydanticUndefined:
             msg = (
                 f"{cls.__name__}.{disc} had no default value, it must "
@@ -189,17 +188,20 @@ class TrackingGroup(pydantic.BaseModel):
 
         self.models[value] = cls
 
-    def union(self, *, annotated: bool = True) -> ty.GenericAlias:
+    def union(self, *, annotated: bool = True) -> ty.Any:  # noqa: ANN401
         """Return the union of all registered models"""
         return (
             ty.Annotated[
                 ty.Union[  # noqa: UP007
-                    tuple(
+                    # This is fundamentally incompatible with static type
+                    # checking, as this is resolved at runtime.
+                    tuple(  # type: ignore[not-a-type]
                         ty.Annotated[x, pydantic.Tag(v)] for v, x in self.models.items()
                     )
                 ],
                 pydantic.Field(discriminator=self.discriminator_field),
             ]
             if annotated
+            # type: ignore[not-a-type]
             else ty.Union[tuple(self.models.values())]  # noqa: UP007
         )

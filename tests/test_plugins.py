@@ -8,6 +8,8 @@ from unittest.mock import patch
 import pydantic
 import pytest
 
+import dynapydantic
+
 
 def setup_env(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that the plugin example works"""
@@ -64,7 +66,7 @@ def test_animal_subclasses(
     import base_package  # noqa: PLC0415
 
     class Parse(pydantic.RootModel):
-        root: base_package.Animal.union()
+        root: dynapydantic.Polymorphic[base_package.Animal]
 
     x = Parse.model_validate_json(animal_json).root
     assert x.speak() == result
@@ -90,7 +92,7 @@ def test_shape_subclasses(
     import base_package  # noqa: PLC0415
 
     class Parse(pydantic.RootModel):
-        root: base_package.Shape.union()
+        root: dynapydantic.Polymorphic[base_package.Shape]
 
     x = Parse.model_validate_json(shape_json).root
     assert x.area() == pytest.approx(result, abs=1e-10)

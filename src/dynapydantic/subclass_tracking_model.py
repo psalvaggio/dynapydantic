@@ -1,8 +1,12 @@
 """Base class for dynamic pydantic models"""
 
+import inspect
 import typing as ty
 
 import pydantic
+from pydantic import GetCoreSchemaHandler
+from pydantic.errors import PydanticSchemaGenerationError
+from pydantic_core import core_schema
 
 from .exceptions import ConfigurationError
 from .tracking_group import TrackingGroup
@@ -45,17 +49,18 @@ class SubclassTrackingModel(pydantic.BaseModel):
         TrackingGroup.load_plugins for more details.
     """
 
-    def __init_subclass__(
-        cls,
-        *args,
-        exclude_from_union: bool | None = None,
-        **kwargs,
-    ) -> None:
+    def __init_subclass__(cls, *args, **kwargs) -> None:
         """Subclass hook"""
-        # Intercept any kwargs that are intended for TrackingGroup
-        super().__pydantic_init_subclass__(
+        # Intercept any kwargs that are intended for TrackingGroup or
+        # __pydantic_init_subclass__
+        sig = inspect.signature(SubclassTrackingModel.__pydantic_init_subclass__)
+        super().__init_subclass__(
             *args,
-            **{k: v for k, v in kwargs.items() if k not in TrackingGroup.model_fields},
+            **{
+                k: v
+                for k, v in kwargs.items()
+                if k not in TrackingGroup.model_fields and k not in sig.parameters
+            },
         )
 
     @classmethod
@@ -77,8 +82,8 @@ class SubclassTrackingModel(pydantic.BaseModel):
                 },
             )
 
-            if isinstance(getattr(cls, "tracking_config", None), TrackingGroup):
-                cls.__DYNAPYDANTIC__ = cls.tracking_config
+            if isinstance((tc := getattr(cls, "tracking_config", None)), TrackingGroup):
+                cls.__DYNAPYDANTIC__ = tc
             else:
                 try:
                     cls.__DYNAPYDANTIC__: TrackingGroup = TrackingGroup.model_validate(
@@ -118,7 +123,7 @@ class SubclassTrackingModel(pydantic.BaseModel):
 
             cls.union = staticmethod(_union)
 
-            def _subclasses() -> dict[str, type[cls]]:
+            def _subclasses() -> dict[str, type[pydantic.BaseModel]]:
                 """Return a mapping of discriminator values to registered model"""
                 return cls.__DYNAPYDANTIC__.models
 
@@ -134,3 +139,23 @@ class SubclassTrackingModel(pydantic.BaseModel):
         supers = direct_children_of_base_in_mro(cls, SubclassTrackingModel)
         for base in supers:
             base.__DYNAPYDANTIC__.register_model(cls)
+
+    class PydanticAdaptor:
+        """Pydantic type adaptor for SubclassTrackingModel"""
+
+        @staticmethod
+        def __get_pydantic_core_schema__(
+            source_type: ty.Any,  # noqa: ANN401
+            handler: GetCoreSchemaHandler,
+        ) -> core_schema.CoreSchema:
+            """Get the pydantic schema for this type"""
+            if not isinstance(source_type, type) or not issubclass(
+                source_type,
+                SubclassTrackingModel,
+            ):
+                msg = (
+                    f"{source_type} was not a SubclassTrackingModel, "
+                    "so it is incompatible with dynapydantic.Polymorphic"
+                )
+                raise PydanticSchemaGenerationError(msg)
+            return handler(source_type.union())
