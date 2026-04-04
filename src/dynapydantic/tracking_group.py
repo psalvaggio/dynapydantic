@@ -274,7 +274,7 @@ class TrackingGroup(pydantic.BaseModel):
     def union(
         self,
         *,
-        plain: ty.Literal[True] | None = None,
+        plain: bool | None = None,
         annotated: bool | None = None,
     ) -> ty.Any:  # noqa: ANN401
         """Return the union of all registered models

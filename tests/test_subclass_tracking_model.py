@@ -106,3 +106,11 @@ def test_l2r_union() -> None:
     assert pydantic.TypeAdapter(dynapydantic.Polymorphic[Base]).validate_python(
         {"a": 1, "b": 5}
     ) == A(a=1)
+
+
+def test_invalid_union_modes() -> None:
+    """Test what happens if the user misconfigures the union mode"""
+    with pytest.raises(dynapydantic.ConfigurationError, match="union_mode"):
+
+        class Base(dynapydantic.SubclassTrackingModel, union_mode="foo"):
+            pass

@@ -226,7 +226,7 @@ union.
 
 While the default discriminated union is the recommended and most robust
 approach, it does require a field in the model to act as the discriminator. If
-the full list of union members is know to the author ahead of time and can be
+the full list of union members is known to the author ahead of time and can be
 proven to be unambiguous from a validation perspective, then the discriminator
 field can be omitted and a
 [`"smart"`](https://docs.pydantic.dev/latest/concepts/unions/#smart-mode) or

@@ -10,7 +10,6 @@ from pydantic_core import core_schema
 
 from .exceptions import ConfigurationError
 from .tracking_group import TrackingGroup
-from .union_mode import DiscriminatedConfig
 
 
 def direct_children_of_base_in_mro(derived: type, base: type) -> list[type]:
@@ -28,9 +27,6 @@ def direct_children_of_base_in_mro(derived: type, base: type) -> list[type]:
     Classes in derived's MRO that are direct subclasses of base.
     """
     return [cls for cls in derived.__mro__ if cls is not base and base in cls.__bases__]
-
-
-_CLASS_KWARGS = set(TrackingGroup.model_fields) | set(DiscriminatedConfig.model_fields)
 
 
 class SubclassTrackingModel(pydantic.BaseModel):
@@ -66,7 +62,7 @@ class SubclassTrackingModel(pydantic.BaseModel):
             **{
                 k: v
                 for k, v in kwargs.items()
-                if k not in _CLASS_KWARGS and k not in sig.parameters
+                if k not in TrackingGroup.model_fields and k not in sig.parameters
             },
         )
 
@@ -82,7 +78,11 @@ class SubclassTrackingModel(pydantic.BaseModel):
             # Intercept any kwargs that are intended for TrackingGroup
             super().__pydantic_init_subclass__(
                 *args,
-                **{k: v for k, v in kwargs.items() if k not in _CLASS_KWARGS},
+                **{
+                    k: v
+                    for k, v in kwargs.items()
+                    if k not in TrackingGroup.model_fields
+                },
             )
 
             if isinstance((tc := getattr(cls, "tracking_config", None)), TrackingGroup):
@@ -114,9 +114,9 @@ class SubclassTrackingModel(pydantic.BaseModel):
 
             def _union(
                 *,
-                plain: ty.Literal[True] | None = None,
+                plain: bool | None = None,
                 annotated: bool | None = None,
-            ) -> ty.Any:  # noqa: ANN401
+            ) -> ty.Any:  # noqa: ANN401 - return type is runtime-determined
                 """Get the union of all tracked subclasses
 
                 Parameters
@@ -129,6 +129,7 @@ class SubclassTrackingModel(pydantic.BaseModel):
                     Deprecated. Use `plain=True` when you would have used
                     `annotated=False`.
                 """
+                # deprecation warning for annotated is in TrackingGroup
                 return cls.__DYNAPYDANTIC__.union(plain=plain, annotated=annotated)
 
             cls.union = staticmethod(_union)

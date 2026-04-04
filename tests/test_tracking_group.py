@@ -44,6 +44,8 @@ def test_simple_disrciminated_tracking_group(kwargs: dict[str, ty.Any]) -> None:
     # Make sure the models and union look good
     assert group.models == {"A": A, "B": B}
     assert group.union(plain=True) == (A | B)
+    with pytest.warns(DeprecationWarning, match="annotated"):
+        assert group.union(annotated=False) == (A | B)
 
     annotated_union = group.union()
     assert ty.get_origin(annotated_union) is ty.Annotated
