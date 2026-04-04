@@ -214,6 +214,16 @@ you must call `.model_rebuild(force=True)` on the model that uses the subclass
 union.
 
 ### Alternative union methods
+!!! warning "Caution"
+
+    `dynapydantic` does **NOT** test if your models have ambiguities in them.
+    This is up to **YOU**.
+
+    Non-discriminated unions should only be used when you can **PROVE** that all
+    possible subclasses will parse unambiguously. If there is ambiguity in the
+    models, you can get unexpected results. If plugins are used, it is highly
+    discouraged to use anything besides discriminated unions.
+
 While the default discriminated union is the recommended and most robust
 approach, it does require a field in the model to act as the discriminator. If
 the full list of union members is know to the author ahead of time and can be
