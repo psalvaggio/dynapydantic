@@ -70,3 +70,39 @@ def test_no_config_raises() -> None:
 
         class Bad(dynapydantic.SubclassTrackingModel):
             pass
+
+
+def test_smart_union() -> None:
+    """Test a smart union"""
+
+    class Base(dynapydantic.SubclassTrackingModel, union_mode="smart"):
+        pass
+
+    class A(Base):
+        a: int
+
+    class B(Base):
+        a: int
+        b: int
+
+    assert pydantic.TypeAdapter(dynapydantic.Polymorphic[Base]).validate_python(
+        {"a": 1, "b": 5}
+    ) == B(a=1, b=5)
+
+
+def test_l2r_union() -> None:
+    """Test a left-to-right union"""
+
+    class Base(dynapydantic.SubclassTrackingModel, union_mode="left_to_right"):
+        pass
+
+    class A(Base):
+        a: int
+
+    class B(Base):
+        a: int
+        b: int
+
+    assert pydantic.TypeAdapter(dynapydantic.Polymorphic[Base]).validate_python(
+        {"a": 1, "b": 5}
+    ) == A(a=1)
