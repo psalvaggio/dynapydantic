@@ -91,7 +91,7 @@ class TrackingGroup(pydantic.BaseModel):
     )
 
     @pydantic.model_validator(mode="after")
-    def _ensure_union_mode(self) -> ty.Self:
+    def _ensure_union_mode(self) -> "TrackingGroup":
         """There must be a union_mode
 
         This validator works as a guard on _coerce_union_mode to make
