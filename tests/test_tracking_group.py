@@ -370,9 +370,7 @@ def test_registering_same_class_twice_is_idempotent() -> None:
     group.register_model(A)  # second time
     group.register_model(A)  # third time
 
-    assert list(group.models.values()).count(A) == 1, (
-        "A should appear exactly once even after multiple registrations"
-    )
+    assert list(group.models.values()) == [A]
 
 
 def test_register_model_with_manual_field_ignores_generator() -> None:
@@ -383,10 +381,11 @@ def test_register_model_with_manual_field_ignores_generator() -> None:
         discriminator_value_generator=lambda cls: "GENERATED",
     )
 
-    @group.register()
     class A(pydantic.BaseModel):
         name: ty.Literal["MANUAL"] = "MANUAL"
         a: int
+
+    group.register_model(A)
 
     # The field default wins; generator is only called when field is absent
     assert "MANUAL" in group.models

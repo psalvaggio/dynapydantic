@@ -118,3 +118,21 @@ def test_single_member_union(kwargs: dict[str, ty.Any]) -> None:
         field: dynapydantic.Polymorphic[Base]
 
     assert Model(field={"a": 1}).field == A(a=1)
+    with pytest.raises(pydantic.ValidationError):
+        (Model(field={"a": "foo"}),)
+
+
+def test_polymorphic_with_no_registered_subclasses_raises() -> None:
+    """Making a union before any subclasses are registered raises aclear error"""
+
+    class EmptyBase(
+        dynapydantic.SubclassTrackingModel,
+        union_mode="left_to_right",
+    ):
+        pass
+
+    # No subclasses registered yet
+    with pytest.raises(dynapydantic.NoRegisteredTypesError):
+
+        class _M(pydantic.BaseModel):
+            val: dynapydantic.Polymorphic[EmptyBase]

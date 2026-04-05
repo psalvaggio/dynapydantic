@@ -155,24 +155,7 @@ def test_diamond_inheritance_no_duplicate_registration() -> None:
     class Concrete(Mixin, Mixin2):
         x: int
 
-    registered = Base.registered_subclasses()
-    assert list(registered.values()).count(Concrete) == 1
-
-
-def test_polymorphic_with_no_registered_subclasses_raises() -> None:
-    """Making a union any subclasses are registered should give a clear error"""
-
-    class EmptyBase(
-        dynapydantic.SubclassTrackingModel,
-        union_mode="left_to_right",
-    ):
-        pass
-
-    # No subclasses registered yet
-    with pytest.raises(dynapydantic.NoRegisteredTypesError):
-
-        class _M(pydantic.BaseModel):
-            val: dynapydantic.Polymorphic[EmptyBase]
+    assert list(Base.registered_subclasses().values()) == [Concrete]
 
 
 def test_tracking_config_classvar_takes_precedence_over_kwargs() -> None:
