@@ -32,21 +32,24 @@ def direct_children_of_base_in_mro(derived: type, base: type) -> list[type]:
 class SubclassTrackingModel(pydantic.BaseModel):
     """Subclass-tracking BaseModel
 
-    This will inject a TrackingGroup into your class and automate the
-    registration of subclasses.
+    This will inject a [`TrackingGroup`][dynapydantic.TrackingGroup] into your
+    class and automate the registration of subclasses.
 
     Inheriting from this class will augment your class with the following
     members functions:
-    1. registered_subclasses() -> dict[str, type[cls]]:
+
+    1. `registered_subclasses() -> dict[str, type[cls]]`:
         This will return a mapping of discriminator value to the corresponding
-        sublcass. See TrackingGroup.models for details.
-    2. union() -> typing.GenericAlias:
+        subclass. See
+        [`TrackingGroup.models`][dynapydantic.TrackingGroup.models] for details.
+    2. `union() -> typing.Any`:
         This will return an (optionally) annotated subclass union. See
-        TrackingGroup.union() for details.
-    3. load_plugins() -> None:
+        [`TrackingGroup.union()`][dynapydantic.TrackingGroup.union] for details.
+    3. `load_plugins() -> None`:
         If plugin_entry_point was specified, then this method will load plugin
         packages to discover additional subclasses. See
-        TrackingGroup.load_plugins for more details.
+        [`TrackingGroup.load_plugins()`][dynapydantic.TrackingGroup.load_plugins]
+        for more details.
     """
 
     def __init_subclass__(cls, *args, **kwargs) -> None:
@@ -109,17 +112,25 @@ class SubclassTrackingModel(pydantic.BaseModel):
 
                 cls.load_plugins = staticmethod(_load_plugins)
 
-            def _union(*, annotated: bool = True) -> ty.GenericAlias:
+            def _union(
+                *,
+                plain: bool | None = None,
+                annotated: bool | None = None,
+            ) -> ty.Any:  # noqa: ANN401 - return type is runtime-determined
                 """Get the union of all tracked subclasses
 
                 Parameters
                 ----------
+                plain
+                    If set to `True`, a plain union of all members will be returned.
+                    Otherwise, the returned union will be annotated in accordance with
+                    the union mode.
                 annotated
-                    Whether this should be an annotated union for usage as a
-                    pydantic field annotation, or a plain typing.Union for a
-                    regular type annotation.
+                    Deprecated. Use `plain=True` when you would have used
+                    `annotated=False`.
                 """
-                return cls.__DYNAPYDANTIC__.union(annotated=annotated)
+                # deprecation warning for annotated is in TrackingGroup
+                return cls.__DYNAPYDANTIC__.union(plain=plain, annotated=annotated)
 
             cls.union = staticmethod(_union)
 

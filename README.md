@@ -58,9 +58,12 @@ Model(val=Base())
 Pydantic provides a solution for serialization via `serialize_as_any` (and
 its corresponding field annotation `SerializeAsAny`), but offers no native
 solution for the validation half. Currently, the canonical way of doing this
-is to annotate the field as a discriminated union of all subclasses. Often, a
-single field in the model is chosen as the "discriminator". This library,
-`dynapydantic`, automates this process.
+is to annotate the field as a union of all subclasses. Often, a single field
+in the model is chosen as the "discriminator" in a
+[discriminated union](https://docs.pydantic.dev/latest/concepts/unions/#discriminated-unions).
+The discriminated pattern is the most robust way to do this, as it eliminates
+ambiguity between the union members. This library, `dynapydantic`, automates
+this process.
 
 Let's reframe the above problem with `dynapydantic`:
 ```python
@@ -93,7 +96,6 @@ Model(val=A(field=1, name='A'))
 >>> Model.model_validate(m.model_dump())
 Model(val=A(field=1, name='A')
 ```
-
 
 ## How it works
 
@@ -131,7 +133,7 @@ print(Model(field={"name": "B", "a": 5})) # field=B(name='B', a=5)
 
 The `union()` method produces a [discriminated union](https://docs.pydantic.dev/latest/concepts/unions/#discriminated-unions)
 of all registered `pydantic.BaseModel` subclasses. It also accepts an
-`annotated=False` keyword argument to produce a plain `typing.Union` for use
+`plain=True` keyword argument to produce a plain `UnionType` for use
 in type annotations, but since this is a runtime-computed union, this will not
 work with static type checkers. This union is based on a discriminator field,
 which was configured by the `discriminator_field` argument to `TrackingGroup`.
@@ -210,3 +212,48 @@ were defined *prior* to defining the model that uses `dynapydantic.Polymorphic`
 (`Model` in the above example). If you declare additional subclasses afterwards,
 you must call `.model_rebuild(force=True)` on the model that uses the subclass
 union.
+
+### Alternative union methods
+!!! warning "Caution"
+
+    `dynapydantic` does **NOT** test if your models have ambiguities in them.
+    This is up to **YOU**.
+
+    Non-discriminated unions should only be used when you can **PROVE** that all
+    possible subclasses will parse unambiguously. If there is ambiguity in the
+    models, you can get unexpected results. If plugins are used, it is highly
+    discouraged to use anything besides discriminated unions.
+
+While the default discriminated union is the recommended and most robust
+approach, it does require a field in the model to act as the discriminator. If
+the full list of union members is known to the author ahead of time and can be
+proven to be unambiguous from a validation perspective, then the discriminator
+field can be omitted and a
+[`"smart"`](https://docs.pydantic.dev/latest/concepts/unions/#smart-mode) or
+[`"left_to_right"`](https://docs.pydantic.dev/latest/concepts/unions/#left-to-right-mode)
+union may be used. `TrackingGroup` and `SubclassTrackingModel` support these
+modes as well via the `union_mode` argument:
+```python
+import typing as ty
+
+import dynapydantic
+import pydantic
+
+class Base(
+    dynapydantic.SubclassTrackingModel,
+    union_mode="smart",
+):
+    """dynapydantic.Polymorphic[Base] will be a "smart" A | B"""
+
+class A(Base):
+    a: int
+
+class B(Base):
+    b: int
+
+class Model(pydantic.BaseModel):
+    field: dynapydantic.Polymorphic[Base]
+
+print(Model(field={"b": 5}))
+# field=B(b=5)
+```
