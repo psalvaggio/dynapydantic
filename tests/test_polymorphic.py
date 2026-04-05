@@ -119,7 +119,7 @@ def test_single_member_union(kwargs: dict[str, ty.Any]) -> None:
 
     assert Model(field={"a": 1}).field == A(a=1)
     with pytest.raises(pydantic.ValidationError):
-        (Model(field={"a": "foo"}),)
+        Model(field={"a": "foo"})
 
 
 def test_polymorphic_with_no_registered_subclasses_raises() -> None:

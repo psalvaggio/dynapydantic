@@ -322,6 +322,16 @@ class TrackingGroup(pydantic.BaseModel):
         NoRegisteredTypesError
             If no types have been registered yet.
         """
+        n = len(self.models)
+        if n == 0:
+            msg = (
+                "Unable to produce a union from the tracking group "
+                f'"{self.name}", as no types have been registered yet.'
+            )
+            raise NoRegisteredTypesError(msg)
+        if n == 1:
+            return next(iter(self.models.values()))
+
         if annotated is not None:
             warnings.warn(
                 "The `annotated` parameter is deprecated. Use `plain=True` to "

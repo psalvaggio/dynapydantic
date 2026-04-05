@@ -413,6 +413,7 @@ def test_register_model_with_manual_field_ignores_generator() -> None:
         discriminator_value_generator=lambda cls: "GENERATED",
     )
 
+    @group.register()
     class A(pydantic.BaseModel):
         name: ty.Literal["MANUAL"] = "MANUAL"
         a: int
