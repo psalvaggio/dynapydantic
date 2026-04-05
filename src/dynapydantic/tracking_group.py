@@ -305,6 +305,16 @@ class TrackingGroup(pydantic.BaseModel):
         NoRegisteredTypesError
             If no types have been registered yet.
         """
+        if annotated is not None:
+            warnings.warn(
+                "The `annotated` parameter is deprecated. Use `plain=True` to "
+                "get a plain union. By default, behavior is governed by "
+                "`union_mode`. Will be removed in a future version.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            plain = True if not annotated else plain
+
         n = len(self.models)
         if n == 0:
             msg = (
@@ -314,16 +324,6 @@ class TrackingGroup(pydantic.BaseModel):
             raise NoRegisteredTypesError(msg)
         if n == 1:
             return next(iter(self.models.values()))
-
-        if annotated is not None:
-            warnings.warn(
-                "The `annotated` parameter is deprectated. Use `plain=True` to "
-                "get a plain union. By default, behavior is governed by "
-                "`union_mode`. Will be removed in a future version.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            plain = True if not annotated else plain
 
         union_mode = "smart" if plain else self.union_mode
 
