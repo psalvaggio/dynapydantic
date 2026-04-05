@@ -4,6 +4,7 @@ from .exceptions import (
     AmbiguousDiscriminatorValueError,
     ConfigurationError,
     Error,
+    NoRegisteredTypesError,
     RegistrationError,
 )
 from .polymorphic import Polymorphic
@@ -16,6 +17,7 @@ __all__ = [
     "ConfigurationError",
     "DiscriminatedConfig",
     "Error",
+    "NoRegisteredTypesError",
     "Polymorphic",
     "RegistrationError",
     "SubclassTrackingModel",

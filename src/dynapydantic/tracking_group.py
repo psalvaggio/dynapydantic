@@ -10,7 +10,11 @@ import pydantic
 import pydantic.fields
 import pydantic_core
 
-from .exceptions import AmbiguousDiscriminatorValueError, RegistrationError
+from .exceptions import (
+    AmbiguousDiscriminatorValueError,
+    NoRegisteredTypesError,
+    RegistrationError,
+)
 from .union_mode import DiscriminatedConfig, UnionMode
 
 
@@ -288,16 +292,38 @@ class TrackingGroup(pydantic.BaseModel):
         annotated
             Deprecated. Use `plain=True` when you would have used
             `annotated=False`.
+
+        Returns
+        -------
+        Any
+            If there is 1 registered type, the type itself. If there is > 1, a
+            union of all registered types. This union may be annotated if
+            `plain` is not `True`.
+
+        Raises
+        ------
+        NoRegisteredTypesError
+            If no types have been registered yet.
         """
         if annotated is not None:
             warnings.warn(
-                "The `annotated` parameter is deprectated. Use `plain=True` to "
+                "The `annotated` parameter is deprecated. Use `plain=True` to "
                 "get a plain union. By default, behavior is governed by "
                 "`union_mode`. Will be removed in a future version.",
                 DeprecationWarning,
                 stacklevel=2,
             )
             plain = True if not annotated else plain
+
+        n = len(self.models)
+        if n == 0:
+            msg = (
+                "Unable to produce a union from the tracking group "
+                f'"{self.name}", as no types have been registered yet.'
+            )
+            raise NoRegisteredTypesError(msg)
+        if n == 1:
+            return next(iter(self.models.values()))
 
         union_mode = "smart" if plain else self.union_mode
 

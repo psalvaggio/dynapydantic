@@ -114,3 +114,65 @@ def test_invalid_union_modes() -> None:
 
         class Base(dynapydantic.SubclassTrackingModel, union_mode="foo"):
             pass
+
+
+def test_three_level_subclass_hierarchy() -> None:
+    """Concrete grandchild should register in the base's TrackingGroup."""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        discriminator_field="name",
+        discriminator_value_generator=lambda cls: cls.__name__,
+    ):
+        pass
+
+    class Intermediate(Base, exclude_from_union=True):
+        pass
+
+    class Concrete(Intermediate):
+        x: int
+
+    assert "Concrete" in Base.registered_subclasses()
+    assert "Intermediate" not in Base.registered_subclasses()
+
+
+def test_diamond_inheritance_no_duplicate_registration() -> None:
+    """A class that appears twice in the MRO should only be registered once."""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        discriminator_field="name",
+        discriminator_value_generator=lambda cls: cls.__name__,
+    ):
+        pass
+
+    class Mixin(Base, exclude_from_union=True):
+        pass
+
+    class Mixin2(Base, exclude_from_union=True):
+        pass
+
+    class Concrete(Mixin, Mixin2):
+        x: int
+
+    assert list(Base.registered_subclasses().values()) == [Concrete]
+
+
+def test_tracking_config_classvar_takes_precedence_over_kwargs() -> None:
+    """tracking_config should take priority over class kwargs"""
+    tc = dynapydantic.TrackingGroup(
+        name="explicit-config",
+        discriminator_field="kind",
+        discriminator_value_generator=lambda cls: cls.__name__,
+    )
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        discriminator_field="IGNORED",  # should be silently ignored
+    ):
+        tracking_config: ty.ClassVar[dynapydantic.TrackingGroup] = tc
+
+    class A(Base):
+        pass
+
+    assert A().model_dump() == {"kind": "A"}
