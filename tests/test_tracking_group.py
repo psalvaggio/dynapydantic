@@ -341,3 +341,94 @@ def test_that_load_plugins_doesnt_raise_on_no_entrypoint() -> None:
     """load_plugins() should be a noop in this case"""
     group = dynapydantic.TrackingGroup(name="Test", discriminator_field="type")
     group.load_plugins()
+
+
+def test_tracking_group_models_default_is_not_shared() -> None:
+    """Each TrackingGroup should have its own independent models dict."""
+    g1 = dynapydantic.TrackingGroup(name="G1", discriminator_field="t")
+    g2 = dynapydantic.TrackingGroup(name="G2", discriminator_field="t")
+
+    @g1.register("A")
+    class A(pydantic.BaseModel):
+        pass
+
+    assert "A" not in g2.models, "g2.models should be independent from g1.models"
+
+
+def test_registering_same_class_twice_is_idempotent() -> None:
+    """Registering the same class twice should not raise or duplicate."""
+    group = dynapydantic.TrackingGroup(
+        name="Test",
+        discriminator_field="name",
+        discriminator_value_generator=lambda cls: cls.__name__,
+    )
+
+    @group.register()
+    class A(pydantic.BaseModel):
+        a: int
+
+    group.register_model(A)  # second time
+    group.register_model(A)  # third time
+
+    assert list(group.models.values()).count(A) == 1, (
+        "A should appear exactly once even after multiple registrations"
+    )
+
+
+def test_register_model_with_manual_field_ignores_generator() -> None:
+    """register_model uses the field default even if generator would differ."""
+    group = dynapydantic.TrackingGroup(
+        name="Test",
+        discriminator_field="name",
+        discriminator_value_generator=lambda cls: "GENERATED",
+    )
+
+    @group.register()
+    class A(pydantic.BaseModel):
+        name: ty.Literal["MANUAL"] = "MANUAL"
+        a: int
+
+    # The field default wins; generator is only called when field is absent
+    assert "MANUAL" in group.models
+    assert "GENERATED" not in group.models
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        pytest.param({"union_mode": "smart"}, id="smart"),
+        pytest.param({"union_mode": "left_to_right"}, id="l2r"),
+        pytest.param(
+            {
+                "discriminator_field": "name",
+                "discriminator_value_generator": lambda cls: cls.__name__,
+            },
+            id="disc",
+        ),
+    ],
+)
+def test_single_member_union(kwargs: dict[str, ty.Any]) -> None:
+    """Test out a single-member union"""
+    group = dynapydantic.TrackingGroup(name="Test", **kwargs)
+
+    @group.register()
+    class A(pydantic.BaseModel):
+        a: int
+
+    assert group.union() is A
+
+
+def test_discriminator_injection_into_frozen_model() -> None:
+    """Injecting a discriminator field into a frozen model should work"""
+    group = dynapydantic.TrackingGroup(
+        name="Test",
+        discriminator_field="type",
+        discriminator_value_generator=lambda cls: cls.__name__,
+    )
+
+    @group.register()
+    class A(pydantic.BaseModel, frozen=True):
+        a: int
+
+    instance = A(a=1)
+    assert instance.model_dump()["type"] == "A"

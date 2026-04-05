@@ -15,3 +15,7 @@ class AmbiguousDiscriminatorValueError(Error):
 
 class ConfigurationError(Error):
     """Occurs when the user misconfigured a tracking setup"""
+
+
+class NoRegisteredTypesError(Error):
+    """Occurs when a union is requested from a tracking group with no members"""

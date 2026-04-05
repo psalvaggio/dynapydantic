@@ -1,6 +1,7 @@
 """Unit test for Polymorphic"""
 
 import json
+import typing as ty
 
 import pydantic
 import pytest
@@ -86,3 +87,34 @@ def test_polymorphic_with_other_type() -> None:
 
         class _Model(pydantic.BaseModel):
             field: dynapydantic.Polymorphic[5]  # type: ignore[bad-specialization]
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        pytest.param({"union_mode": "smart"}, id="smart"),
+        pytest.param({"union_mode": "left_to_right"}, id="l2r"),
+        pytest.param(
+            {
+                "discriminator_field": "name",
+                "discriminator_value_generator": lambda cls: cls.__name__,
+            },
+            id="disc",
+        ),
+    ],
+)
+def test_single_member_union(kwargs: dict[str, ty.Any]) -> None:
+    """Test out a single-member union"""
+
+    class Base(dynapydantic.SubclassTrackingModel):
+        tracking_config: ty.ClassVar[dynapydantic.TrackingGroup] = (
+            dynapydantic.TrackingGroup(name="test", **kwargs)
+        )
+
+    class A(Base):
+        a: int
+
+    class Model(pydantic.BaseModel):
+        field: dynapydantic.Polymorphic[Base]
+
+    assert Model(field={"a": 1}).field == A(a=1)
