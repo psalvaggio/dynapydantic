@@ -119,7 +119,7 @@ def test_single_member_union(kwargs: dict[str, ty.Any]) -> None:
 
     assert Model(field={"a": 1}).field == A(a=1)
     with pytest.raises(pydantic.ValidationError):
-        (Model(field={"a": "foo"}),)
+        Model(field={"a": "foo"})
 
 
 def test_polymorphic_with_no_registered_subclasses_raises() -> None:
@@ -136,3 +136,98 @@ def test_polymorphic_with_no_registered_subclasses_raises() -> None:
 
         class _M(pydantic.BaseModel):
             val: dynapydantic.Polymorphic[EmptyBase]
+
+
+def test_polymorphic_model_copy_update() -> None:
+    """model_copy(update=) with a Polymorphic field should preserve the type."""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        discriminator_field="name",
+        discriminator_value_generator=lambda cls: cls.__name__,
+    ):
+        pass
+
+    class A(Base):
+        a: int
+
+    class B(Base):
+        b: int
+
+    class Outer(pydantic.BaseModel):
+        val: dynapydantic.Polymorphic[Base]
+
+    m = Outer(val=A(a=1))
+    m2 = m.model_copy(update={"val": B(b=99)})  # bypasses validation
+    assert isinstance(m2.val, B)
+    assert m2.val == B(b=99)
+
+
+def test_polymorphic_json_schema_discriminated_union() -> None:
+    """Test the JSON schema for a Polymorphic discriminated union."""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        discriminator_field="kind",
+        discriminator_value_generator=lambda cls: cls.__name__,
+    ):
+        pass
+
+    class A(Base):
+        a: int
+
+    class B(Base):
+        b: str
+
+    class Outer(pydantic.BaseModel):
+        val: dynapydantic.Polymorphic[Base]
+
+    schema = Outer.model_json_schema()
+    assert "discriminator" in schema["properties"]["val"]
+    assert "A" in schema["properties"]["val"]["discriminator"]["mapping"]
+    assert "B" in schema["properties"]["val"]["discriminator"]["mapping"]
+
+
+@pytest.mark.parametrize("union_mode", ["smart", "left_to_right"])
+def test_polymorphic_json_schema_smart_union(union_mode: str) -> None:
+    """Test the JSON schema for a Polymorphic smart union."""
+
+    class Base(dynapydantic.SubclassTrackingModel, union_mode=union_mode):
+        pass
+
+    class A(Base):
+        a: int
+
+    class B(Base):
+        b: str
+
+    class Outer(pydantic.BaseModel):
+        val: dynapydantic.Polymorphic[Base]
+
+    schema = Outer.model_json_schema()
+    assert "anyOf" in schema["properties"]["val"]
+    assert {"$ref": "#/$defs/A"} in schema["properties"]["val"]["anyOf"]
+    assert {"$ref": "#/$defs/B"} in schema["properties"]["val"]["anyOf"]
+
+
+def test_polymorphic_strict_validation() -> None:
+    """Strict mode should still route correctly via the discriminator."""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        discriminator_field="name",
+        discriminator_value_generator=lambda cls: cls.__name__,
+    ):
+        pass
+
+    class A(Base):
+        a: int
+
+    class Outer(pydantic.BaseModel):
+        val: dynapydantic.Polymorphic[Base]
+
+    result = Outer.model_validate({"val": {"name": "A", "a": 1}}, strict=True)
+    assert result.val == A(a=1)
+
+    with pytest.raises(pydantic.ValidationError):
+        Outer.model_validate({"val": {"name": "A", "a": "1"}}, strict=True)
