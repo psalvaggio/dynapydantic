@@ -191,26 +191,32 @@ class TrackingGroup(pydantic.BaseModel):
             if callable(plugin):
                 plugin()
 
+    @ty.overload
+    def register(self, value: str | None = None) -> ty.Callable[[type], type]: ...
+
+    @ty.overload
+    def register(self, value: type[pydantic.BaseModel]) -> type[pydantic.BaseModel]: ...
+
     def register(
         self,
-        discriminator_value: str | type[pydantic.BaseModel] | None = None,
+        value: str | type[pydantic.BaseModel] | None = None,
     ) -> ty.Callable[[type], type] | type[pydantic.BaseModel]:
         """Register a model into this group (decorator)
 
         Parameters
         ----------
-        discriminator_value
+        value
             Value for the discriminator field. If not given, then
             discriminator_value_generator must be non-None or the
             discriminator field must be declared by hand. Can also be the type
             itself to register (if the ()'s are omitted from the decorator).
         """
-        if isinstance(discriminator_value, type):
-            self.register_model(discriminator_value)
-            return discriminator_value
+        if isinstance(value, type):
+            self.register_model(value)
+            return value
 
         def _wrapper(cls: type[pydantic.BaseModel]) -> type[pydantic.BaseModel]:
-            self.register_model(cls, ty.cast("str | None", discriminator_value))
+            self.register_model(cls, ty.cast("str | None", value))
             return cls
 
         return _wrapper
@@ -226,6 +232,10 @@ class TrackingGroup(pydantic.BaseModel):
         ----------
         cls
             The model to register
+        discriminator_value
+            Value for the discriminator field. If not given, then
+            discriminator_value_generator must be non-None or the
+            discriminator field must be declared by hand.
         """
         if discriminator_value is not None and not isinstance(discriminator_value, str):
             msg = (
@@ -259,7 +269,7 @@ class TrackingGroup(pydantic.BaseModel):
                         f"unable to determine a discriminator value for "
                         f'{cls.__name__} in tracking group "{self.name}". '
                         "No value was passed, discriminator_value_generator "
-                        'was None and the "{disc}" field was not defined.'
+                        f'was None and the "{disc}" field was not defined.'
                     )
                     raise RegistrationError(msg)
             elif ty.get_origin(field.annotation) is not ty.Literal:

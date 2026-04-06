@@ -159,6 +159,7 @@ def test_polymorphic_model_copy_update() -> None:
 
     m = Outer(val=A(a=1))
     m2 = m.model_copy(update={"val": B(b=99)})  # bypasses validation
+    assert isinstance(m2.val, B)
     assert m2.val == B(b=99)
 
 
@@ -227,3 +228,6 @@ def test_polymorphic_strict_validation() -> None:
 
     result = Outer.model_validate({"val": {"name": "A", "a": 1}}, strict=True)
     assert result.val == A(a=1)
+
+    with pytest.raises(pydantic.ValidationError):
+        Outer.model_validate({"val": {"name": "A", "a": "1"}}, strict=True)
