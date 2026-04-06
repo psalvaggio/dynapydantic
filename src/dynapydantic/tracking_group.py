@@ -34,6 +34,15 @@ def _inject_discriminator_field(
     value
         Value of the discriminator field
     """
+    if hasattr(cls, disc_field):
+        msg = (
+            f'Cannot inject discriminator field "{disc_field}" into '
+            f"{cls.__name__}: an attribute with that name already exists. "
+            "Rename either the attribute or the discriminator_field to avoid "
+            "the conflict."
+        )
+        raise RegistrationError(msg)
+
     cls.model_fields[disc_field] = pydantic.fields.FieldInfo(
         default=value,
         annotation=ty.Literal[value],  # type: ignore[not-a-type]
@@ -184,8 +193,8 @@ class TrackingGroup(pydantic.BaseModel):
 
     def register(
         self,
-        discriminator_value: str | None = None,
-    ) -> ty.Callable[[type], type]:
+        discriminator_value: str | type[pydantic.BaseModel] | None = None,
+    ) -> ty.Callable[[type], type] | type[pydantic.BaseModel]:
         """Register a model into this group (decorator)
 
         Parameters
@@ -193,60 +202,24 @@ class TrackingGroup(pydantic.BaseModel):
         discriminator_value
             Value for the discriminator field. If not given, then
             discriminator_value_generator must be non-None or the
-            discriminator field must be declared by hand.
+            discriminator field must be declared by hand. Can also be the type
+            itself to register (if the ()'s are omitted from the decorator).
         """
+        if isinstance(discriminator_value, type):
+            self.register_model(discriminator_value)
+            return discriminator_value
 
         def _wrapper(cls: type[pydantic.BaseModel]) -> type[pydantic.BaseModel]:
-            if (dm := self._discriminated) is not None:
-                disc = dm.discriminator_field
-                field = cls.model_fields.get(disc)
-
-                if field is None:
-                    if discriminator_value is not None:
-                        _inject_discriminator_field(cls, disc, discriminator_value)
-                    elif dm.discriminator_value_generator is not None:
-                        _inject_discriminator_field(
-                            cls,
-                            disc,
-                            dm.discriminator_value_generator(cls),
-                        )
-                    else:
-                        msg = (
-                            f"unable to determine a discriminator value for "
-                            f'{cls.__name__} in tracking group "{self.name}". '
-                            "No value was passed to register(), "
-                            "discriminator_value_generator was None and the "
-                            f'"{disc}" field was not defined.'
-                        )
-                        raise RegistrationError(msg)
-                elif (
-                    discriminator_value is not None
-                    and field.default != discriminator_value
-                ):
-                    msg = (
-                        f"the discriminator value for {cls.__name__} was "
-                        f'ambiguous, it was set to "{discriminator_value}" via '
-                        f'register() and "{field.default}" via the '
-                        f"discriminator field ({disc})."
-                    )
-                    raise AmbiguousDiscriminatorValueError(msg)
-
-                self._register_with_discriminator_field(cls)
-            else:
-                if discriminator_value is not None:
-                    warnings.warn(
-                        f"discriminator_value={discriminator_value} was passed "
-                        f'to register() but union_mode="{self.union_mode}" '
-                        "does not use a discriminator. The value will be "
-                        "ignored.",
-                        stacklevel=2,
-                    )
-                self._register_plain(cls)
+            self.register_model(cls, ty.cast("str | None", discriminator_value))
             return cls
 
         return _wrapper
 
-    def register_model(self, cls: type[pydantic.BaseModel]) -> None:
+    def register_model(
+        self,
+        cls: type[pydantic.BaseModel],
+        discriminator_value: str | None = None,
+    ) -> None:
         """Register the given model into this group
 
         Parameters
@@ -254,10 +227,28 @@ class TrackingGroup(pydantic.BaseModel):
         cls
             The model to register
         """
+        if discriminator_value is not None and not isinstance(discriminator_value, str):
+            msg = (
+                "discriminator_value must be a str if given, was "
+                f"{type(discriminator_value).__name__}"
+            )
+            raise RegistrationError(msg)
+
+        if not isinstance(cls, type) or not issubclass(cls, pydantic.BaseModel):
+            msg = (
+                "only pydantic BaseModel subclasses can be registered in a "
+                f"TrackingGroup. Got {cls}, which was not."
+            )
+            raise RegistrationError(msg)
+
         if (dm := self._discriminated) is not None:
             disc = dm.discriminator_field
-            if cls.model_fields.get(disc) is None:
-                if dm.discriminator_value_generator is not None:
+            field = cls.model_fields.get(disc)
+
+            if field is None:
+                if discriminator_value is not None:
+                    _inject_discriminator_field(cls, disc, discriminator_value)
+                elif dm.discriminator_value_generator is not None:
                     _inject_discriminator_field(
                         cls,
                         disc,
@@ -266,13 +257,39 @@ class TrackingGroup(pydantic.BaseModel):
                 else:
                     msg = (
                         f"unable to determine a discriminator value for "
-                        f'{cls.__name__} in tracking group "{self.name}", '
-                        "discriminator_value_generator was None and the "
-                        f'"{disc}" field was not defined.'
+                        f'{cls.__name__} in tracking group "{self.name}". '
+                        "No value was passed, discriminator_value_generator "
+                        'was None and the "{disc}" field was not defined.'
                     )
                     raise RegistrationError(msg)
+            elif ty.get_origin(field.annotation) is not ty.Literal:
+                msg = (
+                    f'the discriminator field "{disc}" already existed in '
+                    f"{cls.__name__}, but its type annotation was "
+                    f"{field.annotation}, not Literal."
+                )
+                raise RegistrationError(msg)
+            elif (
+                discriminator_value is not None and field.default != discriminator_value
+            ):
+                msg = (
+                    f"the discriminator value for {cls.__name__} was "
+                    f'ambiguous, the passed value was "{discriminator_value}" '
+                    f' and "{field.default}" via the discriminator '
+                    f"field ({disc})."
+                )
+                raise AmbiguousDiscriminatorValueError(msg)
+
             self._register_with_discriminator_field(cls)
         else:
+            if discriminator_value is not None:
+                warnings.warn(
+                    f'A discriminator_value of "{discriminator_value}" was '
+                    f"explicitly passed for {cls.__name__}, but "
+                    f'union_mode="{self.union_mode}" does not use a '
+                    "discriminator. The value will be ignored.",
+                    stacklevel=2,
+                )
             self._register_plain(cls)
 
     def union(
@@ -360,6 +377,12 @@ class TrackingGroup(pydantic.BaseModel):
             msg = (
                 f"{cls.__name__}.{disc} had no default value, it must "
                 "have one which is unique among all tracked models."
+            )
+            raise RegistrationError(msg)
+        if not isinstance(value, str):
+            msg = (
+                f"{cls.__name__}.{disc} had a default value of {value}, which "
+                f"was of type {type(value).__name__}, not str."
             )
             raise RegistrationError(msg)
 

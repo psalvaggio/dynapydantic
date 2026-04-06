@@ -1,5 +1,6 @@
 """Unit test for SubclassTrackingModel"""
 
+import datetime
 import typing as ty
 
 import pydantic
@@ -176,3 +177,59 @@ def test_tracking_config_classvar_takes_precedence_over_kwargs() -> None:
         pass
 
     assert A().model_dump() == {"kind": "A"}
+
+
+def test_subclass_tracking_with_frozen_base() -> None:
+    """A frozen SubclassTrackingModel base should still register subclasses."""
+
+    class FrozenBase(
+        dynapydantic.SubclassTrackingModel,
+        discriminator_field="tag",
+        discriminator_value_generator=lambda cls: cls.__name__,
+        frozen=True,
+    ):
+        pass
+
+    class Child(FrozenBase):
+        x: int
+
+    class Child2(FrozenBase):
+        y: int
+
+    assert "Child" in FrozenBase.registered_subclasses()
+    assert "Child2" in FrozenBase.registered_subclasses()
+
+    c = Child(x=5)
+    assert c.model_dump() == {"tag": "Child", "x": 5}
+    with pytest.raises(pydantic.ValidationError):
+        c.x = 10  # type: ignore[read-only]
+
+
+def test_polymorphic_model_dump_json_mode() -> None:
+    """model_dump(mode='json') should propagate through our unions"""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        discriminator_field="name",
+        discriminator_value_generator=lambda cls: cls.__name__,
+    ):
+        pass
+
+    class A(Base):
+        a: int
+        created_at: datetime.datetime
+
+    class B(Base):
+        b: int
+
+    class Outer(pydantic.BaseModel):
+        val: dynapydantic.Polymorphic[Base]
+
+    m = Outer(
+        val=A(
+            a=1, created_at=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc)
+        )
+    )
+    dumped = m.model_dump(mode="json")
+    assert dumped["val"]["created_at"] == "2024-01-01T00:00:00Z"
+    assert dumped["val"]["a"] == 1
