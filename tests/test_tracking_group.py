@@ -5,6 +5,7 @@ from unittest import mock
 
 import pydantic
 import pytest
+from pydantic_core._pydantic_core import ValidationError
 
 import dynapydantic
 
@@ -595,3 +596,43 @@ def test_field_clobbering_not_allowed() -> None:
         ),
     ):
         group.register_model(C)
+
+
+def test_type_adapter() -> None:
+    """Test functionality of the type adapter"""
+    group = dynapydantic.TrackingGroup(
+        name="Test",
+        discriminator_field="name",
+        discriminator_value_generator=lambda cls: cls.__name__,
+    )
+
+    with pytest.raises(dynapydantic.NoRegisteredTypesError):
+        group.type_adapter  # noqa: B018
+
+    @group.register
+    class A(pydantic.BaseModel):
+        a: int
+
+    # Should be able to be computed after a class is registered. Should not
+    # recompute.
+    ta1 = group.type_adapter
+    assert isinstance(ta1, pydantic.TypeAdapter)
+    ta2 = group.type_adapter
+    assert ta1 is ta2
+
+    assert ta1.validate_python({"name": "A", "a": 1}) == A(a=1)
+
+    @group.register
+    class B(pydantic.BaseModel):
+        b: int
+
+    ta3 = group.type_adapter
+    assert isinstance(ta3, pydantic.TypeAdapter)
+    assert ta3 is not ta1
+    ta4 = group.type_adapter
+    assert ta3 is ta4
+
+    assert ta3.validate_python({"name": "A", "a": 1}) == A(a=1)
+    assert ta3.validate_python({"name": "B", "b": 3}) == B(b=3)
+    with pytest.raises(ValidationError, match=r"(?s)A\.a.*required"):
+        ta3.validate_python({"name": "A"})

@@ -67,8 +67,14 @@ class SubclassTrackingModel(pydantic.BaseModel):
             },
         )
 
+    # This method is too complex, here's the plan to simplify it:
+    # We're polluting this models attributes by injecting and forwarding methods
+    # from tracking group. As a result, we're limiting the possible field names
+    # that these models can have. These should be free functions. We're going
+    # to deprecate the methods to give people a release cycle to migrate off.
+    # We should be able to remove the noqa after these are removed.
     @classmethod
-    def __pydantic_init_subclass__(  # noqa: C901 (fix this!)
+    def __pydantic_init_subclass__(  # noqa: C901
         cls,
         *args,
         exclude_from_union: bool | None = None,
@@ -88,10 +94,6 @@ class SubclassTrackingModel(pydantic.BaseModel):
             )
 
             cls.__DYNAPYDANTIC_IMPLICIT_POLYMORPHIC__ = implicit_polymorphic
-            cls.__DYNAPYDANTIC_SCHEMA_GENERATION__: ty.ClassVar[int] = -1
-            cls.__DYNAPYDANTIC_ADAPTER__: ty.ClassVar[pydantic.TypeAdapter | None] = (
-                None
-            )
 
             if isinstance((tc := getattr(cls, "tracking_config", None)), TrackingGroup):
                 cls.__DYNAPYDANTIC__ = tc
@@ -162,7 +164,7 @@ class SubclassTrackingModel(pydantic.BaseModel):
                     source_type = _assert_stm_subclass(source_type)
 
                     def _validate(value: ty.Any) -> ty.Any:  # noqa: ANN401
-                        return _ensure_adapter(source_type).validate_python(value)
+                        return _get_adapter(source_type).validate_python(value)
 
                     def _serialize(
                         value: pydantic.BaseModel,
@@ -191,7 +193,7 @@ class SubclassTrackingModel(pydantic.BaseModel):
                 ) -> JsonSchemaValue:
                     if SubclassTrackingModel not in cls.__bases__:
                         return handler(core_schema)
-                    return handler(_ensure_adapter(cls).core_schema)
+                    return handler(_get_adapter(cls).core_schema)
 
                 cls.__get_pydantic_json_schema__ = classmethod(_gpjs)  # type: ignore[bad-assignment]
 
@@ -234,19 +236,11 @@ def _assert_stm_subclass(
     return t
 
 
-def _ensure_adapter(
+def _get_adapter(
     source_type: type[SubclassTrackingModel],
 ) -> pydantic.TypeAdapter:
-    group = source_type.__DYNAPYDANTIC__
-    if group.generation != source_type.__DYNAPYDANTIC_SCHEMA_GENERATION__:
-        try:
-            source_type.__DYNAPYDANTIC_ADAPTER__ = pydantic.TypeAdapter(group.union())
-        except Error as e:
-            err_t = "dynapydantic_error"
-            raise PydanticCustomError(err_t, "{e}", {"e": str(e)}) from e
-        source_type.__DYNAPYDANTIC_SCHEMA_GENERATION__ = group.generation
-
-    # casting because the if statement ensures it is non-None (because
-    # __DYNAPYDANTIC_SCHEMA_GENERATION__ starts at -1 and generation
-    # increments from 0.
-    return ty.cast("pydantic.TypeAdapter", source_type.__DYNAPYDANTIC_ADAPTER__)
+    try:
+        return source_type.__DYNAPYDANTIC__.type_adapter
+    except Error as e:
+        err_t = "dynapydantic_error"
+        raise PydanticCustomError(err_t, "{e}", {"e": str(e)}) from e

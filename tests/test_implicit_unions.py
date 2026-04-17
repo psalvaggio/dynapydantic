@@ -1,13 +1,6 @@
-"""TDD tests for lazy subclass union validation (Option B).
+"""Tests for the implicit_polymorphic option on SubclassTrackingModel"""
 
-The goal is to make ``Base``-typed fields on containing models dispatch to
-registered subclasses *without* requiring ``dynapydantic.Polymorphic``.
-Validation must pick up newly registered subclasses at call time, not at
-schema-build time.
-
-These tests are written against the *desired* behaviour and will all fail
-until Option B is implemented.
-"""
+import datetime
 
 import pydantic
 import pytest
@@ -149,111 +142,7 @@ def test_generation_advances_on_each_new_registration() -> None:
 
 
 # ===========================================================================
-# 3.  Caching — the TypeAdapter is not rebuilt on every validation call
-# ===========================================================================
-
-
-def test_adapter_cached_between_calls_when_no_new_subclasses() -> None:
-    """Repeated validation reuses the cached adapter (same object identity)."""
-    base = _make_discriminated_base()
-
-    class Child(base):
-        v: int
-
-    class Container(pydantic.BaseModel):
-        item: base
-
-    Container.model_validate({"item": {"kind": "Child", "v": 1}})
-    adapter_after_first = base.__DYNAPYDANTIC_ADAPTER__
-
-    Container.model_validate({"item": {"kind": "Child", "v": 2}})
-    adapter_after_second = base.__DYNAPYDANTIC_ADAPTER__
-
-    assert adapter_after_first is adapter_after_second
-
-
-def test_adapter_replaced_after_new_subclass_registered() -> None:
-    """Adding a subclass causes the adapter to be rebuilt on next validation."""
-    base = _make_discriminated_base()
-
-    class EarlyChild(base):
-        v: int
-
-    class Container(pydantic.BaseModel):
-        item: base
-
-    Container.model_validate({"item": {"kind": "EarlyChild", "v": 0}})
-    adapter_before = base.__DYNAPYDANTIC_ADAPTER__
-
-    class LateChild(base):
-        w: str
-
-    Container.model_validate({"item": {"kind": "LateChild", "w": "hi"}})
-    adapter_after = base.__DYNAPYDANTIC_ADAPTER__
-
-    assert adapter_before is not adapter_after
-
-
-# ===========================================================================
-# 4.  Generation tracking attribute exists and is initialised
-# ===========================================================================
-
-
-def test_schema_generation_sentinel_before_first_validation() -> None:
-    """Before any validation the stored generation is a sentinel < 0."""
-    base = _make_discriminated_base()
-
-    class Child(base):
-        x: int
-
-    # __DYNAPYDANTIC_SCHEMA_GENERATION__ should be set to some sentinel
-    # (e.g. -1) indicating "not yet built".
-    gen = base.__DYNAPYDANTIC_SCHEMA_GENERATION__
-    assert gen < 0
-
-
-def test_schema_generation_synced_after_first_validation() -> None:
-    """After the first validation the cached generation matches the group."""
-    base = _make_discriminated_base()
-
-    class Child(base):
-        x: int
-
-    class Container(pydantic.BaseModel):
-        item: base
-
-    Container.model_validate({"item": {"kind": "Child", "x": 5}})
-
-    assert base.__DYNAPYDANTIC__.generation == base.__DYNAPYDANTIC_SCHEMA_GENERATION__
-
-
-def test_adapter_attribute_is_none_first_validation() -> None:
-    """``__DYNAPYDANTIC_ADAPTER__`` is None before first validation"""
-    base = _make_discriminated_base()
-
-    class Child(base):
-        x: int
-
-    assert getattr(base, "__DYNAPYDANTIC_ADAPTER__", object()) is None
-
-
-def test_adapter_attribute_present_after_first_validation() -> None:
-    """``__DYNAPYDANTIC_ADAPTER__`` is created on the first validation."""
-    base = _make_discriminated_base()
-
-    class Child(base):
-        x: int
-
-    class Container(pydantic.BaseModel):
-        item: base
-
-    Container.model_validate({"item": {"kind": "Child", "x": 1}})
-    assert hasattr(base, "__DYNAPYDANTIC_ADAPTER__")
-    assert isinstance(base.__DYNAPYDANTIC_ADAPTER__, pydantic.TypeAdapter)
-
-
-# ===========================================================================
-# 5.  Serialisation round-trip
+# 3.  Serialisation round-trip
 # ===========================================================================
 
 
@@ -261,15 +150,20 @@ def test_model_dump_preserves_subclass_fields() -> None:
     """``model_dump()`` on the container exposes subclass-specific fields."""
     base = _make_discriminated_base()
 
+    dt_str = "2026-04-16T21:42:00Z"
+    dt = datetime.datetime.fromisoformat(dt_str)
+
     class Child(base):
-        payload: str
+        payload: datetime.datetime
 
     class Container(pydantic.BaseModel):
         item: base
 
-    obj = Container.model_validate({"item": {"kind": "Child", "payload": "data"}})
+    obj = Container(item={"kind": "Child", "payload": dt})
     dumped = obj.model_dump()
-    assert dumped == {"item": {"kind": "Child", "payload": "data"}}
+    assert dumped == {"item": {"kind": "Child", "payload": dt}}
+    dumped_json = obj.model_dump(mode="json")
+    assert dumped_json == {"item": {"kind": "Child", "payload": dt_str}}
 
 
 def test_round_trip_json() -> None:
@@ -307,7 +201,7 @@ def test_round_trip_already_instantiated_object() -> None:
 
 
 # ===========================================================================
-# 6.  Backward-compat: Polymorphic still works unchanged
+# 4.  Backward-compat: Polymorphic still works unchanged
 # ===========================================================================
 
 
@@ -342,7 +236,7 @@ def test_polymorphic_picks_up_late_subclass() -> None:
 
 
 # ===========================================================================
-# 7.  Edge cases
+# 5.  Edge cases
 # ===========================================================================
 
 
@@ -371,10 +265,10 @@ def test_multiple_containers_share_same_adapter_cache() -> None:
         item: base
 
     ContainerA.model_validate({"item": {"kind": "Child", "n": 1}})
-    adapter_a = base.__DYNAPYDANTIC_ADAPTER__  # type: ignore[attr-defined]
+    adapter_a = base.__DYNAPYDANTIC__.type_adapter
 
     ContainerB.model_validate({"item": {"kind": "Child", "n": 2}})
-    adapter_b = base.__DYNAPYDANTIC_ADAPTER__  # type: ignore[attr-defined]
+    adapter_b = base.__DYNAPYDANTIC__.type_adapter
 
     # Both containers use the same cached TypeAdapter on the base class
     assert adapter_a is adapter_b
@@ -446,7 +340,7 @@ def test_json_schema_works_on_simple_smart_union() -> None:
 
 
 # ===========================================================================
-# 8.  Error Behavior
+# 6.  Error Behavior
 # ===========================================================================
 
 

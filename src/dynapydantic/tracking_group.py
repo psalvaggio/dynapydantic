@@ -104,14 +104,8 @@ class TrackingGroup(pydantic.BaseModel):
     )
 
     _generation: int = pydantic.PrivateAttr(default=0)
-
-    @property
-    def generation(self) -> int:
-        """The generation of the tracking group.
-
-        This is a counter that increments every time a new registration occurs
-        """
-        return self._generation
+    _adapter: pydantic.TypeAdapter | None = pydantic.PrivateAttr(default=None)
+    _adapter_generation: int = pydantic.PrivateAttr(default=-1)
 
     @pydantic.model_validator(mode="after")
     def _ensure_union_mode(self) -> "TrackingGroup":
@@ -381,6 +375,26 @@ class TrackingGroup(pydantic.BaseModel):
 
         # "smart" mode is pydantic's default behavior on a plain union
         return plain_union
+
+    @property
+    def generation(self) -> int:
+        """The generation of the tracking group.
+
+        This is a counter that increments every time a new registration occurs
+        """
+        return self._generation
+
+    @property
+    def type_adapter(self) -> pydantic.TypeAdapter:
+        """Get the pydantic TypeAdapter for the union of all group members"""
+        if self.generation != self._adapter_generation:
+            self._adapter = pydantic.TypeAdapter(self.union())
+            self._adapter_generation = self.generation
+
+        # casting because the if statement ensures it is non-None (because
+        # __DYNAPYDANTIC_SCHEMA_GENERATION__ starts at -1 and generation
+        # increments from 0.
+        return ty.cast("pydantic.TypeAdapter", self._adapter)
 
     def _register_with_discriminator_field(self, cls: type[pydantic.BaseModel]) -> None:
         """Register the model with the default of the discriminator field
