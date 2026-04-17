@@ -150,7 +150,7 @@ def test_model_dump_preserves_subclass_fields() -> None:
     """``model_dump()`` on the container exposes subclass-specific fields."""
     base = _make_discriminated_base()
 
-    dt_str = "2026-04-16T21:42:00+00:00"
+    dt_str = "2026-04-16T21:42:00+01:00"
     dt = datetime.datetime.fromisoformat(dt_str)
 
     class Child(base):
