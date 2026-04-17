@@ -915,11 +915,11 @@ union from a previous call, so it is important to consider order of operations.<
 their own tradeoffs:</p>
 <ol>
 <li>
-<p>Calling <code>.union()</code> directly: This functions exactly as it does with
-    <code>TrackingGroup</code>. This option is the "most eager" option, but is the most
-    sensitive with order of operations. In addition, type checkers will not
-    understand this method, as they will complain about calling a function in a
-    type annotation (rightfully so).</p>
+<p>Using <code>union()</code> or <code>Union[T]</code>: These mechanisms eagerly call <code>.union()</code> on
+    <code>TrackingGroup</code>, so the union is realized immediately upon using these. This
+    is the "most eager" option, but is also the most sensitive with order of
+    operations. Type checkers will not understand this method, and interpret its
+    resulting type as <code>Any</code> or unknown.</p>
 <p>Despite the tradeoffs, this option can be desireable for applications that
 inspect field annotations directly. This normally arises in user-implemented
 model reflection code and with
@@ -947,11 +947,10 @@ model reflection code and with
 <span class="n">B</span><span class="o">.</span><span class="n">model_rebuild</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">B</span><span class="p">(</span><span class="n">other</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;other&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;other&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}}})</span> <span class="c1"># B(other=B(other=B(other=A(a=2))))</span>
 </code></pre></div>
-if we used <code>Base.union()</code> directly, the <code>model_rebuild()</code> call would do
-nothing, as the union had already been realized. To accomplish the same
-thing with <code>.union()</code>, we would have to use a forward reference, like
-<code>"BUnion"</code> then then call <code>.union()</code> right before the <code>model_rebuild()</code>
-calls.</p>
+if we used <code>Union[Base]</code>, the <code>model_rebuild()</code> call would do nothing, as
+the union had already been realized. To accomplish the same thing with
+eager unions, we would have to use a forward reference, like <code>"BUnion"</code> then
+call <code>dynapydantic.union(Base)</code> right before the <code>model_rebuild()</code> calls.</p>
 <p>Unlike direct <code>union()</code> calls, the type checker can at least infer the field
 to be a subclass of <code>Base</code>, which is a vast improvement over a type error.</p>
 </li>

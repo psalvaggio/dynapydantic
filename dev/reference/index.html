@@ -1830,36 +1830,6 @@ supported:</p>
        necessary to call <code>model_rebuild</code> on recursive models. This feature
        is currently <strong>EXPERIMENTAL</strong> and does incur a runtime penalty.</li>
 </ol>
-<p><strong>DEPRECATED:</strong></p>
-<p>Inheriting from this class will augment your class with the following
-members functions:</p>
-<ol>
-<li><code>registered_subclasses() -&gt; dict[str, type[cls]]</code>:
-    This will return a mapping of discriminator value to the corresponding
-    subclass. See
-    <a class="autorefs autorefs-internal" title="models: dict[str, type[pydantic.BaseModel]] = {}
-
-  
-      pydantic-field
-  " href="#dynapydantic.TrackingGroup.models"><code>TrackingGroup.models</code></a> for details.</li>
-<li><code>union() -&gt; typing.Any</code>:
-    This will return an (optionally) annotated subclass union. See
-    <a class="autorefs autorefs-internal" title="union(*, plain: bool | None = None, annotated: bool | None = None) -> ty.Any" href="#dynapydantic.TrackingGroup.union"><code>TrackingGroup.union()</code></a> for details.</li>
-<li><code>load_plugins() -&gt; None</code>:
-    If plugin_entry_point was specified, then this method will load plugin
-    packages to discover additional subclasses. See
-    <a class="autorefs autorefs-internal" title="load_plugins() -> None" href="#dynapydantic.TrackingGroup.load_plugins"><code>TrackingGroup.load_plugins()</code></a>
-    for more details.</li>
-</ol>
-<p>These methods will be removed in 0.5.0, please migrate to their
-corresponding free functions:</p>
-<ol>
-<li><code>registered_subclasses()</code> -&gt;
-    <a class="autorefs autorefs-internal" title="registered_models(entity: TrackingGroup | type[ModelT]) -> dict[str, type[pydantic.BaseModel]] | dict[str, type[ModelT]]" href="#dynapydantic.registered_models"><code>registered_models()</code></a></li>
-<li><code>union()</code> -&gt; <a class="autorefs autorefs-internal" title="union(entity: TrackingGroup | type[SubclassTrackingModel], *, plain: bool | None = None) -> ty.Any" href="#dynapydantic.union"><code>union()</code></a> or
-    <a class="autorefs autorefs-internal" title="Union" href="#dynapydantic.Union"><code>Union[T]</code></a></li>
-<li><code>load_plugins()</code> -&gt; <a class="autorefs autorefs-internal" title="load_plugins(entity: TrackingGroup | type[SubclassTrackingModel]) -> None" href="#dynapydantic.load_plugins"><code>load_plugins()</code></a></li>
-</ol>
 
     
 
@@ -1867,7 +1837,8 @@ corresponding free functions:</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/dynapydantic/subclass_tracking_model.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 33</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 32</span>
+<span class="normal"> 33</span>
 <span class="normal"> 34</span>
 <span class="normal"> 35</span>
 <span class="normal"> 36</span>
@@ -1968,105 +1939,7 @@ corresponding free functions:</p>
 <span class="normal">131</span>
 <span class="normal">132</span>
 <span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span>
-<span class="normal">136</span>
-<span class="normal">137</span>
-<span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span>
-<span class="normal">145</span>
-<span class="normal">146</span>
-<span class="normal">147</span>
-<span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span>
-<span class="normal">203</span>
-<span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span>
-<span class="normal">207</span>
-<span class="normal">208</span>
-<span class="normal">209</span>
-<span class="normal">210</span>
-<span class="normal">211</span>
-<span class="normal">212</span>
-<span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
-<span class="normal">222</span>
-<span class="normal">223</span>
-<span class="normal">224</span>
-<span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span>
-<span class="normal">232</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SubclassTrackingModel</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">134</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SubclassTrackingModel</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Subclass-tracking BaseModel</span>
 
 <span class="sd">    This will inject a [`TrackingGroup`][dynapydantic.TrackingGroup] into your</span>
@@ -2088,33 +1961,6 @@ corresponding free functions:</p>
 <span class="sd">           [`Polymorphic`][dynapydantic.Polymorphic]. In addition, it is not</span>
 <span class="sd">           necessary to call `model_rebuild` on recursive models. This feature</span>
 <span class="sd">           is currently **EXPERIMENTAL** and does incur a runtime penalty.</span>
-
-<span class="sd">    **DEPRECATED:**</span>
-
-<span class="sd">    Inheriting from this class will augment your class with the following</span>
-<span class="sd">    members functions:</span>
-
-<span class="sd">    1. `registered_subclasses() -&gt; dict[str, type[cls]]`:</span>
-<span class="sd">        This will return a mapping of discriminator value to the corresponding</span>
-<span class="sd">        subclass. See</span>
-<span class="sd">        [`TrackingGroup.models`][dynapydantic.TrackingGroup.models] for details.</span>
-<span class="sd">    2. `union() -&gt; typing.Any`:</span>
-<span class="sd">        This will return an (optionally) annotated subclass union. See</span>
-<span class="sd">        [`TrackingGroup.union()`][dynapydantic.TrackingGroup.union] for details.</span>
-<span class="sd">    3. `load_plugins() -&gt; None`:</span>
-<span class="sd">        If plugin_entry_point was specified, then this method will load plugin</span>
-<span class="sd">        packages to discover additional subclasses. See</span>
-<span class="sd">        [`TrackingGroup.load_plugins()`][dynapydantic.TrackingGroup.load_plugins]</span>
-<span class="sd">        for more details.</span>
-
-<span class="sd">    These methods will be removed in 0.5.0, please migrate to their</span>
-<span class="sd">    corresponding free functions:</span>
-
-<span class="sd">    1. `registered_subclasses()` -&gt;</span>
-<span class="sd">        [`registered_models()`][dynapydantic.registered_models]</span>
-<span class="sd">    2. `union()` -&gt; [`union()`][dynapydantic.union] or</span>
-<span class="sd">        [`Union[T]`][dynapydantic.Union]</span>
-<span class="sd">    3. `load_plugins()` -&gt; [`load_plugins()`][dynapydantic.load_plugins]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -2131,14 +1977,8 @@ corresponding free functions:</p>
             <span class="p">},</span>
         <span class="p">)</span>
 
-    <span class="c1"># This method is too complex, here&#39;s the plan to simplify it:</span>
-    <span class="c1"># We&#39;re polluting this models attributes by injecting and forwarding methods</span>
-    <span class="c1"># from tracking group. As a result, we&#39;re limiting the possible field names</span>
-    <span class="c1"># that these models can have. These should be free functions. We&#39;re going</span>
-    <span class="c1"># to deprecate the methods to give people a release cycle to migrate off.</span>
-    <span class="c1"># We should be able to remove the noqa after these are removed.</span>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">__pydantic_init_subclass__</span><span class="p">(</span>  <span class="c1"># noqa: C901</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__pydantic_init_subclass__</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="o">*</span><span class="n">args</span><span class="p">,</span>
         <span class="n">exclude_from_union</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -2181,72 +2021,8 @@ corresponding free functions:</p>
                     <span class="p">)</span>
                     <span class="k">raise</span> <span class="n">ConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
-            <span class="c1"># Promote the tracking group&#39;s methods to the parent class</span>
-            <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="o">.</span><span class="n">plugin_entry_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-
-                <span class="k">def</span><span class="w"> </span><span class="nf">_load_plugins</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">                    </span><span class="sd">&quot;&quot;&quot;Load plugins to register more models</span>
-
-<span class="sd">                    DEPRECATED: use</span>
-<span class="sd">                        [`dynapydantic.load_plugins`][dynapydantic.load_plugins]</span>
-<span class="sd">                    &quot;&quot;&quot;</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="s2">&quot;SubclassTrackingModel.load_plugins() is deprecated, &quot;</span>
-                        <span class="s2">&quot;please swap dynapydantic.load_plugins().&quot;</span>
-                    <span class="p">)</span>
-                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-                    <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="o">.</span><span class="n">load_plugins</span><span class="p">()</span>
-
-                <span class="bp">cls</span><span class="o">.</span><span class="n">load_plugins</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">_load_plugins</span><span class="p">)</span>
-
-            <span class="k">def</span><span class="w"> </span><span class="nf">_union</span><span class="p">(</span>
-                <span class="o">*</span><span class="p">,</span>
-                <span class="n">plain</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="n">annotated</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>  <span class="c1"># noqa: ANN401 - return type is runtime-determined</span>
-<span class="w">                </span><span class="sd">&quot;&quot;&quot;Get the union of all tracked subclasses</span>
-
-<span class="sd">                DEPRECATED: use [`Union[T]`][dynapydantic.Union] or</span>
-<span class="sd">                            [`union()`][dynapydantic.union] instead.</span>
-
-<span class="sd">                Parameters</span>
-<span class="sd">                ----------</span>
-<span class="sd">                plain</span>
-<span class="sd">                    If set to `True`, a plain union of all members will be returned.</span>
-<span class="sd">                    Otherwise, the returned union will be annotated in accordance with</span>
-<span class="sd">                    the union mode.</span>
-<span class="sd">                annotated</span>
-<span class="sd">                    Deprecated. Use `plain=True` when you would have used</span>
-<span class="sd">                    `annotated=False`.</span>
-<span class="sd">                &quot;&quot;&quot;</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="s2">&quot;SubclassTrackingModel.union() is deprecated, please swap &quot;</span>
-                    <span class="s2">&quot;to dynapydantic.Union[T] (for annotations) or &quot;</span>
-                    <span class="s2">&quot;dynapydantic.union() (for runtime calls).&quot;</span>
-                <span class="p">)</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-
-                <span class="c1"># deprecation warning for annotated is in TrackingGroup</span>
-                <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">plain</span><span class="o">=</span><span class="n">plain</span><span class="p">,</span> <span class="n">annotated</span><span class="o">=</span><span class="n">annotated</span><span class="p">)</span>
-
-            <span class="bp">cls</span><span class="o">.</span><span class="n">union</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">_union</span><span class="p">)</span>
-
-            <span class="k">def</span><span class="w"> </span><span class="nf">_subclasses</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">]]:</span>
-<span class="w">                </span><span class="sd">&quot;&quot;&quot;Return a mapping of discriminator values to registered model</span>
-
-<span class="sd">                DEPRECATED: use dynapydantic.registered_models().</span>
-<span class="sd">                &quot;&quot;&quot;</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="s2">&quot;SubclassTrackingModel.registered_subclasses() is &quot;</span>
-                    <span class="s2">&quot;deprecated, please swap to &quot;</span>
-                    <span class="s2">&quot;dynapydantic.registered_models().&quot;</span>
-                <span class="p">)</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-
-                <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="o">.</span><span class="n">models</span>
-
-            <span class="bp">cls</span><span class="o">.</span><span class="n">registered_subclasses</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">_subclasses</span><span class="p">)</span>
-
+            <span class="c1"># If we&#39;re an implicit polymorphic model, we need to override our</span>
+            <span class="c1"># pydantic schema.</span>
             <span class="k">if</span> <span class="n">implicit_polymorphic</span><span class="p">:</span>
                 <span class="bp">cls</span><span class="o">.</span><span class="n">__get_pydantic_core_schema__</span> <span class="o">=</span> <span class="nb">classmethod</span><span class="p">(</span>  <span class="c1"># type: ignore[bad-assignment]</span>
                     <span class="n">_get_pydantic_core_schema</span>
@@ -2297,19 +2073,19 @@ corresponding free functions:</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/dynapydantic/subclass_tracking_model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">84</span>
-<span class="normal">85</span>
-<span class="normal">86</span>
-<span class="normal">87</span>
-<span class="normal">88</span>
-<span class="normal">89</span>
-<span class="normal">90</span>
-<span class="normal">91</span>
-<span class="normal">92</span>
-<span class="normal">93</span>
-<span class="normal">94</span>
-<span class="normal">95</span>
-<span class="normal">96</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Subclass hook&quot;&quot;&quot;</span>
     <span class="c1"># Intercept any kwargs that are intended for TrackingGroup or</span>
     <span class="c1"># __pydantic_init_subclass__</span>
@@ -2348,7 +2124,41 @@ corresponding free functions:</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/dynapydantic/subclass_tracking_model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">104</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
 <span class="normal">105</span>
 <span class="normal">106</span>
 <span class="normal">107</span>
@@ -2378,106 +2188,8 @@ corresponding free functions:</p>
 <span class="normal">131</span>
 <span class="normal">132</span>
 <span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span>
-<span class="normal">136</span>
-<span class="normal">137</span>
-<span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span>
-<span class="normal">145</span>
-<span class="normal">146</span>
-<span class="normal">147</span>
-<span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span>
-<span class="normal">203</span>
-<span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span>
-<span class="normal">207</span>
-<span class="normal">208</span>
-<span class="normal">209</span>
-<span class="normal">210</span>
-<span class="normal">211</span>
-<span class="normal">212</span>
-<span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
-<span class="normal">222</span>
-<span class="normal">223</span>
-<span class="normal">224</span>
-<span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span>
-<span class="normal">232</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">__pydantic_init_subclass__</span><span class="p">(</span>  <span class="c1"># noqa: C901</span>
+<span class="normal">134</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">__pydantic_init_subclass__</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">,</span>
     <span class="o">*</span><span class="n">args</span><span class="p">,</span>
     <span class="n">exclude_from_union</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -2520,72 +2232,8 @@ corresponding free functions:</p>
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="n">ConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
-        <span class="c1"># Promote the tracking group&#39;s methods to the parent class</span>
-        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="o">.</span><span class="n">plugin_entry_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-
-            <span class="k">def</span><span class="w"> </span><span class="nf">_load_plugins</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">                </span><span class="sd">&quot;&quot;&quot;Load plugins to register more models</span>
-
-<span class="sd">                DEPRECATED: use</span>
-<span class="sd">                    [`dynapydantic.load_plugins`][dynapydantic.load_plugins]</span>
-<span class="sd">                &quot;&quot;&quot;</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="s2">&quot;SubclassTrackingModel.load_plugins() is deprecated, &quot;</span>
-                    <span class="s2">&quot;please swap dynapydantic.load_plugins().&quot;</span>
-                <span class="p">)</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-                <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="o">.</span><span class="n">load_plugins</span><span class="p">()</span>
-
-            <span class="bp">cls</span><span class="o">.</span><span class="n">load_plugins</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">_load_plugins</span><span class="p">)</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">_union</span><span class="p">(</span>
-            <span class="o">*</span><span class="p">,</span>
-            <span class="n">plain</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">annotated</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>  <span class="c1"># noqa: ANN401 - return type is runtime-determined</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Get the union of all tracked subclasses</span>
-
-<span class="sd">            DEPRECATED: use [`Union[T]`][dynapydantic.Union] or</span>
-<span class="sd">                        [`union()`][dynapydantic.union] instead.</span>
-
-<span class="sd">            Parameters</span>
-<span class="sd">            ----------</span>
-<span class="sd">            plain</span>
-<span class="sd">                If set to `True`, a plain union of all members will be returned.</span>
-<span class="sd">                Otherwise, the returned union will be annotated in accordance with</span>
-<span class="sd">                the union mode.</span>
-<span class="sd">            annotated</span>
-<span class="sd">                Deprecated. Use `plain=True` when you would have used</span>
-<span class="sd">                `annotated=False`.</span>
-<span class="sd">            &quot;&quot;&quot;</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;SubclassTrackingModel.union() is deprecated, please swap &quot;</span>
-                <span class="s2">&quot;to dynapydantic.Union[T] (for annotations) or &quot;</span>
-                <span class="s2">&quot;dynapydantic.union() (for runtime calls).&quot;</span>
-            <span class="p">)</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-
-            <span class="c1"># deprecation warning for annotated is in TrackingGroup</span>
-            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">plain</span><span class="o">=</span><span class="n">plain</span><span class="p">,</span> <span class="n">annotated</span><span class="o">=</span><span class="n">annotated</span><span class="p">)</span>
-
-        <span class="bp">cls</span><span class="o">.</span><span class="n">union</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">_union</span><span class="p">)</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">_subclasses</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">]]:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Return a mapping of discriminator values to registered model</span>
-
-<span class="sd">            DEPRECATED: use dynapydantic.registered_models().</span>
-<span class="sd">            &quot;&quot;&quot;</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;SubclassTrackingModel.registered_subclasses() is &quot;</span>
-                <span class="s2">&quot;deprecated, please swap to &quot;</span>
-                <span class="s2">&quot;dynapydantic.registered_models().&quot;</span>
-            <span class="p">)</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-
-            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="o">.</span><span class="n">models</span>
-
-        <span class="bp">cls</span><span class="o">.</span><span class="n">registered_subclasses</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">_subclasses</span><span class="p">)</span>
-
+        <span class="c1"># If we&#39;re an implicit polymorphic model, we need to override our</span>
+        <span class="c1"># pydantic schema.</span>
         <span class="k">if</span> <span class="n">implicit_polymorphic</span><span class="p">:</span>
             <span class="bp">cls</span><span class="o">.</span><span class="n">__get_pydantic_core_schema__</span> <span class="o">=</span> <span class="nb">classmethod</span><span class="p">(</span>  <span class="c1"># type: ignore[bad-assignment]</span>
                 <span class="n">_get_pydantic_core_schema</span>
@@ -3092,21 +2740,7 @@ corresponding free functions:</p>
 <span class="normal">439</span>
 <span class="normal">440</span>
 <span class="normal">441</span>
-<span class="normal">442</span>
-<span class="normal">443</span>
-<span class="normal">444</span>
-<span class="normal">445</span>
-<span class="normal">446</span>
-<span class="normal">447</span>
-<span class="normal">448</span>
-<span class="normal">449</span>
-<span class="normal">450</span>
-<span class="normal">451</span>
-<span class="normal">452</span>
-<span class="normal">453</span>
-<span class="normal">454</span>
-<span class="normal">455</span>
-<span class="normal">456</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrackingGroup</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">442</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrackingGroup</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Tracker for pydantic models&quot;&quot;&quot;</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span>
@@ -3363,7 +2997,6 @@ corresponding free functions:</p>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">plain</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">annotated</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>  <span class="c1"># noqa: ANN401</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the union of all registered models</span>
 
@@ -3373,9 +3006,6 @@ corresponding free functions:</p>
 <span class="sd">            If set to `True`, a plain union of all members will be returned.</span>
 <span class="sd">            Otherwise, the returned union will be annotated in accordance with</span>
 <span class="sd">            the union mode.</span>
-<span class="sd">        annotated</span>
-<span class="sd">            Deprecated. Use `plain=True` when you would have used</span>
-<span class="sd">            `annotated=False`.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -3389,16 +3019,6 @@ corresponding free functions:</p>
 <span class="sd">        NoRegisteredTypesError</span>
 <span class="sd">            If no types have been registered yet.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">annotated</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;The `annotated` parameter is deprecated. Use `plain=True` to &quot;</span>
-                <span class="s2">&quot;get a plain union. By default, behavior is governed by &quot;</span>
-                <span class="s2">&quot;`union_mode`. Will be removed in version 0.5.0.&quot;</span><span class="p">,</span>
-                <span class="ne">DeprecationWarning</span><span class="p">,</span>
-                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">plain</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">annotated</span> <span class="k">else</span> <span class="n">plain</span>
-
         <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
@@ -4085,7 +3705,7 @@ discriminator field must be declared by hand.</p>
 
 
 <h4 id="dynapydantic.TrackingGroup.union" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">plain</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">annotated</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Any</span></code>
+            <code class="highlight language-python"><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">plain</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Any</span></code>
 
 <a href="#dynapydantic.TrackingGroup.union" class="headerlink" title="Permanent link">&para;</a></h4>
 
@@ -4118,23 +3738,6 @@ discriminator field must be declared by hand.</p>
                 <p>If set to <code>True</code>, a plain union of all members will be returned.
 Otherwise, the returned union will be annotated in accordance with
 the union mode.</p>
-              </div>
-            </td>
-            <td>
-                  <code>None</code>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>annotated</code>
-            </td>
-            <td>
-                  <code><span title="bool">bool</span> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Deprecated. Use <code>plain=True</code> when you would have used
-<code>annotated=False</code>.</p>
               </div>
             </td>
             <td>
@@ -4249,25 +3852,10 @@ union of all registered types. This union may be annotated if
 <span class="normal">360</span>
 <span class="normal">361</span>
 <span class="normal">362</span>
-<span class="normal">363</span>
-<span class="normal">364</span>
-<span class="normal">365</span>
-<span class="normal">366</span>
-<span class="normal">367</span>
-<span class="normal">368</span>
-<span class="normal">369</span>
-<span class="normal">370</span>
-<span class="normal">371</span>
-<span class="normal">372</span>
-<span class="normal">373</span>
-<span class="normal">374</span>
-<span class="normal">375</span>
-<span class="normal">376</span>
-<span class="normal">377</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">union</span><span class="p">(</span>
+<span class="normal">363</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">union</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">plain</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">annotated</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>  <span class="c1"># noqa: ANN401</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the union of all registered models</span>
 
@@ -4277,9 +3865,6 @@ union of all registered types. This union may be annotated if
 <span class="sd">        If set to `True`, a plain union of all members will be returned.</span>
 <span class="sd">        Otherwise, the returned union will be annotated in accordance with</span>
 <span class="sd">        the union mode.</span>
-<span class="sd">    annotated</span>
-<span class="sd">        Deprecated. Use `plain=True` when you would have used</span>
-<span class="sd">        `annotated=False`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -4293,16 +3878,6 @@ union of all registered types. This union may be annotated if
 <span class="sd">    NoRegisteredTypesError</span>
 <span class="sd">        If no types have been registered yet.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">annotated</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="s2">&quot;The `annotated` parameter is deprecated. Use `plain=True` to &quot;</span>
-            <span class="s2">&quot;get a plain union. By default, behavior is governed by &quot;</span>
-            <span class="s2">&quot;`union_mode`. Will be removed in version 0.5.0.&quot;</span><span class="p">,</span>
-            <span class="ne">DeprecationWarning</span><span class="p">,</span>
-            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">plain</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">annotated</span> <span class="k">else</span> <span class="n">plain</span>
-
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
