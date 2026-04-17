@@ -30,4 +30,4 @@ else:
             if getattr(item, "__DYNAPYDANTIC_IMPLICIT_POLYMORPHIC__", False):
                 return item
 
-            return ty.Annotated[item, SubclassTrackingModel.PydanticAdaptor]
+            return ty.Annotated[item, SubclassTrackingModel.PydanticAdapter]

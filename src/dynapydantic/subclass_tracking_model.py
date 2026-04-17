@@ -208,8 +208,8 @@ class SubclassTrackingModel(pydantic.BaseModel):
         for base in supers:
             base.__DYNAPYDANTIC__.register_model(cls)
 
-    class PydanticAdaptor:
-        """Pydantic type adaptor for SubclassTrackingModel"""
+    class PydanticAdapter:
+        """Pydantic type adapter for SubclassTrackingModel"""
 
         @staticmethod
         def __get_pydantic_core_schema__(
