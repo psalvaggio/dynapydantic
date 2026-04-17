@@ -340,7 +340,7 @@ class TrackingGroup(pydantic.BaseModel):
             warnings.warn(
                 "The `annotated` parameter is deprecated. Use `plain=True` to "
                 "get a plain union. By default, behavior is governed by "
-                "`union_mode`. Will be removed in a future version.",
+                "`union_mode`. Will be removed in version 0.5.0.",
                 DeprecationWarning,
                 stacklevel=2,
             )
