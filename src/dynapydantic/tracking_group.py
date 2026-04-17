@@ -103,6 +103,16 @@ class TrackingGroup(pydantic.BaseModel):
         description="The tracked models",
     )
 
+    _generation: int = pydantic.PrivateAttr(default=0)
+
+    @property
+    def generation(self) -> int:
+        """The generation of the tracking group.
+
+        This is a counter that increments every time a new registration occurs
+        """
+        return self._generation
+
     @pydantic.model_validator(mode="after")
     def _ensure_union_mode(self) -> "TrackingGroup":
         """There must be a union_mode
@@ -396,14 +406,7 @@ class TrackingGroup(pydantic.BaseModel):
             )
             raise RegistrationError(msg)
 
-        if (other := self.models.get(value)) is not None and other is not cls:
-            msg = (
-                f'Cannot register {cls.__name__} under the "{value}" '
-                f"identifier, which is already in use by {other.__name__}."
-            )
-            raise RegistrationError(msg)
-
-        self.models[value] = cls
+        self._do_register(value, cls)
 
     def _register_plain(self, cls: type[pydantic.BaseModel]) -> None:
         """Register the model keyed by its class name.
@@ -416,11 +419,25 @@ class TrackingGroup(pydantic.BaseModel):
         cls
             The model to register.
         """
-        key = str(id(cls))
-        if (other := self.models.get(key)) is not None and other is not cls:
-            msg = (
-                f'Cannot register {cls.__name__} under the "{key}" '
-                f"identifier, which is already in use by {other.__name__}."
-            )
-            raise RegistrationError(msg)
-        self.models[key] = cls
+        self._do_register(str(id(cls)), cls)
+
+    def _do_register(self, key: str, cls: type[pydantic.BaseModel]) -> None:
+        """Register the given model under the given key
+
+        Parameters
+        ----------
+        key
+            The key under which to register the model
+        cls
+            The model to register.
+        """
+        if (other := self.models.get(key)) is not None:
+            if other is not cls:
+                msg = (
+                    f'Cannot register {cls.__name__} under the "{key}" '
+                    f"identifier, which is already in use by {other.__name__}."
+                )
+                raise RegistrationError(msg)
+        else:
+            self._generation += 1
+            self.models[key] = cls

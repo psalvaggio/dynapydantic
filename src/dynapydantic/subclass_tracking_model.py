@@ -4,11 +4,12 @@ import inspect
 import typing as ty
 
 import pydantic
-from pydantic import GetCoreSchemaHandler
+from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
 from pydantic.errors import PydanticSchemaGenerationError
-from pydantic_core import core_schema
+from pydantic.json_schema import JsonSchemaValue
+from pydantic_core import PydanticCustomError, core_schema
 
-from .exceptions import ConfigurationError
+from .exceptions import ConfigurationError, Error
 from .tracking_group import TrackingGroup
 
 
@@ -67,10 +68,11 @@ class SubclassTrackingModel(pydantic.BaseModel):
         )
 
     @classmethod
-    def __pydantic_init_subclass__(
+    def __pydantic_init_subclass__(  # noqa: C901 (fix this!)
         cls,
         *args,
         exclude_from_union: bool | None = None,
+        implicit_polymorphic: bool | None = None,
         **kwargs,
     ) -> None:
         """Pydantic subclass hook"""
@@ -83,6 +85,12 @@ class SubclassTrackingModel(pydantic.BaseModel):
                     for k, v in kwargs.items()
                     if k not in TrackingGroup.model_fields
                 },
+            )
+
+            cls.__DYNAPYDANTIC_IMPLICIT_POLYMORPHIC__ = implicit_polymorphic
+            cls.__DYNAPYDANTIC_SCHEMA_GENERATION__: ty.ClassVar[int] = -1
+            cls.__DYNAPYDANTIC_ADAPTER__: ty.ClassVar[pydantic.TypeAdapter | None] = (
+                None
             )
 
             if isinstance((tc := getattr(cls, "tracking_config", None)), TrackingGroup):
@@ -140,6 +148,53 @@ class SubclassTrackingModel(pydantic.BaseModel):
 
             cls.registered_subclasses = staticmethod(_subclasses)
 
+            if implicit_polymorphic:
+
+                def _gpcs(
+                    cls: type[SubclassTrackingModel],
+                    source_type: type[pydantic.BaseModel],
+                    handler: GetCoreSchemaHandler,
+                    /,
+                ) -> core_schema.CoreSchema:
+                    if SubclassTrackingModel not in cls.__bases__:
+                        return handler(source_type)
+
+                    source_type = _assert_stm_subclass(source_type)
+
+                    def _validate(value: ty.Any) -> ty.Any:  # noqa: ANN401
+                        return _ensure_adapter(source_type).validate_python(value)
+
+                    def _serialize(
+                        value: pydantic.BaseModel,
+                        info: core_schema.SerializationInfo,
+                    ) -> dict[str, ty.Any]:
+                        return value.model_dump(mode=info.mode)
+
+                    return core_schema.no_info_plain_validator_function(
+                        _validate,
+                        serialization=core_schema.plain_serializer_function_ser_schema(
+                            _serialize,
+                            info_arg=True,
+                            when_used="unless-none",
+                            return_schema=core_schema.dict_schema(
+                                core_schema.str_schema(), core_schema.any_schema()
+                            ),
+                        ),
+                    )
+
+                cls.__get_pydantic_core_schema__ = classmethod(_gpcs)  # type: ignore[bad-assignment]
+
+                def _gpjs(
+                    cls: type[SubclassTrackingModel],
+                    core_schema: core_schema.CoreSchema,
+                    handler: GetJsonSchemaHandler,
+                ) -> JsonSchemaValue:
+                    if SubclassTrackingModel not in cls.__bases__:
+                        return handler(core_schema)
+                    return handler(_ensure_adapter(cls).core_schema)
+
+                cls.__get_pydantic_json_schema__ = classmethod(_gpjs)  # type: ignore[bad-assignment]
+
             return
 
         super().__pydantic_init_subclass__(*args, **kwargs)
@@ -160,13 +215,38 @@ class SubclassTrackingModel(pydantic.BaseModel):
             handler: GetCoreSchemaHandler,
         ) -> core_schema.CoreSchema:
             """Get the pydantic schema for this type"""
-            if not isinstance(source_type, type) or not issubclass(
-                source_type,
-                SubclassTrackingModel,
-            ):
-                msg = (
-                    f"{source_type} was not a SubclassTrackingModel, "
-                    "so it is incompatible with dynapydantic.Polymorphic"
-                )
-                raise PydanticSchemaGenerationError(msg)
+            source_type = _assert_stm_subclass(source_type)
             return handler(source_type.union())
+
+
+def _assert_stm_subclass(
+    t: ty.Any,  # noqa: ANN401
+) -> type[SubclassTrackingModel]:
+    if not isinstance(t, type) or not issubclass(
+        t,
+        SubclassTrackingModel,
+    ):
+        msg = (
+            f"{t} was not a SubclassTrackingModel, "
+            "so it is incompatible with dynapydantic.Polymorphic"
+        )
+        raise PydanticSchemaGenerationError(msg)
+    return t
+
+
+def _ensure_adapter(
+    source_type: type[SubclassTrackingModel],
+) -> pydantic.TypeAdapter:
+    group = source_type.__DYNAPYDANTIC__
+    if group.generation != source_type.__DYNAPYDANTIC_SCHEMA_GENERATION__:
+        try:
+            source_type.__DYNAPYDANTIC_ADAPTER__ = pydantic.TypeAdapter(group.union())
+        except Error as e:
+            err_t = "dynapydantic_error"
+            raise PydanticCustomError(err_t, "{e}", {"e": str(e)}) from e
+        source_type.__DYNAPYDANTIC_SCHEMA_GENERATION__ = group.generation
+
+    # casting because the if statement ensures it is non-None (because
+    # __DYNAPYDANTIC_SCHEMA_GENERATION__ starts at -1 and generation
+    # increments from 0.
+    return ty.cast("pydantic.TypeAdapter", source_type.__DYNAPYDANTIC_ADAPTER__)
