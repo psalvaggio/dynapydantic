@@ -432,6 +432,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#when-are-unions-realized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When are unions realized?
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -621,6 +632,17 @@
     <span class="md-ellipsis">
       
         Alternative union methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-are-unions-realized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When are unions realized?
       
     </span>
   </a>
@@ -883,6 +905,85 @@ modes as well via the <code>union_mode</code> argument:
 <span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">}))</span>
 <span class="c1"># field=B(b=5)</span>
 </code></pre></div></p>
+<h3 id="when-are-unions-realized">When are unions realized?<a class="headerlink" href="#when-are-unions-realized" title="Permanent link">&para;</a></h3>
+<p>When using <code>TrackingModel</code> directly, there is only one option for when the union
+is realized, which is the moment you call <code>.union()</code>. At this point, any classes
+that have been registered will be present in the union. Registration of
+additional classes after a call to <code>.union()</code> will not update the returned
+union from a previous call, so it is important to consider order of operations.</p>
+<p>When using <code>SubclassTrackingModel</code>, there are more options and each comes with
+their own tradeoffs:</p>
+<ol>
+<li>
+<p>Calling <code>.union()</code> directly: This functions exactly as it does with
+    <code>TrackingGroup</code>. This option is the "most eager" option, but is the most
+    sensitive with order of operations. In addition, type checkers will not
+    understand this method, as they will complain about calling a function in a
+    type annotation (rightfully so).</p>
+<p>Despite the tradeoffs, this option can be desireable for applications that
+inspect field annotations directly. This normally arises in user-implemented
+model reflection code and with
+<a href="https://pydantic.dev/docs/validation/latest/api/pydantic_settings/#_top"><code>pydantic_settings</code></a>.</p>
+</li>
+<li>
+<p>Using <code>dynapydantic.Polymorphic[T]</code>: This method will defer the union
+    realization slightly, into the schema generation step for the model. The
+    difference between this and option 1 is slight and subtle, but does have an
+    affect with recursive models. Consider the following:</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span><span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span> <span class="n">union_mode</span><span class="o">=</span><span class="s2">&quot;smart&quot;</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
+    <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
+    <span class="n">other</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">]</span>
+
+<span class="n">B</span><span class="p">(</span><span class="n">other</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;other&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;other&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}}})</span> <span class="c1"># ValidationError (union only has A)</span>
+
+<span class="n">B</span><span class="o">.</span><span class="n">model_rebuild</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">B</span><span class="p">(</span><span class="n">other</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;other&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;other&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}}})</span> <span class="c1"># B(other=B(other=B(other=A(a=2))))</span>
+</code></pre></div>
+if we used <code>Base.union()</code> directly, the <code>model_rebuild()</code> call would do
+nothing, as the union had already been realized. To accomplish the same
+thing with <code>.union()</code>, we would have to use a forward reference, like
+<code>"BUnion"</code> then then call <code>.union()</code> right before the <code>model_rebuild()</code>
+calls.</p>
+<p>Unlike direct <code>union()</code> calls, the type checker can at least infer the field
+to be a subclass of <code>Base</code>, which is a vast improvement over a type error.</p>
+</li>
+<li>
+<p><strong>EXPERIMENTAL</strong> Using <code>implicit_polymorphic</code>: If <code>implicit_polymorphic=True</code>
+    is passed to a <code>SubclassTrackingModel</code>, then union realization is deferred
+    to model validation time, making the process robust to order of operations.
+    This reduces the previous example down to:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span>
+    <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
+    <span class="n">union_mode</span><span class="o">=</span><span class="s2">&quot;smart&quot;</span><span class="p">,</span>
+    <span class="n">implicit_polymorphic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
+    <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
+    <span class="n">other</span><span class="p">:</span> <span class="n">Base</span>
+
+<span class="n">B</span><span class="p">(</span><span class="n">other</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;other&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;other&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}}})</span> <span class="c1"># B(other=B(other=B(other=A(a=2))))</span>
+</code></pre></div>
+<p>This option has the cleanest syntax, but does incur a runtime penalty for
+potentially multiple schema compilations and the need for a field validator
+function, whereas options 1 and 2 can produce static schema. Like option 2,
+the field is able to be interpreted by type checkers as the base class.</p>
+</li>
+</ol>
 
 
 
