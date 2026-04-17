@@ -1,5 +1,6 @@
 """dynapydantic - dynamic tracking of pydantic models"""
 
+from .annotations import Polymorphic, Union
 from .exceptions import (
     AmbiguousDiscriminatorValueError,
     ConfigurationError,
@@ -7,7 +8,7 @@ from .exceptions import (
     NoRegisteredTypesError,
     RegistrationError,
 )
-from .polymorphic import Polymorphic
+from .free_funcs import load_plugins, registered_models, union
 from .subclass_tracking_model import SubclassTrackingModel
 from .tracking_group import TrackingGroup
 from .union_mode import DiscriminatedConfig
@@ -22,4 +23,8 @@ __all__ = [
     "RegistrationError",
     "SubclassTrackingModel",
     "TrackingGroup",
+    "Union",
+    "load_plugins",
+    "registered_models",
+    "union",
 ]

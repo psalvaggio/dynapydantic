@@ -220,7 +220,7 @@ class TrackingGroup(pydantic.BaseModel):
             return value
 
         def _wrapper(cls: type[pydantic.BaseModel]) -> type[pydantic.BaseModel]:
-            self.register_model(cls, ty.cast("str | None", value))
+            self.register_model(cls, value)
             return cls
 
         return _wrapper
