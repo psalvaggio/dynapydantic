@@ -103,6 +103,10 @@ class TrackingGroup(pydantic.BaseModel):
         description="The tracked models",
     )
 
+    _generation: int = pydantic.PrivateAttr(default=0)
+    _adapter: pydantic.TypeAdapter | None = pydantic.PrivateAttr(default=None)
+    _adapter_generation: int = pydantic.PrivateAttr(default=-1)
+
     @pydantic.model_validator(mode="after")
     def _ensure_union_mode(self) -> "TrackingGroup":
         """There must be a union_mode
@@ -372,6 +376,25 @@ class TrackingGroup(pydantic.BaseModel):
         # "smart" mode is pydantic's default behavior on a plain union
         return plain_union
 
+    @property
+    def generation(self) -> int:
+        """The generation of the tracking group.
+
+        This is a counter that increments every time a new registration occurs
+        """
+        return self._generation
+
+    @property
+    def type_adapter(self) -> pydantic.TypeAdapter:
+        """Get the pydantic TypeAdapter for the union of all group members"""
+        if self.generation != self._adapter_generation:
+            self._adapter = pydantic.TypeAdapter(self.union())
+            self._adapter_generation = self.generation
+
+        # casting because the if statement ensures it is non-None (because
+        # _adapter_generation starts at -1 and generation increments from 0.
+        return ty.cast("pydantic.TypeAdapter", self._adapter)
+
     def _register_with_discriminator_field(self, cls: type[pydantic.BaseModel]) -> None:
         """Register the model with the default of the discriminator field
 
@@ -396,14 +419,7 @@ class TrackingGroup(pydantic.BaseModel):
             )
             raise RegistrationError(msg)
 
-        if (other := self.models.get(value)) is not None and other is not cls:
-            msg = (
-                f'Cannot register {cls.__name__} under the "{value}" '
-                f"identifier, which is already in use by {other.__name__}."
-            )
-            raise RegistrationError(msg)
-
-        self.models[value] = cls
+        self._do_register(value, cls)
 
     def _register_plain(self, cls: type[pydantic.BaseModel]) -> None:
         """Register the model keyed by its class name.
@@ -416,11 +432,25 @@ class TrackingGroup(pydantic.BaseModel):
         cls
             The model to register.
         """
-        key = str(id(cls))
-        if (other := self.models.get(key)) is not None and other is not cls:
-            msg = (
-                f'Cannot register {cls.__name__} under the "{key}" '
-                f"identifier, which is already in use by {other.__name__}."
-            )
-            raise RegistrationError(msg)
-        self.models[key] = cls
+        self._do_register(str(id(cls)), cls)
+
+    def _do_register(self, key: str, cls: type[pydantic.BaseModel]) -> None:
+        """Register the given model under the given key
+
+        Parameters
+        ----------
+        key
+            The key under which to register the model
+        cls
+            The model to register.
+        """
+        if (other := self.models.get(key)) is not None:
+            if other is not cls:
+                msg = (
+                    f'Cannot register {cls.__name__} under the "{key}" '
+                    f"identifier, which is already in use by {other.__name__}."
+                )
+                raise RegistrationError(msg)
+        else:
+            self._generation += 1
+            self.models[key] = cls

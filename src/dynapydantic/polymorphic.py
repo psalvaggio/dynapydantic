@@ -26,4 +26,8 @@ else:
             if not isinstance(item, type):
                 msg = f"dynapydantic.Polymorphic must be given a type, not {item}"
                 raise TypeError(msg)
-            return ty.Annotated[item, SubclassTrackingModel.PydanticAdaptor]
+
+            if getattr(item, "__DYNAPYDANTIC_IMPLICIT_POLYMORPHIC__", False):
+                return item
+
+            return ty.Annotated[item, SubclassTrackingModel.PydanticAdapter]

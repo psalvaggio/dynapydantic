@@ -257,3 +257,87 @@ class Model(pydantic.BaseModel):
 print(Model(field={"b": 5}))
 # field=B(b=5)
 ```
+
+### When are unions realized?
+
+When using `TrackingModel` directly, there is only one option for when the union
+is realized, which is the moment you call `.union()`. At this point, any classes
+that have been registered will be present in the union. Registration of
+additional classes after a call to `.union()` will not update the returned
+union from a previous call, so it is important to consider order of operations.
+
+When using `SubclassTrackingModel`, there are more options and each comes with
+their own tradeoffs:
+
+1. Calling `.union()` directly: This functions exactly as it does with
+    `TrackingGroup`. This option is the "most eager" option, but is the most
+    sensitive with order of operations. In addition, type checkers will not
+    understand this method, as they will complain about calling a function in a
+    type annotation (rightfully so).
+
+    Despite the tradeoffs, this option can be desireable for applications that
+    inspect field annotations directly. This normally arises in user-implemented
+    model reflection code and with
+    [`pydantic_settings`](https://pydantic.dev/docs/validation/latest/api/pydantic_settings/#_top).
+
+2. Using `dynapydantic.Polymorphic[T]`: This method will defer the union
+    realization slightly, into the schema generation step for the model. The
+    difference between this and option 1 is slight and subtle, but does have an
+    affect with recursive models. Consider the following:
+
+    ```python
+    import dynapydantic
+    import pydantic
+
+    class Base(dynapydantic.SubclassTrackingModel, union_mode="smart"):
+        pass
+
+    class A(Base, extra="forbid"):
+        a: int
+
+    class B(Base, extra="forbid"):
+        other: dynapydantic.Polymorphic[Base]
+
+    B(other={"other": {"other": {"a": 2}}}) # ValidationError (union only has A)
+
+    B.model_rebuild(force=True)
+    B(other={"other": {"other": {"a": 2}}}) # B(other=B(other=B(other=A(a=2))))
+    ```
+    if we used `Base.union()` directly, the `model_rebuild()` call would do
+    nothing, as the union had already been realized. To accomplish the same
+    thing with `.union()`, we would have to use a forward reference, like
+    `"BUnion"` then then call `.union()` right before the `model_rebuild()`
+    calls.
+
+    Unlike direct `union()` calls, the type checker can at least infer the field
+    to be a subclass of `Base`, which is a vast improvement over a type error.
+
+3. **EXPERIMENTAL** Using `implicit_polymorphic`: If `implicit_polymorphic=True`
+    is passed to a `SubclassTrackingModel`, then union realization is deferred
+    to model validation time, making the process robust to order of operations.
+    This reduces the previous example down to:
+
+    ```python
+    import dynapydantic
+    import pydantic
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        union_mode="smart",
+        implicit_polymorphic=True,
+    ):
+        pass
+
+    class A(Base, extra="forbid"):
+        a: int
+
+    class B(Base, extra="forbid"):
+        other: Base
+
+    B(other={"other": {"other": {"a": 2}}}) # B(other=B(other=B(other=A(a=2))))
+    ```
+
+    This option has the cleanest syntax, but does incur a runtime penalty for
+    potentially multiple schema compilations and the need for a field validator
+    function, whereas options 1 and 2 can produce static schema. Like option 2,
+    the field is able to be interpreted by type checkers as the base class.
