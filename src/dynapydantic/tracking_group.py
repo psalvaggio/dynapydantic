@@ -392,8 +392,7 @@ class TrackingGroup(pydantic.BaseModel):
             self._adapter_generation = self.generation
 
         # casting because the if statement ensures it is non-None (because
-        # __DYNAPYDANTIC_SCHEMA_GENERATION__ starts at -1 and generation
-        # increments from 0.
+        # _adapter_generation starts at -1 and generation increments from 0.
         return ty.cast("pydantic.TypeAdapter", self._adapter)
 
     def _register_with_discriminator_field(self, cls: type[pydantic.BaseModel]) -> None:

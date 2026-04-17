@@ -30,6 +30,9 @@ def direct_children_of_base_in_mro(derived: type, base: type) -> list[type]:
     return [cls for cls in derived.__mro__ if cls is not base and base in cls.__bases__]
 
 
+SubT = ty.TypeVar("SubT", bound="SubclassTrackingModel")
+
+
 class SubclassTrackingModel(pydantic.BaseModel):
     """Subclass-tracking BaseModel
 
@@ -93,14 +96,18 @@ class SubclassTrackingModel(pydantic.BaseModel):
                 },
             )
 
-            cls.__DYNAPYDANTIC_IMPLICIT_POLYMORPHIC__ = implicit_polymorphic
+            cls.__DYNAPYDANTIC_IMPLICIT_POLYMORPHIC__: ty.ClassVar[bool] = (
+                implicit_polymorphic if implicit_polymorphic is not None else False
+            )
 
             if isinstance((tc := getattr(cls, "tracking_config", None)), TrackingGroup):
-                cls.__DYNAPYDANTIC__ = tc
+                cls.__DYNAPYDANTIC__: ty.ClassVar[TrackingGroup] = tc
             else:
                 try:
-                    cls.__DYNAPYDANTIC__: TrackingGroup = TrackingGroup.model_validate(
-                        {"name": f"{cls.__name__}-subclasses"} | kwargs,
+                    cls.__DYNAPYDANTIC__: ty.ClassVar[TrackingGroup] = (
+                        TrackingGroup.model_validate(
+                            {"name": f"{cls.__name__}-subclasses"} | kwargs,
+                        )
                     )
                 except pydantic.ValidationError as e:
                     msg = (
@@ -153,12 +160,12 @@ class SubclassTrackingModel(pydantic.BaseModel):
             if implicit_polymorphic:
 
                 def _gpcs(
-                    cls: type[SubclassTrackingModel],
+                    _cls: type[SubclassTrackingModel],
                     source_type: type[pydantic.BaseModel],
                     handler: GetCoreSchemaHandler,
                     /,
                 ) -> core_schema.CoreSchema:
-                    if SubclassTrackingModel not in cls.__bases__:
+                    if SubclassTrackingModel not in _cls.__bases__:
                         return handler(source_type)
 
                     source_type = _assert_stm_subclass(source_type)
@@ -187,13 +194,14 @@ class SubclassTrackingModel(pydantic.BaseModel):
                 cls.__get_pydantic_core_schema__ = classmethod(_gpcs)  # type: ignore[bad-assignment]
 
                 def _gpjs(
-                    cls: type[SubclassTrackingModel],
-                    core_schema: core_schema.CoreSchema,
+                    _cls: type[SubT],
+                    _core_schema: core_schema.CoreSchema,
                     handler: GetJsonSchemaHandler,
+                    /,
                 ) -> JsonSchemaValue:
-                    if SubclassTrackingModel not in cls.__bases__:
-                        return handler(core_schema)
-                    return handler(_get_adapter(cls).core_schema)
+                    if SubclassTrackingModel in _cls.__bases__:
+                        return handler(_get_adapter(_cls).core_schema)
+                    return handler(_core_schema)
 
                 cls.__get_pydantic_json_schema__ = classmethod(_gpjs)  # type: ignore[bad-assignment]
 
