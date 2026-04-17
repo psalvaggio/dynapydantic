@@ -45,8 +45,6 @@ def test_simple_disrciminated_tracking_group(kwargs: dict[str, ty.Any]) -> None:
     # Make sure the models and union look good
     assert group.models == {"A": A, "B": B}
     assert group.union(plain=True) == (A | B)
-    with pytest.warns(DeprecationWarning, match="annotated"):
-        assert group.union(annotated=False) == (A | B)
 
     annotated_union = group.union()
     assert ty.get_origin(annotated_union) is ty.Annotated
@@ -126,8 +124,6 @@ def test_smart_union_mode() -> None:
 
     assert group.union() == A | B | C
     assert group.union(plain=True) == A | B | C
-    with pytest.warns(DeprecationWarning, match="annotated"):
-        assert group.union(annotated=False) == A | B | C
 
     assert pydantic.TypeAdapter(group.union()).validate_python({"a": 1, "b": 5}) == B(
         a=1, b=5

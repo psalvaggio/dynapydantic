@@ -2,7 +2,6 @@
 
 import inspect
 import typing as ty
-import warnings
 
 import pydantic
 from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
@@ -52,33 +51,6 @@ class SubclassTrackingModel(pydantic.BaseModel):
            [`Polymorphic`][dynapydantic.Polymorphic]. In addition, it is not
            necessary to call `model_rebuild` on recursive models. This feature
            is currently **EXPERIMENTAL** and does incur a runtime penalty.
-
-    **DEPRECATED:**
-
-    Inheriting from this class will augment your class with the following
-    members functions:
-
-    1. `registered_subclasses() -> dict[str, type[cls]]`:
-        This will return a mapping of discriminator value to the corresponding
-        subclass. See
-        [`TrackingGroup.models`][dynapydantic.TrackingGroup.models] for details.
-    2. `union() -> typing.Any`:
-        This will return an (optionally) annotated subclass union. See
-        [`TrackingGroup.union()`][dynapydantic.TrackingGroup.union] for details.
-    3. `load_plugins() -> None`:
-        If plugin_entry_point was specified, then this method will load plugin
-        packages to discover additional subclasses. See
-        [`TrackingGroup.load_plugins()`][dynapydantic.TrackingGroup.load_plugins]
-        for more details.
-
-    These methods will be removed in 0.5.0, please migrate to their
-    corresponding free functions:
-
-    1. `registered_subclasses()` ->
-        [`registered_models()`][dynapydantic.registered_models]
-    2. `union()` -> [`union()`][dynapydantic.union] or
-        [`Union[T]`][dynapydantic.Union]
-    3. `load_plugins()` -> [`load_plugins()`][dynapydantic.load_plugins]
     """
 
     def __init_subclass__(cls, *args, **kwargs) -> None:
@@ -95,14 +67,8 @@ class SubclassTrackingModel(pydantic.BaseModel):
             },
         )
 
-    # This method is too complex, here's the plan to simplify it:
-    # We're polluting this models attributes by injecting and forwarding methods
-    # from tracking group. As a result, we're limiting the possible field names
-    # that these models can have. These should be free functions. We're going
-    # to deprecate the methods to give people a release cycle to migrate off.
-    # We should be able to remove the noqa after these are removed.
     @classmethod
-    def __pydantic_init_subclass__(  # noqa: C901
+    def __pydantic_init_subclass__(
         cls,
         *args,
         exclude_from_union: bool | None = None,
@@ -145,72 +111,8 @@ class SubclassTrackingModel(pydantic.BaseModel):
                     )
                     raise ConfigurationError(msg) from e
 
-            # Promote the tracking group's methods to the parent class
-            if cls.__DYNAPYDANTIC__.plugin_entry_point is not None:
-
-                def _load_plugins() -> None:
-                    """Load plugins to register more models
-
-                    DEPRECATED: use
-                        [`dynapydantic.load_plugins`][dynapydantic.load_plugins]
-                    """
-                    msg = (
-                        "SubclassTrackingModel.load_plugins() is deprecated, "
-                        "please swap dynapydantic.load_plugins()."
-                    )
-                    warnings.warn(msg, DeprecationWarning, stacklevel=2)
-                    cls.__DYNAPYDANTIC__.load_plugins()
-
-                cls.load_plugins = staticmethod(_load_plugins)
-
-            def _union(
-                *,
-                plain: bool | None = None,
-                annotated: bool | None = None,
-            ) -> ty.Any:  # noqa: ANN401 - return type is runtime-determined
-                """Get the union of all tracked subclasses
-
-                DEPRECATED: use [`Union[T]`][dynapydantic.Union] or
-                            [`union()`][dynapydantic.union] instead.
-
-                Parameters
-                ----------
-                plain
-                    If set to `True`, a plain union of all members will be returned.
-                    Otherwise, the returned union will be annotated in accordance with
-                    the union mode.
-                annotated
-                    Deprecated. Use `plain=True` when you would have used
-                    `annotated=False`.
-                """
-                msg = (
-                    "SubclassTrackingModel.union() is deprecated, please swap "
-                    "to dynapydantic.Union[T] (for annotations) or "
-                    "dynapydantic.union() (for runtime calls)."
-                )
-                warnings.warn(msg, DeprecationWarning, stacklevel=2)
-
-                # deprecation warning for annotated is in TrackingGroup
-                return cls.__DYNAPYDANTIC__.union(plain=plain, annotated=annotated)
-
-            cls.union = staticmethod(_union)
-
-            def _subclasses() -> dict[str, type[pydantic.BaseModel]]:
-                """Return a mapping of discriminator values to registered model
-
-                DEPRECATED: use dynapydantic.registered_models().
-                """
-                msg = (
-                    "SubclassTrackingModel.registered_subclasses() is "
-                    "deprecated, please swap to "
-                    "dynapydantic.registered_models()."
-                )
-                warnings.warn(msg, DeprecationWarning, stacklevel=2)
-
-                return cls.__DYNAPYDANTIC__.models
-
-            cls.registered_subclasses = staticmethod(_subclasses)
-
+            # If we're an implicit polymorphic model, we need to override our
+            # pydantic schema.
             if implicit_polymorphic:
                 cls.__get_pydantic_core_schema__ = classmethod(  # type: ignore[bad-assignment]
                     _get_pydantic_core_schema
