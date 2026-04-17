@@ -75,10 +75,10 @@ class SubclassTrackingModel(pydantic.BaseModel):
     corresponding free functions:
 
     1. `registered_subclasses()` ->
-        [`registered_models()`][dynapydantic.registered_models()]
-    2. `union()` -> [`union()`][dynapydantic.union()] or
+        [`registered_models()`][dynapydantic.registered_models]
+    2. `union()` -> [`union()`][dynapydantic.union] or
         [`Union[T]`][dynapydantic.Union]
-    3. `load_plugins()` -> [`load_plugins()`][dynapydantic.load_plugins()]
+    3. `load_plugins()` -> [`load_plugins()`][dynapydantic.load_plugins]
     """
 
     def __init_subclass__(cls, *args, **kwargs) -> None:

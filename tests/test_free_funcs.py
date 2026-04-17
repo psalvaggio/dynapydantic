@@ -22,7 +22,8 @@ def test_union_tg() -> None:
     class B(pydantic.BaseModel):
         b: int
 
-    assert dynapydantic.union(group) == A | B
+    union = dynapydantic.union(group)
+    assert union == A | B
 
     with mock.patch.object(
         dynapydantic.TrackingGroup, "union", autospec=True
@@ -44,7 +45,8 @@ def test_union_stm() -> None:
     class B(Base):
         b: int
 
-    assert dynapydantic.union(Base) == A | B
+    union = dynapydantic.union(Base)
+    assert union == A | B
 
     with mock.patch.object(
         dynapydantic.TrackingGroup, "union", autospec=True
@@ -120,7 +122,8 @@ def test_registered_models_tg() -> None:
     class B(pydantic.BaseModel):
         b: int
 
-    assert set(dynapydantic.registered_models(group).values()) == {A, B}
+    models = dynapydantic.registered_models(group)
+    assert set(models.values()) == {A, B}
 
     placeholder = object()
     with mock.patch.object(group, "models", new=placeholder):
@@ -139,7 +142,8 @@ def test_registered_models_stm() -> None:
     class B(Base):
         b: int
 
-    assert set(dynapydantic.registered_models(Base).values()) == {A, B}
+    models = dynapydantic.registered_models(Base)
+    assert set(models.values()) == {A, B}
 
     placeholder = object()
     with mock.patch.object(Base.__DYNAPYDANTIC__, "models", new=placeholder):

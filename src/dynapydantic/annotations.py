@@ -25,6 +25,7 @@ class PydanticAdapter:
 
 
 if ty.TYPE_CHECKING:  # pragma: no cover
+    # From the type checker's perspective, Polymorphic[T] = Annotated[T]
     Polymorphic = ty.Annotated[ModelT, ...]
 else:
 
@@ -59,7 +60,6 @@ else:
 
 
 if ty.TYPE_CHECKING:  # pragma: no cover
-    ModelT = ty.TypeVar("ModelT", bound=SubclassTrackingModel)
 
     class Union:
         """Annotation used to get the union out of a dynapydantic entity"""
@@ -76,7 +76,12 @@ if ty.TYPE_CHECKING:  # pragma: no cover
 else:
 
     class Union:
-        """Annotation used to get the union out of a dynapydantic entity"""
+        """Annotation used to get the union out of a dynapydantic entity
+
+        This annotation is primarily used for using the union of all models in
+        a `TrackingGroup` as a field annotation. It can be used with
+        `SubclassTrackingModel`, but in general, `Polymorphic` is preferable.
+        """
 
         def __class_getitem__(
             cls, item: TrackingGroup | type[SubclassTrackingModel]

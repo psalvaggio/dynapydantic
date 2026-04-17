@@ -22,6 +22,8 @@ def union(
 
     Parameters
     ----------
+    entity
+        The entity for which the union shall be computed.
     plain
         If set to `True`, a plain union of all members will be returned.
         Otherwise, the returned union will be annotated in accordance with
@@ -34,6 +36,11 @@ def union(
         model is tracked a union of all models will be returned. This union may
         be an `Annotated` union, depending on the `union_mode` of the entity and
         the value of `plain`.
+
+    See Also
+    --------
+    [`Union[T]`][dynapydantic.Union] : Wrapper around this function for use
+        in type annotations.
 
     Raises
     ------
@@ -53,7 +60,13 @@ def union(
 
 
 def load_plugins(entity: TrackingGroup | type[SubclassTrackingModel]) -> None:
-    """Load plugins to discover/register additional models"""
+    """Load plugins to discover/register additional models
+
+    Parameters
+    ----------
+    entity
+        The entity for which to load plugins
+    """
     if isinstance(entity, TrackingGroup):
         entity.load_plugins()
     elif isinstance(entity, type) and issubclass(entity, SubclassTrackingModel):
@@ -77,7 +90,21 @@ def registered_models(entity: type[ModelT]) -> dict[str, type[ModelT]]: ...
 def registered_models(
     entity: TrackingGroup | type[ModelT],
 ) -> dict[str, type[pydantic.BaseModel]] | dict[str, type[ModelT]]:
-    """Get the mapping of identifier -> model for all models tracked by the entity"""
+    """Get the mapping of identifier -> model for all models tracked by the entity
+
+    Parameters
+    ----------
+    entity
+        The entity for which to the registered models are desired
+
+    Returns
+    -------
+    dict[str, pydantic.BaseModel]
+        A mapping of identifier to the registered model. This identifier will be
+        the discriminator value for entities that produce discriminated unions.
+        If the entity produces a non-discriminated union, the identifier will
+        just be some unique string.
+    """
     if isinstance(entity, TrackingGroup):
         return entity.models
     if isinstance(entity, type) and issubclass(entity, SubclassTrackingModel):
