@@ -269,11 +269,11 @@ union from a previous call, so it is important to consider order of operations.
 When using `SubclassTrackingModel`, there are more options and each comes with
 their own tradeoffs:
 
-1. Calling `.union()` directly: This functions exactly as it does with
-    `TrackingGroup`. This option is the "most eager" option, but is the most
-    sensitive with order of operations. In addition, type checkers will not
-    understand this method, as they will complain about calling a function in a
-    type annotation (rightfully so).
+1. Using `union()` or `Union[T]`: These mechanisms eagerly call `.union()` on
+    `TrackingGroup`, so the union is realized immediately upon using these. This
+    is the "most eager" option, but is also the most sensitive with order of
+    operations. Type checkers will not understand this method, and interpret its
+    resulting type as `Any` or unknown.
 
     Despite the tradeoffs, this option can be desireable for applications that
     inspect field annotations directly. This normally arises in user-implemented
@@ -303,11 +303,10 @@ their own tradeoffs:
     B.model_rebuild(force=True)
     B(other={"other": {"other": {"a": 2}}}) # B(other=B(other=B(other=A(a=2))))
     ```
-    if we used `Base.union()` directly, the `model_rebuild()` call would do
-    nothing, as the union had already been realized. To accomplish the same
-    thing with `.union()`, we would have to use a forward reference, like
-    `"BUnion"` then then call `.union()` right before the `model_rebuild()`
-    calls.
+    if we used `Union[Base]`, the `model_rebuild()` call would do nothing, as
+    the union had already been realized. To accomplish the same thing with
+    eager unions, we would have to use a forward reference, like `"BUnion"` then
+    call `dynapydantic.union(Base)` right before the `model_rebuild()` calls.
 
     Unlike direct `union()` calls, the type checker can at least infer the field
     to be a subclass of `Base`, which is a vast improvement over a type error.
