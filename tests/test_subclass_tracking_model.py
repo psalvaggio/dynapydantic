@@ -57,7 +57,7 @@ def test_basic(cls: type[dynapydantic.SubclassTrackingModel]) -> None:
         a=1,
         b=2,
     )
-    assert "C" not in cls.registered_subclasses()
+    assert "C" not in dynapydantic.registered_models(cls)
     with pytest.raises(
         pydantic.ValidationError,
         match="does not match any of the expected tags",
@@ -133,8 +133,8 @@ def test_three_level_subclass_hierarchy() -> None:
     class Concrete(Intermediate):
         x: int
 
-    assert "Concrete" in Base.registered_subclasses()
-    assert "Intermediate" not in Base.registered_subclasses()
+    assert "Concrete" in dynapydantic.registered_models(Base)
+    assert "Intermediate" not in dynapydantic.registered_models(Base)
 
 
 def test_diamond_inheritance_no_duplicate_registration() -> None:
@@ -156,7 +156,7 @@ def test_diamond_inheritance_no_duplicate_registration() -> None:
     class Concrete(Mixin, Mixin2):
         x: int
 
-    assert list(Base.registered_subclasses().values()) == [Concrete]
+    assert list(dynapydantic.registered_models(Base).values()) == [Concrete]
 
 
 def test_tracking_config_classvar_takes_precedence_over_kwargs() -> None:
@@ -196,8 +196,9 @@ def test_subclass_tracking_with_frozen_base() -> None:
     class Child2(FrozenBase):
         y: int
 
-    assert "Child" in FrozenBase.registered_subclasses()
-    assert "Child2" in FrozenBase.registered_subclasses()
+    subclasses = dynapydantic.registered_models(FrozenBase)
+    assert "Child" in subclasses
+    assert "Child2" in subclasses
 
     c = Child(x=5)
     assert c.model_dump() == {"tag": "Child", "x": 5}

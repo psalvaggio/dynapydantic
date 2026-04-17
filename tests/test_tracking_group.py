@@ -357,7 +357,7 @@ def test_that_the_union_works() -> None:
         a: int
 
     class UserModel(pydantic.BaseModel):
-        field: group.union()  # pyrefly: ignore
+        field: dynapydantic.Union[group]
 
     assert UserModel(field={"type": "A", "a": 5}).field == A(a=5)
     assert UserModel(field={"type": "B", "a": 5}).field == B(a=5)
@@ -373,7 +373,7 @@ def test_that_the_union_works() -> None:
 def test_that_load_plugins_doesnt_raise_on_no_entrypoint() -> None:
     """load_plugins() should be a noop in this case"""
     group = dynapydantic.TrackingGroup(name="Test", discriminator_field="type")
-    group.load_plugins()
+    dynapydantic.load_plugins(group)
 
 
 def test_tracking_group_models_default_is_not_shared() -> None:

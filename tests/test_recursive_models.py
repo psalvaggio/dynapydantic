@@ -26,7 +26,7 @@ def test_recursive_models_without_discriminator_value_generator() -> None:
         name: ty.Literal["C"] = "C"
         c: dynapydantic.Polymorphic[A]
 
-    for cls in A.registered_subclasses().values():
+    for cls in dynapydantic.registered_models(A).values():
         cls.model_rebuild(force=True)
 
     model = C(c=C(c=B(b=1)))
@@ -55,7 +55,7 @@ def test_recursive_models_with_model_value_generator() -> None:
 
         c: dynapydantic.Polymorphic[A]
 
-    for cls in A.registered_subclasses().values():
+    for cls in dynapydantic.registered_models(A).values():
         cls.model_rebuild(force=True)
 
     model = C(c=C(c=B(b=1)))

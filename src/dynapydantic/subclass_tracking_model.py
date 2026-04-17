@@ -2,10 +2,10 @@
 
 import inspect
 import typing as ty
+import warnings
 
 import pydantic
 from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
-from pydantic.errors import PydanticSchemaGenerationError
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import PydanticCustomError, core_schema
 
@@ -36,22 +36,6 @@ class SubclassTrackingModel(pydantic.BaseModel):
     This will inject a [`TrackingGroup`][dynapydantic.TrackingGroup] into your
     class and automate the registration of subclasses.
 
-    Inheriting from this class will augment your class with the following
-    members functions:
-
-    1. `registered_subclasses() -> dict[str, type[cls]]`:
-        This will return a mapping of discriminator value to the corresponding
-        subclass. See
-        [`TrackingGroup.models`][dynapydantic.TrackingGroup.models] for details.
-    2. `union() -> typing.Any`:
-        This will return an (optionally) annotated subclass union. See
-        [`TrackingGroup.union()`][dynapydantic.TrackingGroup.union] for details.
-    3. `load_plugins() -> None`:
-        If plugin_entry_point was specified, then this method will load plugin
-        packages to discover additional subclasses. See
-        [`TrackingGroup.load_plugins()`][dynapydantic.TrackingGroup.load_plugins]
-        for more details.
-
     Similar to `BaseModel`, `SubclassTrackingModel` can take arguments in the
     class declaration. Arguments from `BaseModel` will be forwarded.
     Additionally, any fields from `TrackingGroup` will be forwarded to the
@@ -68,6 +52,33 @@ class SubclassTrackingModel(pydantic.BaseModel):
            [`Polymorphic`][dynapydantic.Polymorphic]. In addition, it is not
            necessary to call `model_rebuild` on recursive models. This feature
            is currently **EXPERIMENTAL** and does incur a runtime penalty.
+
+    **DEPRECATED:**
+
+    Inheriting from this class will augment your class with the following
+    members functions:
+
+    1. `registered_subclasses() -> dict[str, type[cls]]`:
+        This will return a mapping of discriminator value to the corresponding
+        subclass. See
+        [`TrackingGroup.models`][dynapydantic.TrackingGroup.models] for details.
+    2. `union() -> typing.Any`:
+        This will return an (optionally) annotated subclass union. See
+        [`TrackingGroup.union()`][dynapydantic.TrackingGroup.union] for details.
+    3. `load_plugins() -> None`:
+        If plugin_entry_point was specified, then this method will load plugin
+        packages to discover additional subclasses. See
+        [`TrackingGroup.load_plugins()`][dynapydantic.TrackingGroup.load_plugins]
+        for more details.
+
+    These methods will be removed in 0.5.0, please migrate to their
+    corresponding free functions:
+
+    1. `registered_subclasses()` ->
+        [`registered_models()`][dynapydantic.registered_models]
+    2. `union()` -> [`union()`][dynapydantic.union] or
+        [`Union[T]`][dynapydantic.Union]
+    3. `load_plugins()` -> [`load_plugins()`][dynapydantic.load_plugins]
     """
 
     def __init_subclass__(cls, *args, **kwargs) -> None:
@@ -138,7 +149,16 @@ class SubclassTrackingModel(pydantic.BaseModel):
             if cls.__DYNAPYDANTIC__.plugin_entry_point is not None:
 
                 def _load_plugins() -> None:
-                    """Load plugins to register more models"""
+                    """Load plugins to register more models
+
+                    DEPRECATED: use
+                        [`dynapydantic.load_plugins`][dynapydantic.load_plugins]
+                    """
+                    msg = (
+                        "SubclassTrackingModel.load_plugins() is deprecated, "
+                        "please swap dynapydantic.load_plugins()."
+                    )
+                    warnings.warn(msg, DeprecationWarning, stacklevel=2)
                     cls.__DYNAPYDANTIC__.load_plugins()
 
                 cls.load_plugins = staticmethod(_load_plugins)
@@ -150,6 +170,9 @@ class SubclassTrackingModel(pydantic.BaseModel):
             ) -> ty.Any:  # noqa: ANN401 - return type is runtime-determined
                 """Get the union of all tracked subclasses
 
+                DEPRECATED: use [`Union[T]`][dynapydantic.Union] or
+                            [`union()`][dynapydantic.union] instead.
+
                 Parameters
                 ----------
                 plain
@@ -160,13 +183,30 @@ class SubclassTrackingModel(pydantic.BaseModel):
                     Deprecated. Use `plain=True` when you would have used
                     `annotated=False`.
                 """
+                msg = (
+                    "SubclassTrackingModel.union() is deprecated, please swap "
+                    "to dynapydantic.Union[T] (for annotations) or "
+                    "dynapydantic.union() (for runtime calls)."
+                )
+                warnings.warn(msg, DeprecationWarning, stacklevel=2)
+
                 # deprecation warning for annotated is in TrackingGroup
                 return cls.__DYNAPYDANTIC__.union(plain=plain, annotated=annotated)
 
             cls.union = staticmethod(_union)
 
             def _subclasses() -> dict[str, type[pydantic.BaseModel]]:
-                """Return a mapping of discriminator values to registered model"""
+                """Return a mapping of discriminator values to registered model
+
+                DEPRECATED: use dynapydantic.registered_models().
+                """
+                msg = (
+                    "SubclassTrackingModel.registered_subclasses() is "
+                    "deprecated, please swap to "
+                    "dynapydantic.registered_models()."
+                )
+                warnings.warn(msg, DeprecationWarning, stacklevel=2)
+
                 return cls.__DYNAPYDANTIC__.models
 
             cls.registered_subclasses = staticmethod(_subclasses)
@@ -191,33 +231,6 @@ class SubclassTrackingModel(pydantic.BaseModel):
         for base in supers:
             base.__DYNAPYDANTIC__.register_model(cls)
 
-    class PydanticAdapter:
-        """Pydantic type adapter for SubclassTrackingModel"""
-
-        @staticmethod
-        def __get_pydantic_core_schema__(
-            source_type: ty.Any,  # noqa: ANN401
-            handler: GetCoreSchemaHandler,
-        ) -> core_schema.CoreSchema:
-            """Get the pydantic schema for this type"""
-            source_type = _assert_stm_subclass(source_type)
-            return handler(source_type.union())
-
-
-def _assert_stm_subclass(
-    t: ty.Any,  # noqa: ANN401
-) -> type[SubclassTrackingModel]:
-    if not isinstance(t, type) or not issubclass(
-        t,
-        SubclassTrackingModel,
-    ):
-        msg = (
-            f"{t} was not a SubclassTrackingModel, "
-            "so it is incompatible with dynapydantic.Polymorphic"
-        )
-        raise PydanticSchemaGenerationError(msg)
-    return t
-
 
 def _get_adapter(
     source_type: type[SubclassTrackingModel],
@@ -239,10 +252,10 @@ def _get_pydantic_core_schema(
     if SubclassTrackingModel not in cls.__bases__:
         return handler(source_type)
 
-    source_type = _assert_stm_subclass(source_type)
-
     def _validate(value: ty.Any) -> ty.Any:  # noqa: ANN401
-        return _get_adapter(source_type).validate_python(value)
+        return _get_adapter(
+            ty.cast("type[SubclassTrackingModel]", source_type)
+        ).validate_python(value)
 
     def _serialize(
         value: pydantic.BaseModel,
