@@ -310,7 +310,6 @@ class TrackingGroup(pydantic.BaseModel):
         self,
         *,
         plain: bool | None = None,
-        annotated: bool | None = None,
     ) -> ty.Any:  # noqa: ANN401
         """Return the union of all registered models
 
@@ -320,9 +319,6 @@ class TrackingGroup(pydantic.BaseModel):
             If set to `True`, a plain union of all members will be returned.
             Otherwise, the returned union will be annotated in accordance with
             the union mode.
-        annotated
-            Deprecated. Use `plain=True` when you would have used
-            `annotated=False`.
 
         Returns
         -------
@@ -336,16 +332,6 @@ class TrackingGroup(pydantic.BaseModel):
         NoRegisteredTypesError
             If no types have been registered yet.
         """
-        if annotated is not None:
-            warnings.warn(
-                "The `annotated` parameter is deprecated. Use `plain=True` to "
-                "get a plain union. By default, behavior is governed by "
-                "`union_mode`. Will be removed in version 0.5.0.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            plain = True if not annotated else plain
-
         n = len(self.models)
         if n == 0:
             msg = (

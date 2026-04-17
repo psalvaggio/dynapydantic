@@ -20,7 +20,7 @@ def list_animal() -> None:
     """List registered animal subclasses"""
     from . import Animal
 
-    click.echo(Animal.registered_subclasses())
+    click.echo(dynapydantic.registered_models(Animal))
 
 
 @animal.command("parse")
@@ -51,7 +51,7 @@ def list_shape() -> None:
     """Shape CLI"""
     from . import Shape
 
-    click.echo(Shape.registered_subclasses())
+    click.echo(dynapydantic.registered_models(Shape))
 
 
 @shape.command("parse")
