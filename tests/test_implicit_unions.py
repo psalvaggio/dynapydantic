@@ -387,3 +387,61 @@ def test_validation_error_good_message_on_disc_union() -> None:
         pydantic.ValidationError, match=r"(?s)item\.Child1\.a.*required"
     ):
         Container(item={"kind": "Child1"})
+
+
+def test_implicit_recursive_models() -> None:
+    """Tests recursive models with an implicit union"""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        discriminator_field="name",
+        discriminator_value_generator=lambda cls: cls.__name__,
+        implicit_polymorphic=True,
+    ):
+        """Base class, has discriminator value generator"""
+
+    class Base2(
+        dynapydantic.SubclassTrackingModel,
+        discriminator_field="name",
+        discriminator_value_generator=lambda cls: cls.__name__,
+        implicit_polymorphic=True,
+    ):
+        """Base class, has discriminator value generator"""
+
+    class A(Base):
+        """A concrete non-recursive subclass"""
+
+        a: int
+
+    class B(Base):
+        """A concrete recursive subclass"""
+
+        b: int
+        other: Base
+
+    class C(Base):
+        """Recursive subclass"""
+
+        c: Base
+        other: Base2
+
+    class D(Base2):
+        d: int
+        other: Base
+
+    model = D.model_validate_json(
+        """
+        {
+          "name": "D", "d": 1, "other": {
+            "name": "B", "b": 2, "other": {
+              "name": "C", "c": {"name": "A", "a": 3}, "other": {
+                "name": "D", "d": 4, "other": {
+                  "name": "A", "a": 5
+                }
+              }
+            }
+          }
+        }
+        """
+    )
+    assert model == D(d=1, other=B(b=2, other=C(c=A(a=3), other=D(d=4, other=A(a=5)))))
