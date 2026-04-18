@@ -65,10 +65,10 @@ def test_simple_disrciminated_tracking_group(kwargs: dict[str, ty.Any]) -> None:
         pytest.param(
             {
                 "discriminator_field": "foo",
-                "union_mode": {"discriminator_field": "foo"},
+                "union_mode": {"discriminator_field": "bar"},
             },
             "Received both union_mode and discriminator_field; pass one or the other.",
-            id="redundant-args",
+            id="contradicting-args-field",
         ),
     ],
 )
