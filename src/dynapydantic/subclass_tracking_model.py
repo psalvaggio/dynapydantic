@@ -1,5 +1,6 @@
 """Base class for dynamic pydantic models"""
 
+import dataclasses
 import inspect
 import typing as ty
 
@@ -10,23 +11,6 @@ from pydantic_core import PydanticCustomError, core_schema
 
 from .exceptions import ConfigurationError, Error
 from .tracking_group import TrackingGroup
-
-
-def direct_children_of_base_in_mro(derived: type, base: type) -> list[type]:
-    """Find all classes in derived's MRO that are direct subclasses of base.
-
-    Parameters
-    ----------
-    derived
-        The class whose MRO is being examined.
-    base
-        The base class to find direct subclasses of.
-
-    Returns
-    -------
-    Classes in derived's MRO that are direct subclasses of base.
-    """
-    return [cls for cls in derived.__mro__ if cls is not base and base in cls.__bases__]
 
 
 class SubclassTrackingModel(pydantic.BaseModel):
@@ -43,14 +27,24 @@ class SubclassTrackingModel(pydantic.BaseModel):
 
     1. `exclude_from_union`: This flag is intended to be used with descendents
            of `SubclassTrackingModel`. If `True`, this subclass will be omitted
-           from tracking.
-    2. `implicit_polymorphic`: This flag is intended to be used with direct
-           descendents of `SubclassTrackingModel`. If `True`, then the core
-           schema of this class will be overridden. This allows polymorphic
-           parsing to occur without the use of
+           from tracking. The default for this flag is `True` for direct
+           descendents of `SubclassTrackingModel` and `False` otherwise.
+    2. `implicit_polymorphic`: **EXPERIMENTAL**. If `True`, then the core schema
+           of this class will be overridden to a validator function that
+           realizes the subclass union at validation time. This allows
+           polymorphic parsing to occur without the use of
            [`Polymorphic`][dynapydantic.Polymorphic]. In addition, it is not
            necessary to call `model_rebuild` on recursive models. This feature
-           is currently **EXPERIMENTAL** and does incur a runtime penalty.
+           is subject to the following limitations at this time:
+
+        1. This flag may only be set on direct descendents of
+            `SubclassTrackingModel` (base classes).
+        2. This flag does **NOT** inherit, a child of an
+            `implicit_polymorphic=True` type is not `implicit_polymorphic=True`.
+        3. A class that is `implicit_polymorphic=True` may not have a parent
+            which is `implicit_polymorphic=True`.
+        4. A class which is `implicit_polymorphic=True` may not be included in
+            its own union.
     """
 
     def __init_subclass__(cls, *args, **kwargs) -> None:
@@ -76,62 +70,120 @@ class SubclassTrackingModel(pydantic.BaseModel):
         **kwargs,
     ) -> None:
         """Pydantic subclass hook"""
-        if SubclassTrackingModel in cls.__bases__:
-            # Intercept any kwargs that are intended for TrackingGroup
-            super().__pydantic_init_subclass__(
-                *args,
-                **{
-                    k: v
-                    for k, v in kwargs.items()
-                    if k not in TrackingGroup.model_fields
-                },
+        # Forward along any unexpected arguments that were not intended
+        # for TrackingGroup.
+        super().__pydantic_init_subclass__(
+            *args,
+            **{k: v for k, v in kwargs.items() if k not in TrackingGroup.model_fields},
+        )
+
+        # Initialize the tracking group
+        cls.__DYNAPYDANTIC__: ty.ClassVar[TrackingGroup] = _init_tracking_group(
+            cls, **kwargs
+        )
+
+        # Initialize our SubclassTrackingModel-specific config
+        cls.__DYNAPYDANTIC_STM_CONFIG__: ty.ClassVar[_StmConfig] = _StmConfig.create(
+            cls,
+            exclude_from_union=exclude_from_union,
+            implicit_polymorphic=implicit_polymorphic,
+        )
+
+        # If we're an implicit polymorphic model, we need to override our
+        # pydantic schema.
+        if cls.__DYNAPYDANTIC_STM_CONFIG__.implicit_polymorphic:
+            _enforce_implicit_guard_rails(cls)
+
+            cls.__get_pydantic_core_schema__ = _get_pydantic_core_schema  # type: ignore[bad-assignment]
+            cls.__get_pydantic_json_schema__ = classmethod(  # type: ignore[bad-assignment]
+                _get_pydantic_json_schema
             )
 
-            cls.__DYNAPYDANTIC_IMPLICIT_POLYMORPHIC__: ty.ClassVar[bool] = (
-                implicit_polymorphic if implicit_polymorphic is not None else False
-            )
+        # If we are going to be tracked, walk the entire MRO (to support
+        # multi-level tree) and register ourselves with each oe.
+        if not cls.__DYNAPYDANTIC_STM_CONFIG__.exclude_from_union:
+            for base in cls.__mro__:
+                if (
+                    issubclass(base, SubclassTrackingModel)
+                    and base is not SubclassTrackingModel
+                ):
+                    base.__DYNAPYDANTIC__.register_model(cls)
 
-            if isinstance((tc := getattr(cls, "tracking_config", None)), TrackingGroup):
-                cls.__DYNAPYDANTIC__: ty.ClassVar[TrackingGroup] = tc
-            else:
-                try:
-                    cls.__DYNAPYDANTIC__: ty.ClassVar[TrackingGroup] = (
-                        TrackingGroup.model_validate(
-                            {"name": f"{cls.__name__}-subclasses"} | kwargs,
-                        )
-                    )
-                except pydantic.ValidationError as e:
-                    msg = (
-                        "SubclassTrackingModel subclasses must either have a "
-                        "tracking_config: ClassVar[dynapydantic.TrackingGroup] "
-                        "member or pass kwargs sufficient to construct a "
-                        "dynapydantic.TrackingGroup in the class declaration. "
-                        "The latter approach produced the following "
-                        f"ValidationError:\n{e}"
-                    )
-                    raise ConfigurationError(msg) from e
 
-            # If we're an implicit polymorphic model, we need to override our
-            # pydantic schema.
-            if implicit_polymorphic:
-                cls.__get_pydantic_core_schema__ = classmethod(  # type: ignore[bad-assignment]
-                    _get_pydantic_core_schema
-                )
+def _init_tracking_group(
+    cls: type[SubclassTrackingModel],
+    **kwargs,
+) -> TrackingGroup:
+    """Initialize the tracking model embedded in this model"""
+    # If the user already defined one, use it
+    if isinstance((tc := getattr(cls, "tracking_config", None)), TrackingGroup):
+        return tc
 
-                cls.__get_pydantic_json_schema__ = classmethod(  # type: ignore[bad-assignment]
-                    _get_pydantic_json_schema
-                )
+    # Otherwise, we need to make it. We can inherit arguments from our
+    # parent class(es) if they have TrackingGroup's and then allow any
+    # kwargs directly passed here to override.
+    if isinstance(parent_tg := getattr(cls, "__DYNAPYDANTIC__", None), TrackingGroup):
+        tg_kwargs = parent_tg.model_dump(
+            exclude={
+                "name",
+                "models",
+                "discriminator_field",
+                "discriminator_value_generator",
+            }
+        )
+        tg_kwargs |= kwargs
+        if "discriminator_field" in kwargs:
+            tg_kwargs.pop("union_mode", None)
+    else:
+        tg_kwargs = kwargs
+    tg_kwargs.setdefault("name", f"{cls.__name__}-subclasses")
 
-            return
+    try:
+        return TrackingGroup(**tg_kwargs)
+    except pydantic.ValidationError as e:
+        msg = (
+            "SubclassTrackingModel subclasses must either have a "
+            "tracking_config: ClassVar[dynapydantic.TrackingGroup] "
+            "member or pass kwargs sufficient to construct a "
+            "dynapydantic.TrackingGroup in the class declaration. "
+            "The latter approach produced the following "
+            f"ValidationError:\n{e}"
+        )
+        raise ConfigurationError(msg) from e
 
-        super().__pydantic_init_subclass__(*args, **kwargs)
 
-        if exclude_from_union:
-            return
+@dataclasses.dataclass(frozen=True)
+class _StmConfig:
+    """Config for SubclassTrackingModel"""
 
-        supers = direct_children_of_base_in_mro(cls, SubclassTrackingModel)
-        for base in supers:
-            base.__DYNAPYDANTIC__.register_model(cls)
+    implicit_polymorphic: bool
+    exclude_from_union: bool
+
+    @classmethod
+    def create(
+        cls,
+        model_t: type[SubclassTrackingModel],
+        *,
+        exclude_from_union: bool | None,
+        implicit_polymorphic: bool | None,
+    ) -> "_StmConfig":
+        """Create this model from the user's specified keyword arguments"""
+        # Figure out if we are an implicit polymorphic model. Prefer direct
+        # argument, then default False.
+        if implicit_polymorphic is None:
+            implicit_polymorphic = False
+
+        # Figure out if model_t is are excluded from tracking unions. Prefer
+        # direct argument, default to True if we are direct descendent of
+        # SubclassTrackingModel and False otherwise. This is because direct
+        # descendents tend to be the abstract base classes.
+        if exclude_from_union is None:
+            exclude_from_union = SubclassTrackingModel in model_t.__bases__
+
+        return cls(
+            implicit_polymorphic=implicit_polymorphic,
+            exclude_from_union=exclude_from_union,
+        )
 
 
 def _get_adapter(
@@ -145,19 +197,16 @@ def _get_adapter(
 
 
 def _get_pydantic_core_schema(
-    cls: type[SubclassTrackingModel],
-    source_type: type[pydantic.BaseModel],
+    source_type: type[SubclassTrackingModel],
     handler: GetCoreSchemaHandler,
     /,
 ) -> core_schema.CoreSchema:
     """Get the pydantic core schema for this type"""
-    if SubclassTrackingModel not in cls.__bases__:
+    if SubclassTrackingModel not in source_type.__bases__:
         return handler(source_type)
 
     def _validate(value: ty.Any) -> ty.Any:  # noqa: ANN401
-        return _get_adapter(
-            ty.cast("type[SubclassTrackingModel]", source_type)
-        ).validate_python(value)
+        return _get_adapter(source_type).validate_python(value)
 
     def _serialize(
         value: pydantic.BaseModel,
@@ -188,3 +237,38 @@ def _get_pydantic_json_schema(
     if SubclassTrackingModel in cls.__bases__:
         return handler(_get_adapter(cls).core_schema)
     return handler(cs)
+
+
+def _enforce_implicit_guard_rails(cls: type[SubclassTrackingModel]) -> None:
+    """Enforce the limitations on implicit_polymorphic"""
+    # Only allowable for direct descendents of SubclassTrackingModel
+    if SubclassTrackingModel not in cls.__bases__:
+        msg = (
+            "implicit_polymorphic=True is only allowed on direct descendents "
+            "of SubclassTrackingModel."
+        )
+        raise ConfigurationError(msg)
+
+    # Check for other implicit_polymorphic's in the MRO (we'd like for
+    # this to work, but it isn't yet)
+    implicits = [
+        t
+        for t in cls.__mro__
+        if t is not cls
+        and (stm := getattr(t, "__DYNAPYDANTIC_STM_CONFIG__", None)) is not None
+        and stm.implicit_polymorphic
+    ]
+    if implicits:
+        msg = (
+            "Models with implicit_polymorphic=True may not have parents that "
+            f"also have implicit_polymorphic=True. For type {cls.__name__}, "
+            f"found the following implicit_polymorphic parents: {implicits}"
+        )
+        raise ConfigurationError(msg)
+
+    if cls.__DYNAPYDANTIC_STM_CONFIG__.exclude_from_union is False:
+        msg = (
+            "A model with implicit_polymorphic=True may not set "
+            "exclude_from_union=False"
+        )
+        raise ConfigurationError(msg)

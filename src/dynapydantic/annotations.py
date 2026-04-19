@@ -46,15 +46,15 @@ else:
                 msg = f"dynapydantic.Polymorphic must be given a type, not {item}"
                 raise TypeError(msg)
 
-            if getattr(item, "__DYNAPYDANTIC_IMPLICIT_POLYMORPHIC__", False):
-                return item
-
             if not issubclass(item, SubclassTrackingModel):
                 msg = (
                     f"Polymorphic was given {item}, which was not a "
                     "SubclassTrackingModel."
                 )
                 raise PydanticSchemaGenerationError(msg)
+
+            if item.__DYNAPYDANTIC_STM_CONFIG__.implicit_polymorphic:
+                return item
 
             return ty.Annotated[item, PydanticAdapter]
 

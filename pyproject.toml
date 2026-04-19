@@ -15,6 +15,7 @@ dependencies = [
 dev = [
     "click>=8.2.1",
     "coveralls>=4.0.1",
+    "griffe<2.0.0a0",
     "griffe-pydantic>=1.1.4",
     "mike>=2.1.3",
     "mkdocs-material>=9.6.15",

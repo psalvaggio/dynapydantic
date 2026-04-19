@@ -234,3 +234,24 @@ def test_polymorphic_model_dump_json_mode() -> None:
     dumped = m.model_dump(mode="json")
     assert dumped["val"]["created_at"] == "2024-01-01T00:00:00Z"
     assert dumped["val"]["a"] == 1
+
+
+def test_root_in_union() -> None:
+    """Test that the inheritance tree root can be in the union"""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        discriminator_field="name",
+        discriminator_value_generator=lambda cls: cls.__name__,
+        exclude_from_union=False,
+    ):
+        a: int
+
+    class B(Base):
+        b: int
+
+    class Outer(pydantic.BaseModel):
+        val: dynapydantic.Polymorphic[Base]
+
+    assert Outer(val={"name": "Base", "a": 1}).val == Base(a=1)
+    assert Outer(val={"name": "B", "a": 2, "b": 3}).val == B(a=2, b=3)

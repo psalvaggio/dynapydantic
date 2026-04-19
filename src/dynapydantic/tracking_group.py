@@ -153,12 +153,26 @@ class TrackingGroup(pydantic.BaseModel):
         union_mode = data.get("union_mode", None)
         has_union_mode = union_mode is not None
 
+        # If the user passed us both a discriminator field and a union_mode,
+        # things must be perfectly consistent
         if has_disc_field and has_union_mode:
-            msg = (
-                "Received both union_mode and discriminator_field; pass one "
-                "or the other."
+            consistent = (
+                isinstance(union_mode, DiscriminatedConfig)
+                and disc_field == union_mode.discriminator_field
+                and data.get("discriminator_value_generator")
+                is union_mode.discriminator_value_generator
+            ) or (
+                isinstance(union_mode, dict)
+                and disc_field == union_mode.get("discriminator_field")
+                and data.get("discriminator_value_generator")
+                is union_mode.get("discriminator_value_generator")
             )
-            raise ValueError(msg)
+            if not consistent:
+                msg = (
+                    "Received both union_mode and discriminator_field; pass one "
+                    "or the other."
+                )
+                raise ValueError(msg)
 
         if has_disc_field and not has_union_mode:
             # Forward arguments to DiscriminatedConfig
