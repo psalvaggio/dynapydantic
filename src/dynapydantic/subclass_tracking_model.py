@@ -92,39 +92,7 @@ class SubclassTrackingModel(pydantic.BaseModel):
         # If we're an implicit polymorphic model, we need to override our
         # pydantic schema.
         if cls.__DYNAPYDANTIC_STM_CONFIG__.implicit_polymorphic:
-            # This is only allowable for direct descendents of
-            # SubclassTrackingModel
-            if SubclassTrackingModel not in cls.__bases__:
-                msg = (
-                    "implicit_polymorphic=True is only allowed on direct "
-                    "descendents of SubclassTrackingModel."
-                )
-                raise ConfigurationError(msg)
-
-            # Check for other implicit_polymorphic's in the MRO (we'd like for
-            # this to work, but it isn't yet)
-            implicits = [
-                t
-                for t in cls.__mro__
-                if t is not cls
-                and (stm := getattr(t, "__DYNAPYDANTIC_STM_CONFIG__", None)) is not None
-                and stm.implicit_polymorphic
-            ]
-            if len(implicits) > 0:
-                msg = (
-                    "Models with implicit_polymorphic=True may not have "
-                    "parents that also have implicit_polymorphic=True. For "
-                    f"type {cls.__name__}, found the following "
-                    f"implicit_polymorphic parents: {implicits}"
-                )
-                raise ConfigurationError(msg)
-
-            if exclude_from_union is False:
-                msg = (
-                    "A model with implicit_polymorphic=True may not set "
-                    "exclude_from_union=False"
-                )
-                raise ConfigurationError(msg)
+            _enforce_implicit_guard_rails(cls)
 
             cls.__get_pydantic_core_schema__ = _get_pydantic_core_schema  # type: ignore[bad-assignment]
             cls.__get_pydantic_json_schema__ = classmethod(  # type: ignore[bad-assignment]
@@ -134,9 +102,10 @@ class SubclassTrackingModel(pydantic.BaseModel):
         if not cls.__DYNAPYDANTIC_STM_CONFIG__.exclude_from_union:
             for base in cls.__mro__:
                 if (
-                    tg := getattr(base, "__DYNAPYDANTIC__", None)
-                ) is not None and isinstance(tg, TrackingGroup):
-                    tg.register_model(cls)
+                    issubclass(base, SubclassTrackingModel)
+                    and base is not SubclassTrackingModel
+                ):
+                    base.__DYNAPYDANTIC__.register_model(cls)
 
 
 def _init_tracking_group(
@@ -171,7 +140,7 @@ def _init_tracking_group(
         raise ConfigurationError(msg) from e
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class _StmConfig:
     """Config for SubclassTrackingModel"""
 
@@ -186,6 +155,7 @@ class _StmConfig:
         exclude_from_union: bool | None,
         implicit_polymorphic: bool | None,
     ) -> "_StmConfig":
+        """Create this model from the user's specified keyword arguments"""
         # Figure out if we are an implicit polymorphic model. Prefer direct
         # argument, then default False.
         if implicit_polymorphic is None:
@@ -193,7 +163,8 @@ class _StmConfig:
 
         # Figure out if model_t is are excluded from tracking unions. Prefer
         # direct argument, default to True if we are direct descendent of
-        # SubclassTrackingModel and False otherwise.
+        # SubclassTrackingModel and False otherwise. This is because direct
+        # descendents tend to be the abstract base classes.
         if exclude_from_union is None:
             exclude_from_union = SubclassTrackingModel in model_t.__bases__
 
@@ -275,7 +246,7 @@ def _enforce_implicit_guard_rails(cls: type[SubclassTrackingModel]) -> None:
         and (stm := getattr(t, "__DYNAPYDANTIC_STM_CONFIG__", None)) is not None
         and stm.implicit_polymorphic
     ]
-    if len(implicits) > 0:
+    if implicits:
         msg = (
             "Models with implicit_polymorphic=True may not have parents that "
             f"also have implicit_polymorphic=True. For type {cls.__name__}, "

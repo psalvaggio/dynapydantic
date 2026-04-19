@@ -153,7 +153,7 @@ class TrackingGroup(pydantic.BaseModel):
         union_mode = data.get("union_mode", None)
         has_union_mode = union_mode is not None
 
-        # If the user passed us both a discrimator field and a union_mode,
+        # If the user passed us both a discriminator field and a union_mode,
         # things must be perfectly consistent
         if has_disc_field and has_union_mode:
             consistent = (
