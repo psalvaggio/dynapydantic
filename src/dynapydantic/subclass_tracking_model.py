@@ -185,7 +185,7 @@ class _StmConfig:
         *,
         exclude_from_union: bool | None,
         implicit_polymorphic: bool | None,
-    ) -> ty.Self:
+    ) -> "_StmConfig":
         # Figure out if we are an implicit polymorphic model. Prefer direct
         # argument, then default False.
         if implicit_polymorphic is None:
