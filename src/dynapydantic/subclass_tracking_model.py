@@ -192,7 +192,7 @@ def _get_adapter(
 
 
 def _get_pydantic_core_schema(
-    source_type: type[pydantic.BaseModel],
+    source_type: type[SubclassTrackingModel],
     handler: GetCoreSchemaHandler,
     /,
 ) -> core_schema.CoreSchema:
@@ -201,9 +201,7 @@ def _get_pydantic_core_schema(
         return handler(source_type)
 
     def _validate(value: ty.Any) -> ty.Any:  # noqa: ANN401
-        return _get_adapter(
-            ty.cast("type[SubclassTrackingModel]", source_type)
-        ).validate_python(value)
+        return _get_adapter(source_type).validate_python(value)
 
     def _serialize(
         value: pydantic.BaseModel,
