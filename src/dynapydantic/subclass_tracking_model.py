@@ -101,9 +101,7 @@ class SubclassTrackingModel(pydantic.BaseModel):
         # If we're an implicit polymorphic model, we need to override our
         # pydantic schema.
         if cls.__DYNAPYDANTIC_STM_CONFIG__.implicit_polymorphic:
-            cls.__get_pydantic_core_schema__ = classmethod(  # type: ignore[bad-assignment]
-                _get_pydantic_core_schema
-            )
+            cls.__get_pydantic_core_schema__ = _get_pydantic_core_schema  # type: ignore[bad-assignment]
             cls.__get_pydantic_json_schema__ = classmethod(  # type: ignore[bad-assignment]
                 _get_pydantic_json_schema
             )
@@ -194,13 +192,12 @@ def _get_adapter(
 
 
 def _get_pydantic_core_schema(
-    cls: type[SubclassTrackingModel],
     source_type: type[pydantic.BaseModel],
     handler: GetCoreSchemaHandler,
     /,
 ) -> core_schema.CoreSchema:
     """Get the pydantic core schema for this type"""
-    if SubclassTrackingModel not in cls.__bases__:
+    if SubclassTrackingModel not in source_type.__bases__:
         return handler(source_type)
 
     def _validate(value: ty.Any) -> ty.Any:  # noqa: ANN401
