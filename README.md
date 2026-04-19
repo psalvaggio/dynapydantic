@@ -340,3 +340,14 @@ their own tradeoffs:
     potentially multiple schema compilations and the need for a field validator
     function, whereas options 1 and 2 can produce static schema. Like option 2,
     the field is able to be interpreted by type checkers as the base class.
+
+    This mechanism is subject to the following limitation currently:
+
+    1. This flag may only be set on direct descendents of
+        `SubclassTrackingModel` (base classes).
+     2. This flag does **NOT** inherit, a child of an
+         `implicit_polymorphic=True` type is not `implicit_polymorphic=True`.
+     3. A class that is `implicit_polymorphic=True` may not have a parent which
+        is `implicit_polymorphic=True`.
+     4. A class which is `implicit_polymorphic=True` may not be included in its
+        own union.

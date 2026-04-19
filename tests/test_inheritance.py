@@ -1,6 +1,7 @@
 """Tests for how dynapydantic propagates to subclasses"""
 
 import pydantic
+import pytest
 
 import dynapydantic
 
@@ -89,4 +90,87 @@ def test_inheritance_tree_basic() -> None:
         class Model(pydantic.BaseModel):
             f: dynapydantic.Polymorphic[field_t]
 
-        assert Model(f=data).f == truth
+        try:
+            m = Model(f=data)
+        except pydantic.ValidationError as e:
+            pytest.fail(f"Failed test ({field_t=}, {data=}, {truth=}):\n{e}")
+
+        assert m.f == truth
+
+
+# The following tests are testing the guard rails put up on
+# implicit_polymorphic. These are there because of an implementation
+# limitations. Feel free to revise these test in the future if you figure out
+# how to make implicit_polymorphic work like dynapydantic.Polymorphic above. I
+# ran into issues because implicit_polymorphic requires overriding
+# __get_pydantic_core_schema__ and we want two behaviors out of this. If a
+# parent class is requesting the schema, as part of their union we want to
+# bypass the override, but if it is used directly as an annotation, we do not.
+# I couldn't figure out a way to route these two paths separately. So, I
+# decided that implicit_polymorphic should NOT inherit and having two in
+# and MRO would be an error.
+
+
+def test_implicit_polymorphic_only_on_direct_descendents() -> None:
+    """implicit_polymorphic is only allowed on direct descendents of STM"""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        discriminator_field="name",
+        discriminator_value_generator=lambda cls: cls.__name__,
+    ):
+        pass
+
+    with pytest.raises(
+        dynapydantic.ConfigurationError, match="only allowed on direct descendents"
+    ):
+
+        class Derived(Base, implicit_polymorphic=True):
+            pass
+
+
+def test_implicit_polymorphic_inheritance() -> None:
+    """implicit_polymorphic should NOT inherit"""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        discriminator_field="name",
+        discriminator_value_generator=lambda cls: cls.__name__,
+        implicit_polymorphic=True,
+    ):
+        pass
+
+    with pytest.raises(
+        dynapydantic.ConfigurationError,
+        match=(
+            "Models with implicit_polymorphic=True may not have parents that also have"
+        ),
+    ):
+
+        class MidA(
+            Base,
+            dynapydantic.SubclassTrackingModel,
+            implicit_polymorphic=True,
+            exclude_from_union=False,
+        ):
+            pass
+
+
+def test_implicit_polymorphic_root_in_union() -> None:
+    """Test an implicit_polymorphic=True, exclude_from_union=False model"""
+    with pytest.raises(
+        dynapydantic.ConfigurationError,
+        match=(
+            "A model with implicit_polymorphic=True may not set "
+            "exclude_from_union=False"
+        ),
+    ):
+
+        class Base(
+            dynapydantic.SubclassTrackingModel,
+            discriminator_field="name",
+            discriminator_value_generator=lambda cls: cls.__name__,
+            implicit_polymorphic=True,
+            exclude_from_union=False,
+        ):
+            a: int

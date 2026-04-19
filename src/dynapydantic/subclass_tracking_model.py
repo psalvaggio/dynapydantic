@@ -13,23 +13,6 @@ from .exceptions import ConfigurationError, Error
 from .tracking_group import TrackingGroup
 
 
-def direct_children_of_base_in_mro(derived: type, base: type) -> list[type]:
-    """Find all classes in derived's MRO that are direct subclasses of base.
-
-    Parameters
-    ----------
-    derived
-        The class whose MRO is being examined.
-    base
-        The base class to find direct subclasses of.
-
-    Returns
-    -------
-    Classes in derived's MRO that are direct subclasses of base.
-    """
-    return [cls for cls in derived.__mro__ if cls is not base and base in cls.__bases__]
-
-
 class SubclassTrackingModel(pydantic.BaseModel):
     """Subclass-tracking BaseModel
 
@@ -46,13 +29,22 @@ class SubclassTrackingModel(pydantic.BaseModel):
            of `SubclassTrackingModel`. If `True`, this subclass will be omitted
            from tracking. The default for this flag is `True` for direct
            descendents of `SubclassTrackingModel` and `False` otherwise.
-    2. `implicit_polymorphic`: This flag is intended to be used with direct
-           descendents of `SubclassTrackingModel`. If `True`, then the core
-           schema of this class will be overridden. This allows polymorphic
-           parsing to occur without the use of
+    2. `implicit_polymorphic`: **EXPERIMENTAL**. If `True`, then the core schema
+           of this class will be overridden to a validator function that
+           realizes the subclass union at validation time. This allows
+           polymorphic parsing to occur without the use of
            [`Polymorphic`][dynapydantic.Polymorphic]. In addition, it is not
            necessary to call `model_rebuild` on recursive models. This feature
-           is currently **EXPERIMENTAL** and does incur a runtime penalty.
+           is subject to the following limitations at this time:
+
+        1. This flag may only be set on direct descendents of
+            `SubclassTrackingModel` (base classes).
+        2. This flag does **NOT** inherit, a child of an
+            `implicit_polymorphic=True` type is not `implicit_polymorphic=True`.
+        3. A class that is `implicit_polymorphic=True` may not have a parent
+            which is `implicit_polymorphic=True`.
+        4. A class which is `implicit_polymorphic=True` may not be included in
+            its own union.
     """
 
     def __init_subclass__(cls, *args, **kwargs) -> None:
@@ -95,12 +87,45 @@ class SubclassTrackingModel(pydantic.BaseModel):
             cls,
             exclude_from_union=exclude_from_union,
             implicit_polymorphic=implicit_polymorphic,
-            inherited=getattr(cls, "__DYNAPYDANTIC_STM_CONFIG__", None),
         )
 
         # If we're an implicit polymorphic model, we need to override our
         # pydantic schema.
         if cls.__DYNAPYDANTIC_STM_CONFIG__.implicit_polymorphic:
+            # This is only allowable for direct descendents of
+            # SubclassTrackingModel
+            if SubclassTrackingModel not in cls.__bases__:
+                msg = (
+                    "implicit_polymorphic=True is only allowed on direct "
+                    "descendents of SubclassTrackingModel."
+                )
+                raise ConfigurationError(msg)
+
+            # Check for other implicit_polymorphic's in the MRO (we'd like for
+            # this to work, but it isn't yet)
+            implicits = [
+                t
+                for t in cls.__mro__
+                if t is not cls
+                and (stm := getattr(t, "__DYNAPYDANTIC_STM_CONFIG__", None)) is not None
+                and stm.implicit_polymorphic
+            ]
+            if len(implicits) > 0:
+                msg = (
+                    "Models with implicit_polymorphic=True may not have "
+                    "parents that also have implicit_polymorphic=True. For "
+                    f"type {cls.__name__}, found the following "
+                    f"implicit_polymorphic parents: {implicits}"
+                )
+                raise ConfigurationError(msg)
+
+            if exclude_from_union is False:
+                msg = (
+                    "A model with implicit_polymorphic=True may not set "
+                    "exclude_from_union=False"
+                )
+                raise ConfigurationError(msg)
+
             cls.__get_pydantic_core_schema__ = _get_pydantic_core_schema  # type: ignore[bad-assignment]
             cls.__get_pydantic_json_schema__ = classmethod(  # type: ignore[bad-assignment]
                 _get_pydantic_json_schema
@@ -160,14 +185,11 @@ class _StmConfig:
         *,
         exclude_from_union: bool | None,
         implicit_polymorphic: bool | None,
-        inherited: ty.Self | None,
     ) -> ty.Self:
         # Figure out if we are an implicit polymorphic model. Prefer direct
-        # argument, then inherited, then default False.
+        # argument, then default False.
         if implicit_polymorphic is None:
-            implicit_polymorphic = (
-                inherited.implicit_polymorphic if inherited is not None else False
-            )
+            implicit_polymorphic = False
 
         # Figure out if model_t is are excluded from tracking unions. Prefer
         # direct argument, default to True if we are direct descendent of
@@ -232,3 +254,38 @@ def _get_pydantic_json_schema(
     if SubclassTrackingModel in cls.__bases__:
         return handler(_get_adapter(cls).core_schema)
     return handler(cs)
+
+
+def _enforce_implicit_guard_rails(cls: type[SubclassTrackingModel]) -> None:
+    """Enforce the limitations on implicit_polymorphic"""
+    # Only allowable for direct descendents of SubclassTrackingModel
+    if SubclassTrackingModel not in cls.__bases__:
+        msg = (
+            "implicit_polymorphic=True is only allowed on direct descendents "
+            "of SubclassTrackingModel."
+        )
+        raise ConfigurationError(msg)
+
+    # Check for other implicit_polymorphic's in the MRO (we'd like for
+    # this to work, but it isn't yet)
+    implicits = [
+        t
+        for t in cls.__mro__
+        if t is not cls
+        and (stm := getattr(t, "__DYNAPYDANTIC_STM_CONFIG__", None)) is not None
+        and stm.implicit_polymorphic
+    ]
+    if len(implicits) > 0:
+        msg = (
+            "Models with implicit_polymorphic=True may not have parents that "
+            f"also have implicit_polymorphic=True. For type {cls.__name__}, "
+            f"found the following implicit_polymorphic parents: {implicits}"
+        )
+        raise ConfigurationError(msg)
+
+    if cls.__DYNAPYDANTIC_STM_CONFIG__.exclude_from_union is False:
+        msg = (
+            "A model with implicit_polymorphic=True may not set "
+            "exclude_from_union=False"
+        )
+        raise ConfigurationError(msg)
