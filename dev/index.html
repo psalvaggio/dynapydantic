@@ -981,6 +981,17 @@ to be a subclass of <code>Base</code>, which is a vast improvement over a type e
 potentially multiple schema compilations and the need for a field validator
 function, whereas options 1 and 2 can produce static schema. Like option 2,
 the field is able to be interpreted by type checkers as the base class.</p>
+<p>This mechanism is subject to the following limitation currently:</p>
+<ol>
+<li>This flag may only be set on direct descendents of
+    <code>SubclassTrackingModel</code> (base classes).</li>
+<li>This flag does <strong>NOT</strong> inherit, a child of an
+     <code>implicit_polymorphic=True</code> type is not <code>implicit_polymorphic=True</code>.</li>
+<li>A class that is <code>implicit_polymorphic=True</code> may not have a parent which
+    is <code>implicit_polymorphic=True</code>.</li>
+<li>A class which is <code>implicit_polymorphic=True</code> may not be included in its
+    own union.</li>
+</ol>
 </li>
 </ol>
 

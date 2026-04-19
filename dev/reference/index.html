@@ -1397,15 +1397,15 @@ all tracked subclasses.</p>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;dynapydantic.Polymorphic must be given a type, not </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="s2">&quot;__DYNAPYDANTIC_IMPLICIT_POLYMORPHIC__&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">item</span>
-
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">SubclassTrackingModel</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Polymorphic was given </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">, which was not a &quot;</span>
                 <span class="s2">&quot;SubclassTrackingModel.&quot;</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">PydanticSchemaGenerationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">__DYNAPYDANTIC_STM_CONFIG__</span><span class="o">.</span><span class="n">implicit_polymorphic</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">item</span>
 
         <span class="k">return</span> <span class="n">ty</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">item</span><span class="p">,</span> <span class="n">PydanticAdapter</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
@@ -1462,15 +1462,15 @@ all tracked subclasses.</p>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;dynapydantic.Polymorphic must be given a type, not </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="s2">&quot;__DYNAPYDANTIC_IMPLICIT_POLYMORPHIC__&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">item</span>
-
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">SubclassTrackingModel</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Polymorphic was given </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">, which was not a &quot;</span>
             <span class="s2">&quot;SubclassTrackingModel.&quot;</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">PydanticSchemaGenerationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">__DYNAPYDANTIC_STM_CONFIG__</span><span class="o">.</span><span class="n">implicit_polymorphic</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">item</span>
 
     <span class="k">return</span> <span class="n">ty</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">item</span><span class="p">,</span> <span class="n">PydanticAdapter</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
@@ -1821,14 +1821,27 @@ supported:</p>
 <ol>
 <li><code>exclude_from_union</code>: This flag is intended to be used with descendents
        of <code>SubclassTrackingModel</code>. If <code>True</code>, this subclass will be omitted
-       from tracking.</li>
-<li><code>implicit_polymorphic</code>: This flag is intended to be used with direct
-       descendents of <code>SubclassTrackingModel</code>. If <code>True</code>, then the core
-       schema of this class will be overridden. This allows polymorphic
-       parsing to occur without the use of
+       from tracking. The default for this flag is <code>True</code> for direct
+       descendents of <code>SubclassTrackingModel</code> and <code>False</code> otherwise.</li>
+<li>
+<p><code>implicit_polymorphic</code>: <strong>EXPERIMENTAL</strong>. If <code>True</code>, then the core schema
+       of this class will be overridden to a validator function that
+       realizes the subclass union at validation time. This allows
+       polymorphic parsing to occur without the use of
        <a class="autorefs autorefs-internal" href="#dynapydantic.Polymorphic"><code>Polymorphic</code></a>. In addition, it is not
        necessary to call <code>model_rebuild</code> on recursive models. This feature
-       is currently <strong>EXPERIMENTAL</strong> and does incur a runtime penalty.</li>
+       is subject to the following limitations at this time:</p>
+<ol>
+<li>This flag may only be set on direct descendents of
+    <code>SubclassTrackingModel</code> (base classes).</li>
+<li>This flag does <strong>NOT</strong> inherit, a child of an
+    <code>implicit_polymorphic=True</code> type is not <code>implicit_polymorphic=True</code>.</li>
+<li>A class that is <code>implicit_polymorphic=True</code> may not have a parent
+    which is <code>implicit_polymorphic=True</code>.</li>
+<li>A class which is <code>implicit_polymorphic=True</code> may not be included in
+    its own union.</li>
+</ol>
+</li>
 </ol>
 
     
@@ -1837,7 +1850,23 @@ supported:</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/dynapydantic/subclass_tracking_model.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 32</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
 <span class="normal"> 33</span>
 <span class="normal"> 34</span>
 <span class="normal"> 35</span>
@@ -1915,31 +1944,7 @@ supported:</p>
 <span class="normal">107</span>
 <span class="normal">108</span>
 <span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SubclassTrackingModel</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">110</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SubclassTrackingModel</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Subclass-tracking BaseModel</span>
 
 <span class="sd">    This will inject a [`TrackingGroup`][dynapydantic.TrackingGroup] into your</span>
@@ -1953,14 +1958,24 @@ supported:</p>
 
 <span class="sd">    1. `exclude_from_union`: This flag is intended to be used with descendents</span>
 <span class="sd">           of `SubclassTrackingModel`. If `True`, this subclass will be omitted</span>
-<span class="sd">           from tracking.</span>
-<span class="sd">    2. `implicit_polymorphic`: This flag is intended to be used with direct</span>
-<span class="sd">           descendents of `SubclassTrackingModel`. If `True`, then the core</span>
-<span class="sd">           schema of this class will be overridden. This allows polymorphic</span>
-<span class="sd">           parsing to occur without the use of</span>
+<span class="sd">           from tracking. The default for this flag is `True` for direct</span>
+<span class="sd">           descendents of `SubclassTrackingModel` and `False` otherwise.</span>
+<span class="sd">    2. `implicit_polymorphic`: **EXPERIMENTAL**. If `True`, then the core schema</span>
+<span class="sd">           of this class will be overridden to a validator function that</span>
+<span class="sd">           realizes the subclass union at validation time. This allows</span>
+<span class="sd">           polymorphic parsing to occur without the use of</span>
 <span class="sd">           [`Polymorphic`][dynapydantic.Polymorphic]. In addition, it is not</span>
 <span class="sd">           necessary to call `model_rebuild` on recursive models. This feature</span>
-<span class="sd">           is currently **EXPERIMENTAL** and does incur a runtime penalty.</span>
+<span class="sd">           is subject to the following limitations at this time:</span>
+
+<span class="sd">        1. This flag may only be set on direct descendents of</span>
+<span class="sd">            `SubclassTrackingModel` (base classes).</span>
+<span class="sd">        2. This flag does **NOT** inherit, a child of an</span>
+<span class="sd">            `implicit_polymorphic=True` type is not `implicit_polymorphic=True`.</span>
+<span class="sd">        3. A class that is `implicit_polymorphic=True` may not have a parent</span>
+<span class="sd">            which is `implicit_polymorphic=True`.</span>
+<span class="sd">        4. A class which is `implicit_polymorphic=True` may not be included in</span>
+<span class="sd">            its own union.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1986,62 +2001,44 @@ supported:</p>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Pydantic subclass hook&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">SubclassTrackingModel</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">:</span>
-            <span class="c1"># Intercept any kwargs that are intended for TrackingGroup</span>
-            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__pydantic_init_subclass__</span><span class="p">(</span>
-                <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-                <span class="o">**</span><span class="p">{</span>
-                    <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
-                    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                    <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TrackingGroup</span><span class="o">.</span><span class="n">model_fields</span>
-                <span class="p">},</span>
+        <span class="c1"># Forward along any unexpected arguments that were not intended</span>
+        <span class="c1"># for TrackingGroup.</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__pydantic_init_subclass__</span><span class="p">(</span>
+            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+            <span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TrackingGroup</span><span class="o">.</span><span class="n">model_fields</span><span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Initialize the tracking group</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">ClassVar</span><span class="p">[</span><span class="n">TrackingGroup</span><span class="p">]</span> <span class="o">=</span> <span class="n">_init_tracking_group</span><span class="p">(</span>
+            <span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Initialize our SubclassTrackingModel-specific config</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC_STM_CONFIG__</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">ClassVar</span><span class="p">[</span><span class="n">_StmConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">_StmConfig</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+            <span class="bp">cls</span><span class="p">,</span>
+            <span class="n">exclude_from_union</span><span class="o">=</span><span class="n">exclude_from_union</span><span class="p">,</span>
+            <span class="n">implicit_polymorphic</span><span class="o">=</span><span class="n">implicit_polymorphic</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># If we&#39;re an implicit polymorphic model, we need to override our</span>
+        <span class="c1"># pydantic schema.</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC_STM_CONFIG__</span><span class="o">.</span><span class="n">implicit_polymorphic</span><span class="p">:</span>
+            <span class="n">_enforce_implicit_guard_rails</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+
+            <span class="bp">cls</span><span class="o">.</span><span class="n">__get_pydantic_core_schema__</span> <span class="o">=</span> <span class="n">_get_pydantic_core_schema</span>  <span class="c1"># type: ignore[bad-assignment]</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">__get_pydantic_json_schema__</span> <span class="o">=</span> <span class="nb">classmethod</span><span class="p">(</span>  <span class="c1"># type: ignore[bad-assignment]</span>
+                <span class="n">_get_pydantic_json_schema</span>
             <span class="p">)</span>
 
-            <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC_IMPLICIT_POLYMORPHIC__</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">ClassVar</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">implicit_polymorphic</span> <span class="k">if</span> <span class="n">implicit_polymorphic</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">False</span>
-            <span class="p">)</span>
-
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">((</span><span class="n">tc</span> <span class="o">:=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">&quot;tracking_config&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)),</span> <span class="n">TrackingGroup</span><span class="p">):</span>
-                <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">ClassVar</span><span class="p">[</span><span class="n">TrackingGroup</span><span class="p">]</span> <span class="o">=</span> <span class="n">tc</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">ClassVar</span><span class="p">[</span><span class="n">TrackingGroup</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">TrackingGroup</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span>
-                            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">-subclasses&quot;</span><span class="p">}</span> <span class="o">|</span> <span class="n">kwargs</span><span class="p">,</span>
-                        <span class="p">)</span>
-                    <span class="p">)</span>
-                <span class="k">except</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">ValidationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="s2">&quot;SubclassTrackingModel subclasses must either have a &quot;</span>
-                        <span class="s2">&quot;tracking_config: ClassVar[dynapydantic.TrackingGroup] &quot;</span>
-                        <span class="s2">&quot;member or pass kwargs sufficient to construct a &quot;</span>
-                        <span class="s2">&quot;dynapydantic.TrackingGroup in the class declaration. &quot;</span>
-                        <span class="s2">&quot;The latter approach produced the following &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;ValidationError:</span><span class="se">\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
-                    <span class="p">)</span>
-                    <span class="k">raise</span> <span class="n">ConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
-
-            <span class="c1"># If we&#39;re an implicit polymorphic model, we need to override our</span>
-            <span class="c1"># pydantic schema.</span>
-            <span class="k">if</span> <span class="n">implicit_polymorphic</span><span class="p">:</span>
-                <span class="bp">cls</span><span class="o">.</span><span class="n">__get_pydantic_core_schema__</span> <span class="o">=</span> <span class="nb">classmethod</span><span class="p">(</span>  <span class="c1"># type: ignore[bad-assignment]</span>
-                    <span class="n">_get_pydantic_core_schema</span>
-                <span class="p">)</span>
-
-                <span class="bp">cls</span><span class="o">.</span><span class="n">__get_pydantic_json_schema__</span> <span class="o">=</span> <span class="nb">classmethod</span><span class="p">(</span>  <span class="c1"># type: ignore[bad-assignment]</span>
-                    <span class="n">_get_pydantic_json_schema</span>
-                <span class="p">)</span>
-
-            <span class="k">return</span>
-
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__pydantic_init_subclass__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">exclude_from_union</span><span class="p">:</span>
-            <span class="k">return</span>
-
-        <span class="n">supers</span> <span class="o">=</span> <span class="n">direct_children_of_base_in_mro</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">SubclassTrackingModel</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">supers</span><span class="p">:</span>
-            <span class="n">base</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="o">.</span><span class="n">register_model</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="c1"># If we are going to be tracked, walk the entire MRO (to support</span>
+        <span class="c1"># multi-level tree) and register ourselves with each oe.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC_STM_CONFIG__</span><span class="o">.</span><span class="n">exclude_from_union</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__mro__</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="nb">issubclass</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">SubclassTrackingModel</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="n">base</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">SubclassTrackingModel</span>
+                <span class="p">):</span>
+                    <span class="n">base</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="o">.</span><span class="n">register_model</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -2073,19 +2070,19 @@ supported:</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/dynapydantic/subclass_tracking_model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">56</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
 <span class="normal">57</span>
 <span class="normal">58</span>
 <span class="normal">59</span>
 <span class="normal">60</span>
 <span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">62</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Subclass hook&quot;&quot;&quot;</span>
     <span class="c1"># Intercept any kwargs that are intended for TrackingGroup or</span>
     <span class="c1"># __pydantic_init_subclass__</span>
@@ -2124,7 +2121,13 @@ supported:</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/dynapydantic/subclass_tracking_model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 70</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
 <span class="normal"> 71</span>
 <span class="normal"> 72</span>
 <span class="normal"> 73</span>
@@ -2164,31 +2167,7 @@ supported:</p>
 <span class="normal">107</span>
 <span class="normal">108</span>
 <span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">110</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">__pydantic_init_subclass__</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">,</span>
     <span class="o">*</span><span class="n">args</span><span class="p">,</span>
@@ -2197,62 +2176,44 @@ supported:</p>
     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Pydantic subclass hook&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">SubclassTrackingModel</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">:</span>
-        <span class="c1"># Intercept any kwargs that are intended for TrackingGroup</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__pydantic_init_subclass__</span><span class="p">(</span>
-            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-            <span class="o">**</span><span class="p">{</span>
-                <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
-                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TrackingGroup</span><span class="o">.</span><span class="n">model_fields</span>
-            <span class="p">},</span>
+    <span class="c1"># Forward along any unexpected arguments that were not intended</span>
+    <span class="c1"># for TrackingGroup.</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__pydantic_init_subclass__</span><span class="p">(</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TrackingGroup</span><span class="o">.</span><span class="n">model_fields</span><span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Initialize the tracking group</span>
+    <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">ClassVar</span><span class="p">[</span><span class="n">TrackingGroup</span><span class="p">]</span> <span class="o">=</span> <span class="n">_init_tracking_group</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Initialize our SubclassTrackingModel-specific config</span>
+    <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC_STM_CONFIG__</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">ClassVar</span><span class="p">[</span><span class="n">_StmConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">_StmConfig</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">exclude_from_union</span><span class="o">=</span><span class="n">exclude_from_union</span><span class="p">,</span>
+        <span class="n">implicit_polymorphic</span><span class="o">=</span><span class="n">implicit_polymorphic</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># If we&#39;re an implicit polymorphic model, we need to override our</span>
+    <span class="c1"># pydantic schema.</span>
+    <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC_STM_CONFIG__</span><span class="o">.</span><span class="n">implicit_polymorphic</span><span class="p">:</span>
+        <span class="n">_enforce_implicit_guard_rails</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">__get_pydantic_core_schema__</span> <span class="o">=</span> <span class="n">_get_pydantic_core_schema</span>  <span class="c1"># type: ignore[bad-assignment]</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">__get_pydantic_json_schema__</span> <span class="o">=</span> <span class="nb">classmethod</span><span class="p">(</span>  <span class="c1"># type: ignore[bad-assignment]</span>
+            <span class="n">_get_pydantic_json_schema</span>
         <span class="p">)</span>
 
-        <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC_IMPLICIT_POLYMORPHIC__</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">ClassVar</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">implicit_polymorphic</span> <span class="k">if</span> <span class="n">implicit_polymorphic</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">False</span>
-        <span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">((</span><span class="n">tc</span> <span class="o">:=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">&quot;tracking_config&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)),</span> <span class="n">TrackingGroup</span><span class="p">):</span>
-            <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">ClassVar</span><span class="p">[</span><span class="n">TrackingGroup</span><span class="p">]</span> <span class="o">=</span> <span class="n">tc</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">ClassVar</span><span class="p">[</span><span class="n">TrackingGroup</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">TrackingGroup</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span>
-                        <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">-subclasses&quot;</span><span class="p">}</span> <span class="o">|</span> <span class="n">kwargs</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
-            <span class="k">except</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">ValidationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="s2">&quot;SubclassTrackingModel subclasses must either have a &quot;</span>
-                    <span class="s2">&quot;tracking_config: ClassVar[dynapydantic.TrackingGroup] &quot;</span>
-                    <span class="s2">&quot;member or pass kwargs sufficient to construct a &quot;</span>
-                    <span class="s2">&quot;dynapydantic.TrackingGroup in the class declaration. &quot;</span>
-                    <span class="s2">&quot;The latter approach produced the following &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;ValidationError:</span><span class="se">\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
-                <span class="k">raise</span> <span class="n">ConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
-
-        <span class="c1"># If we&#39;re an implicit polymorphic model, we need to override our</span>
-        <span class="c1"># pydantic schema.</span>
-        <span class="k">if</span> <span class="n">implicit_polymorphic</span><span class="p">:</span>
-            <span class="bp">cls</span><span class="o">.</span><span class="n">__get_pydantic_core_schema__</span> <span class="o">=</span> <span class="nb">classmethod</span><span class="p">(</span>  <span class="c1"># type: ignore[bad-assignment]</span>
-                <span class="n">_get_pydantic_core_schema</span>
-            <span class="p">)</span>
-
-            <span class="bp">cls</span><span class="o">.</span><span class="n">__get_pydantic_json_schema__</span> <span class="o">=</span> <span class="nb">classmethod</span><span class="p">(</span>  <span class="c1"># type: ignore[bad-assignment]</span>
-                <span class="n">_get_pydantic_json_schema</span>
-            <span class="p">)</span>
-
-        <span class="k">return</span>
-
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__pydantic_init_subclass__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">exclude_from_union</span><span class="p">:</span>
-        <span class="k">return</span>
-
-    <span class="n">supers</span> <span class="o">=</span> <span class="n">direct_children_of_base_in_mro</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">SubclassTrackingModel</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">supers</span><span class="p">:</span>
-        <span class="n">base</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="o">.</span><span class="n">register_model</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+    <span class="c1"># If we are going to be tracked, walk the entire MRO (to support</span>
+    <span class="c1"># multi-level tree) and register ourselves with each oe.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__DYNAPYDANTIC_STM_CONFIG__</span><span class="o">.</span><span class="n">exclude_from_union</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__mro__</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="nb">issubclass</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">SubclassTrackingModel</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">base</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">SubclassTrackingModel</span>
+            <span class="p">):</span>
+                <span class="n">base</span><span class="o">.</span><span class="n">__DYNAPYDANTIC__</span><span class="o">.</span><span class="n">register_model</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2740,7 +2701,21 @@ supported:</p>
 <span class="normal">439</span>
 <span class="normal">440</span>
 <span class="normal">441</span>
-<span class="normal">442</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrackingGroup</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrackingGroup</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Tracker for pydantic models&quot;&quot;&quot;</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span>
@@ -2840,12 +2815,26 @@ supported:</p>
         <span class="n">union_mode</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;union_mode&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">has_union_mode</span> <span class="o">=</span> <span class="n">union_mode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
+        <span class="c1"># If the user passed us both a discriminator field and a union_mode,</span>
+        <span class="c1"># things must be perfectly consistent</span>
         <span class="k">if</span> <span class="n">has_disc_field</span> <span class="ow">and</span> <span class="n">has_union_mode</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;Received both union_mode and discriminator_field; pass one &quot;</span>
-                <span class="s2">&quot;or the other.&quot;</span>
+            <span class="n">consistent</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">union_mode</span><span class="p">,</span> <span class="n">DiscriminatedConfig</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">disc_field</span> <span class="o">==</span> <span class="n">union_mode</span><span class="o">.</span><span class="n">discriminator_field</span>
+                <span class="ow">and</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;discriminator_value_generator&quot;</span><span class="p">)</span>
+                <span class="ow">is</span> <span class="n">union_mode</span><span class="o">.</span><span class="n">discriminator_value_generator</span>
+            <span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">union_mode</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">disc_field</span> <span class="o">==</span> <span class="n">union_mode</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;discriminator_field&quot;</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;discriminator_value_generator&quot;</span><span class="p">)</span>
+                <span class="ow">is</span> <span class="n">union_mode</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;discriminator_value_generator&quot;</span><span class="p">)</span>
             <span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">consistent</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;Received both union_mode and discriminator_field; pass one &quot;</span>
+                    <span class="s2">&quot;or the other.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">has_disc_field</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_union_mode</span><span class="p">:</span>
             <span class="c1"># Forward arguments to DiscriminatedConfig</span>
@@ -3335,17 +3324,17 @@ supported:</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/dynapydantic/tracking_group.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_plugins</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_plugins</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Load plugins to discover/register additional models&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plugin_entry_point</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span>
@@ -3420,21 +3409,7 @@ itself to register (if the ()'s are omitted from the decorator).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/dynapydantic/tracking_group.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span>
-<span class="normal">207</span>
-<span class="normal">208</span>
-<span class="normal">209</span>
-<span class="normal">210</span>
-<span class="normal">211</span>
-<span class="normal">212</span>
-<span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">218</span>
 <span class="normal">219</span>
 <span class="normal">220</span>
 <span class="normal">221</span>
@@ -3442,7 +3417,21 @@ itself to register (if the ()'s are omitted from the decorator).</p>
 <span class="normal">223</span>
 <span class="normal">224</span>
 <span class="normal">225</span>
-<span class="normal">226</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">type</span><span class="p">],</span> <span class="nb">type</span><span class="p">]</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">]:</span>
@@ -3536,21 +3525,7 @@ discriminator field must be declared by hand.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/dynapydantic/tracking_group.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span>
-<span class="normal">232</span>
-<span class="normal">233</span>
-<span class="normal">234</span>
-<span class="normal">235</span>
-<span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span>
-<span class="normal">242</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">242</span>
 <span class="normal">243</span>
 <span class="normal">244</span>
 <span class="normal">245</span>
@@ -3615,7 +3590,21 @@ discriminator field must be declared by hand.</p>
 <span class="normal">304</span>
 <span class="normal">305</span>
 <span class="normal">306</span>
-<span class="normal">307</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">register_model</span><span class="p">(</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">register_model</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="bp">cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">],</span>
     <span class="n">discriminator_value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -3798,21 +3787,7 @@ union of all registered types. This union may be annotated if
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/dynapydantic/tracking_group.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">309</span>
-<span class="normal">310</span>
-<span class="normal">311</span>
-<span class="normal">312</span>
-<span class="normal">313</span>
-<span class="normal">314</span>
-<span class="normal">315</span>
-<span class="normal">316</span>
-<span class="normal">317</span>
-<span class="normal">318</span>
-<span class="normal">319</span>
-<span class="normal">320</span>
-<span class="normal">321</span>
-<span class="normal">322</span>
-<span class="normal">323</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">323</span>
 <span class="normal">324</span>
 <span class="normal">325</span>
 <span class="normal">326</span>
@@ -3852,7 +3827,21 @@ union of all registered types. This union may be annotated if
 <span class="normal">360</span>
 <span class="normal">361</span>
 <span class="normal">362</span>
-<span class="normal">363</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">union</span><span class="p">(</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">union</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">plain</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
