@@ -99,6 +99,8 @@ class SubclassTrackingModel(pydantic.BaseModel):
                 _get_pydantic_json_schema
             )
 
+        # If we are going to be tracked, walk the entire MRO (to support
+        # multi-level tree) and register ourselves with each oe.
         if not cls.__DYNAPYDANTIC_STM_CONFIG__.exclude_from_union:
             for base in cls.__mro__:
                 if (
