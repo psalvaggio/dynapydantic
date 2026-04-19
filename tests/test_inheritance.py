@@ -98,6 +98,111 @@ def test_inheritance_tree_basic() -> None:
         assert m.f == truth
 
 
+def test_changing_union_from_smart_to_discriminated() -> None:
+    """Test a subclass changing a union type"""
+
+    class Base(dynapydantic.SubclassTrackingModel, union_mode="smart"):
+        pass
+
+    class Mid(Base, exclude_from_union=True):
+        pass
+
+    class MidA(
+        Mid,
+        discriminator_field="name",
+        discriminator_value_generator=lambda cls: cls.__name__,
+    ):
+        a: int
+
+    class B(MidA):
+        b: int
+
+    class C(MidA):
+        c: int
+
+    class Container(pydantic.BaseModel):
+        f1: dynapydantic.Polymorphic[Base]
+        f2: dynapydantic.Polymorphic[MidA]
+
+    assert Container.model_json_schema() == {
+        "$defs": {
+            "B": {
+                "properties": {
+                    "a": {"title": "A", "type": "integer"},
+                    "b": {"title": "B", "type": "integer"},
+                    "name": {
+                        "title": "Name",
+                        "type": "string",
+                        "const": "B",
+                        "default": "B",
+                    },
+                },
+                "required": ["a", "b"],
+                "title": "B",
+                "type": "object",
+            },
+            "C": {
+                "properties": {
+                    "a": {"title": "A", "type": "integer"},
+                    "c": {"title": "C", "type": "integer"},
+                    "name": {
+                        "title": "Name",
+                        "type": "string",
+                        "const": "C",
+                        "default": "C",
+                    },
+                },
+                "required": ["a", "c"],
+                "title": "C",
+                "type": "object",
+            },
+            "MidA": {
+                "properties": {
+                    "a": {"title": "A", "type": "integer"},
+                    "name": {
+                        "title": "Name",
+                        "type": "string",
+                        "const": "MidA",
+                        "default": "MidA",
+                    },
+                },
+                "required": ["a"],
+                "title": "MidA",
+                "type": "object",
+            },
+        },
+        "properties": {
+            "f1": {
+                "anyOf": [
+                    {"$ref": "#/$defs/MidA"},
+                    {"$ref": "#/$defs/B"},
+                    {"$ref": "#/$defs/C"},
+                ],
+                "title": "F1",
+            },
+            "f2": {
+                "discriminator": {
+                    "mapping": {
+                        "MidA": "#/$defs/MidA",
+                        "B": "#/$defs/B",
+                        "C": "#/$defs/C",
+                    },
+                    "propertyName": "name",
+                },
+                "oneOf": [
+                    {"$ref": "#/$defs/MidA"},
+                    {"$ref": "#/$defs/B"},
+                    {"$ref": "#/$defs/C"},
+                ],
+                "title": "F2",
+            },
+        },
+        "required": ["f1", "f2"],
+        "title": "Container",
+        "type": "object",
+    }
+
+
 # The following tests are testing the guard rails put up on
 # implicit_polymorphic. These are there because of an implementation
 # limitations. Feel free to revise these test in the future if you figure out

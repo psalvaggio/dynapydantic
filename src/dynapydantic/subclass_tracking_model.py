@@ -122,8 +122,18 @@ def _init_tracking_group(
     # Otherwise, we need to make it. We can inherit arguments from our
     # parent class(es) if they have TrackingGroup's and then allow any
     # kwargs directly passed here to override.
-    if (parent_tg := getattr(cls, "__DYNAPYDANTIC__", None)) is not None:
-        tg_kwargs = parent_tg.model_dump(exclude={"name", "models"}) | kwargs
+    if isinstance(parent_tg := getattr(cls, "__DYNAPYDANTIC__", None), TrackingGroup):
+        tg_kwargs = parent_tg.model_dump(
+            exclude={
+                "name",
+                "models",
+                "discriminator_field",
+                "discriminator_value_generator",
+            }
+        )
+        tg_kwargs |= kwargs
+        if "discriminator_field" in kwargs:
+            tg_kwargs.pop("union_mode", None)
     else:
         tg_kwargs = kwargs
     tg_kwargs.setdefault("name", f"{cls.__name__}-subclasses")

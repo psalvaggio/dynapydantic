@@ -8,6 +8,7 @@ import pytest
 from pydantic_core._pydantic_core import ValidationError
 
 import dynapydantic
+from dynapydantic import TrackingGroup
 
 
 @pytest.mark.parametrize(
@@ -632,3 +633,71 @@ def test_type_adapter() -> None:
     assert ta3.validate_python({"name": "B", "b": 3}) == B(b=3)
     with pytest.raises(ValidationError, match=r"(?s)A\.a.*required"):
         ta3.validate_python({"name": "A"})
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "match"),
+    [
+        pytest.param(
+            {"discriminator_field": "foo", "union_mode": "smart"},
+            "pass one or the other",
+            id="mix-types",
+        ),
+        pytest.param(
+            {
+                "discriminator_field": "foo",
+                "union_mode": {"discriminator_field": "bar"},
+            },
+            "pass one or the other",
+            id="different-fields",
+        ),
+        pytest.param(
+            {
+                "discriminator_field": "foo",
+                "discriminator_value_generator": lambda cls: cls.__name__,
+                "union_mode": {
+                    "discriminator_field": "foo",
+                    # not the same ID
+                    "discriminator_value_generator": lambda cls: cls.__name__,
+                },
+            },
+            "pass one or the other",
+            id="different-fields",
+        ),
+    ],
+)
+def test_inconsistent_union(kwargs: dict[str, ty.Any], match: str) -> None:
+    """Test inconsistent union setups"""
+    with pytest.raises(pydantic.ValidationError, match=match):
+        dynapydantic.TrackingGroup(name="test", **kwargs)
+
+
+def test_consistent_union() -> None:
+    """If the user passes exactly consistent things for the union, that's fine"""
+
+    def my_gen(cls: type) -> str:
+        return cls.__name__
+
+    tg = TrackingGroup(
+        name="test",
+        discriminator_field="foo",
+        discriminator_value_generator=my_gen,
+        union_mode=dynapydantic.DiscriminatedConfig(
+            discriminator_field="foo", discriminator_value_generator=my_gen
+        ),
+    )
+    assert tg.discriminator_field == "foo"
+    assert tg.discriminator_value_generator is my_gen
+
+    tg = TrackingGroup(
+        name="test",
+        discriminator_field="foo",
+        discriminator_value_generator=my_gen,
+        union_mode={
+            "discriminator_field": "foo",
+            "discriminator_value_generator": my_gen,
+        },
+    )
+
+    assert tg.discriminator_field == "foo"
+    assert tg.discriminator_value_generator is my_gen
