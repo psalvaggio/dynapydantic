@@ -701,3 +701,22 @@ def test_consistent_union() -> None:
 
     assert tg.discriminator_field == "foo"
     assert tg.discriminator_value_generator is my_gen
+
+
+def test_generation_advances_on_each_new_registration() -> None:
+    """`TrackingGroup.generation` increments for every new subclass."""
+    tg = TrackingGroup(name="test", union_mode="smart")
+
+    initial = tg.generation
+
+    @tg.register
+    class C1(pydantic.BaseModel):
+        x: int
+
+    assert tg.generation == initial + 1
+
+    @tg.register
+    class C2(pydantic.BaseModel):
+        y: int
+
+    assert tg.generation == initial + 2
