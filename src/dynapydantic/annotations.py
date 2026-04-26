@@ -28,74 +28,78 @@ class ModelConstructionTimeAdapter:
         return handler(union(source_type))
 
 
-if ty.TYPE_CHECKING:  # pragma: no cover
-    # From the type checker's perspective, Polymorphic[T] = Annotated[T]
-    Polymorphic = ty.Annotated[ModelT, ...]
-else:
+class Polymorphic:
+    """Annotation used to mark a type as having duck-typing behavior
 
-    class Polymorphic:
-        """Annotation used to mark a type as having duck-typing behavior
+    This annotation is only valid for SubclassTrackingModel's.
 
-        This annotation is only valid for SubclassTrackingModel's.
+    Similar to SerializeAsAny, a field annotated with this shall serialize as
+    according to its actual type, not the field annotation type. In addition,
+    parsing will function as if the field annotation type were the union of
+    all tracked subclasses.
 
-        Similar to SerializeAsAny, a field annotated with this shall serialize as
-        according to its actual type, not the field annotation type. In addition,
-        parsing will function as if the field annotation type were the union of
-        all tracked subclasses.
-        """
+    If a UnionRealization (or the string value of one) is passed as the
+    second argument, it will override the default value for the union
+    realization that is stored in the class.
+    """
 
-        def __class_getitem__(cls, item: ModelT) -> ty.Any:  # noqa: ANN401
-            """Get the annotation for the pydantic field"""
-            if not isinstance(item, type):
-                msg = f"dynapydantic.Polymorphic must be given a type, not {item}"
+    def __class_getitem__(
+        cls,
+        item: type[ModelT] | tuple[type[ModelT], UnionRealization | str],
+    ) -> ty.Annotated[type[ModelT], ...] | type[ModelT]:
+        """Get the annotation for the pydantic field"""
+        if isinstance(item, tuple):
+            if len(item) != 2:  # noqa: PLR2004
+                msg = "dynapydantic.Polymorphic was passed too many arguments"
                 raise TypeError(msg)
 
-            if not issubclass(item, SubclassTrackingModel):
-                msg = (
-                    f"Polymorphic was given {item}, which was not a "
-                    "SubclassTrackingModel."
-                )
-                raise PydanticSchemaGenerationError(msg)
-
-            cfg = item.__DYNAPYDANTIC_STM_CONFIG__
-
-            if cfg.implicit_polymorphic:
-                return item
-
-            adapter = (
-                ValidationTimeAdapter
-                if cfg.union_realization == UnionRealization.VALIDATION
-                else ModelConstructionTimeAdapter
-            )
-            return ty.Annotated[item, adapter]
+            return _polymorphic_cgi(*item)
+        return _polymorphic_cgi(item)
 
 
-if ty.TYPE_CHECKING:  # pragma: no cover
+def _polymorphic_cgi(
+    cls: type[ModelT],
+    union_realization: UnionRealization | str | None = None,
+) -> ty.Annotated[type[ModelT], ...] | type[ModelT]:
+    if not isinstance(cls, type):
+        msg = f"dynapydantic.Polymorphic must be given a type, not {cls}"
+        raise TypeError(msg)
 
-    class Union:
-        """Annotation used to get the union out of a dynapydantic entity"""
+    if not issubclass(cls, SubclassTrackingModel):
+        msg = f"Polymorphic was given {cls}, which was not a SubclassTrackingModel."
+        raise PydanticSchemaGenerationError(msg)
 
-        @ty.overload
-        def __class_getitem__(cls, item: type[ModelT]) -> ModelT: ...
+    cfg = cls.__DYNAPYDANTIC_STM_CONFIG__
+    if cfg.implicit_polymorphic:
+        return cls  # type: ignore[bad-return]
 
-        @ty.overload
-        def __class_getitem__(cls, item: TrackingGroup) -> ty.Any: ...  # noqa: ANN401
+    union_realization = (
+        UnionRealization(union_realization)
+        if union_realization is not None
+        else cfg.union_realization
+    )
+    adapter = (
+        ValidationTimeAdapter
+        if union_realization == UnionRealization.VALIDATION
+        else ModelConstructionTimeAdapter
+    )
+    return ty.Annotated[cls, adapter]  # type: ignore[bad-return]
 
-        def __class_getitem__(cls, item: TrackingGroup | type[ModelT]) -> object:
-            """Return the union"""
 
-else:
+class Union:
+    """Annotation used to get the union out of a dynapydantic entity
 
-    class Union:
-        """Annotation used to get the union out of a dynapydantic entity
+    This annotation is primarily used for using the union of all models in
+    a `TrackingGroup` as a field annotation. It can be used with
+    `SubclassTrackingModel`, but in general, `Polymorphic` is preferable.
+    """
 
-        This annotation is primarily used for using the union of all models in
-        a `TrackingGroup` as a field annotation. It can be used with
-        `SubclassTrackingModel`, but in general, `Polymorphic` is preferable.
-        """
+    @ty.overload
+    def __class_getitem__(cls, item: type[ModelT]) -> type[ModelT]: ...
 
-        def __class_getitem__(
-            cls, item: TrackingGroup | type[SubclassTrackingModel]
-        ) -> ty.Any:  # noqa: ANN401
-            """Return the union"""
-            return union(item)
+    @ty.overload
+    def __class_getitem__(cls, item: TrackingGroup) -> ty.Any: ...  # noqa: ANN401
+
+    def __class_getitem__(cls, item: TrackingGroup | type[ModelT]) -> object:
+        """Return the union"""
+        return union(item)

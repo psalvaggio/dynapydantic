@@ -231,3 +231,41 @@ def test_polymorphic_strict_validation() -> None:
 
     with pytest.raises(pydantic.ValidationError):
         Outer.model_validate({"val": {"name": "A", "a": "1"}}, strict=True)
+
+
+def test_polymorphic_union_realization_overrides_class_default() -> None:
+    """Test override behavior of Polymorphic's union realization"""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        union_mode="smart",
+        union_realization="validation",
+    ):
+        pass
+
+    class A(Base):
+        a: int
+
+    class B(Base):
+        b: int
+        other: dynapydantic.Polymorphic[Base, "model-construction"]  # type: ignore[unknown-name] # noqa: F821
+
+    # No B in the schema because the union was eaglerly made
+    b_schema = B.model_json_schema()
+    assert b_schema["properties"]["other"] == {"$ref": "#/$defs/A"}
+
+    class C(Base):
+        c: int
+        other: dynapydantic.Polymorphic[
+            Base, dynapydantic.UnionRealization.MODEL_CONSTRUCTION
+        ]
+
+    # Same story with no C
+    c_schema = C.model_json_schema()
+    assert c_schema["properties"]["other"] == {
+        "anyOf": [
+            {"$ref": "#/$defs/A"},
+            {"$ref": "#/$defs/B"},
+        ],
+        "title": "Other",
+    }
