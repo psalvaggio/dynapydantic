@@ -248,7 +248,10 @@ def test_polymorphic_union_realization_overrides_class_default() -> None:
 
     class B(Base):
         b: int
-        other: dynapydantic.Polymorphic[Base, "model-construction"]  # type: ignore[unknown-name] # noqa: F821
+        other: dynapydantic.Polymorphic[
+            Base,
+            "model-construction",  # type: ignore[unknown-name] # noqa: F821
+        ]
 
     # No B in the schema because the union was eaglerly made
     b_schema = B.model_json_schema()
