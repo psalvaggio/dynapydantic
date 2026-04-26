@@ -6,13 +6,17 @@ from pydantic import GetCoreSchemaHandler, PydanticSchemaGenerationError
 from pydantic_core import core_schema
 
 from .free_funcs import union
-from .subclass_tracking_model import SubclassTrackingModel
+from .subclass_tracking_model import (
+    SubclassTrackingModel,
+    ValidationTimeAdapter,
+)
 from .tracking_group import TrackingGroup
+from .union_mode import UnionRealization
 
 ModelT = ty.TypeVar("ModelT", bound=SubclassTrackingModel)
 
 
-class PydanticAdapter:
+class ModelConstructionTimeAdapter:
     """Pydantic type adapter for SubclassTrackingModel"""
 
     @staticmethod
@@ -53,10 +57,17 @@ else:
                 )
                 raise PydanticSchemaGenerationError(msg)
 
-            if item.__DYNAPYDANTIC_STM_CONFIG__.implicit_polymorphic:
+            cfg = item.__DYNAPYDANTIC_STM_CONFIG__
+
+            if cfg.implicit_polymorphic:
                 return item
 
-            return ty.Annotated[item, PydanticAdapter]
+            adapter = (
+                ValidationTimeAdapter
+                if cfg.union_realization == UnionRealization.VALIDATION
+                else ModelConstructionTimeAdapter
+            )
+            return ty.Annotated[item, adapter]
 
 
 if ty.TYPE_CHECKING:  # pragma: no cover

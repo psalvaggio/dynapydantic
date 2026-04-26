@@ -1,5 +1,6 @@
 """Union mode configuration types for dynapydantic."""
 
+import enum
 import typing as ty
 from collections.abc import Callable
 
@@ -33,3 +34,22 @@ NonDiscriminatedMode = ty.Literal["smart", "left_to_right"]
 #: (the default) or one of the plain string literals for the two
 #: non-discriminated strategies.
 UnionMode = DiscriminatedConfig | NonDiscriminatedMode
+
+
+class UnionRealization(enum.Enum):
+    """When unions should be realized
+
+    Attributes
+    ----------
+    MODEL_CONSTRUCTION
+        Unions are realized at model construction time, during generation of
+        the schema. This approach has the lowest runtime overhead, but is
+        somewhat sensitive to ordering and may require model rebuilding for
+        recursive model.
+    VALIDATION
+        Unions are realized at validation time. This approach is robust to order
+        of operation, but carries additional runtime overhead.
+    """
+
+    MODEL_CONSTRUCTION = "model-construction"
+    VALIDATION = "validation"

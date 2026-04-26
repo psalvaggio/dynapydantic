@@ -11,7 +11,7 @@ from .exceptions import (
 from .free_funcs import load_plugins, registered_models, union
 from .subclass_tracking_model import SubclassTrackingModel
 from .tracking_group import TrackingGroup
-from .union_mode import DiscriminatedConfig
+from .union_mode import DiscriminatedConfig, UnionRealization
 
 __all__ = [
     "AmbiguousDiscriminatorValueError",
@@ -24,6 +24,7 @@ __all__ = [
     "SubclassTrackingModel",
     "TrackingGroup",
     "Union",
+    "UnionRealization",
     "load_plugins",
     "registered_models",
     "union",
