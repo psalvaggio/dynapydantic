@@ -49,8 +49,11 @@ class Polymorphic:
     ) -> ty.Annotated[type[ModelT], ...] | type[ModelT]:
         """Get the annotation for the pydantic field"""
         if isinstance(item, tuple):
-            if len(item) != 2:  # noqa: PLR2004
-                msg = "dynapydantic.Polymorphic was passed too many arguments"
+            if len(item) > 2:  # noqa: PLR2004
+                msg = (
+                    "dynapydantic.Polymorphic takes 1 or 2 arguments "
+                    f"({len(item)} given)"
+                )
                 raise TypeError(msg)
 
             return _polymorphic_cgi(*item)

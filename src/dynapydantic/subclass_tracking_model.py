@@ -195,7 +195,11 @@ class _StmConfig:
                 else UnionRealization.MODEL_CONSTRUCTION
             )
         elif not isinstance(union_realization, UnionRealization):
-            union_realization = UnionRealization(union_realization)
+            try:
+                union_realization = UnionRealization(union_realization)
+            except (ValueError, TypeError) as e:
+                msg = f"invalid union_realization: {e}"
+                raise ConfigurationError(msg) from e
 
         # Figure out if model_t is are excluded from tracking unions. Prefer
         # direct argument, default to True if we are direct descendent of

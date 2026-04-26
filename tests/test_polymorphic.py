@@ -239,7 +239,7 @@ def test_polymorphic_union_realization_overrides_class_default() -> None:
     class Base(
         dynapydantic.SubclassTrackingModel,
         union_mode="smart",
-        union_realization="validation",
+        union_realization=dynapydantic.UnionRealization.VALIDATION,
     ):
         pass
 
@@ -272,3 +272,22 @@ def test_polymorphic_union_realization_overrides_class_default() -> None:
         ],
         "title": "Other",
     }
+
+
+def test_incorrect_num_args() -> None:
+    """Test passing the incorrect number of arguments to Polymorphic"""
+
+    class Base(dynapydantic.SubclassTrackingModel, union_mode="smart"):
+        pass
+
+    class A(Base):
+        a: int
+
+    with pytest.raises(TypeError, match="Polymorphic takes 1 or 2 arguments"):
+
+        class Model(pydantic.BaseModel):
+            val: dynapydantic.Polymorphic[
+                Base,  # type: ignore[bad-index]
+                "validation",  # type: ignore[unknown-name] # noqa: F821
+                "foo",  # type: ignore[unknown-name] # noqa: F821
+            ]
