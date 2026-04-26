@@ -915,21 +915,22 @@ union from a previous call, so it is important to consider order of operations.<
 their own tradeoffs:</p>
 <ol>
 <li>
-<p>Using <code>union()</code> or <code>Union[T]</code>: These mechanisms eagerly call <code>.union()</code> on
-    <code>TrackingGroup</code>, so the union is realized immediately upon using these. This
-    is the "most eager" option, but is also the most sensitive with order of
-    operations. Type checkers will not understand this method, and interpret its
-    resulting type as <code>Any</code> or unknown.</p>
-<p>Despite the tradeoffs, this option can be desireable for applications that
-inspect field annotations directly. This normally arises in user-implemented
-model reflection code and with
+<p><strong>Immediately</strong>: When using <code>dynapydantic.Union[T]</code>, the union is realized
+    immediately. This is the "most eager" option, but is also the most sensitive
+    with order of operations. Type checkers will not understand this direct
+    calls to <code>union()</code>, but <code>dynapydantic.Union[T]</code> will resolved to <code>T</code>.</p>
+<p>Despite the tradeoff on sensitivity to order of operations, this option can
+be desireable for applications that inspect field annotations directly.
+This normally arises in user-implemented model reflection code and with
 <a href="https://pydantic.dev/docs/validation/latest/api/pydantic_settings/#_top"><code>pydantic_settings</code></a>.</p>
 </li>
 <li>
-<p>Using <code>dynapydantic.Polymorphic[T]</code>: This method will defer the union
-    realization slightly, into the schema generation step for the model. The
-    difference between this and option 1 is slight and subtle, but does have an
-    affect with recursive models. Consider the following:</p>
+<p><strong>Model-construction time</strong>: Instead of eagerly realizing the union in the
+    field annotation, <code>dynapydantic.Polymorphic[T]</code> (in its default ),
+    configuration will defer the union realization slightly, into the schema
+    generation step for the model. The difference between this and option 1 is
+    subtle, but does have an effect with recursive models. Consider the
+    following:</p>
 <p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
 
@@ -951,21 +952,23 @@ if we used <code>Union[Base]</code>, the <code>model_rebuild()</code> call would
 the union had already been realized. To accomplish the same thing with
 eager unions, we would have to use a forward reference, like <code>"BUnion"</code> then
 call <code>dynapydantic.union(Base)</code> right before the <code>model_rebuild()</code> calls.</p>
-<p>Unlike direct <code>union()</code> calls, the type checker can at least infer the field
-to be a subclass of <code>Base</code>, which is a vast improvement over a type error.</p>
+<p>Similar to <code>dynapydantic.Union</code>, <code>dyanpydantic.Polymorphic</code> is interpretable
+by the type checker, which will constrain fields to be of the base class
+type.</p>
 </li>
 <li>
-<p><strong>EXPERIMENTAL</strong> Using <code>implicit_polymorphic</code>: If <code>implicit_polymorphic=True</code>
-    is passed to a <code>SubclassTrackingModel</code>, then union realization is deferred
-    to model validation time, making the process robust to order of operations.
-    This reduces the previous example down to:</p>
+<p><strong>Validation time</strong>: Finally, realization of the union can be deferred to
+    validation time. This makes the union construction process more robust to
+    order of operations. In this formulation, all subclasses must be registered
+    before the use of the union in validation, rather than the declaration of a
+    model using the union field. This reduces the previous example down to:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span>
     <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
     <span class="n">union_mode</span><span class="o">=</span><span class="s2">&quot;smart&quot;</span><span class="p">,</span>
-    <span class="n">implicit_polymorphic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">union_realization</span><span class="o">=</span><span class="s2">&quot;validation&quot;</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="k">pass</span>
 
@@ -973,27 +976,27 @@ to be a subclass of <code>Base</code>, which is a vast improvement over a type e
     <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
-    <span class="n">other</span><span class="p">:</span> <span class="n">Base</span>
+    <span class="n">other</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">]</span>
 
 <span class="n">B</span><span class="p">(</span><span class="n">other</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;other&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;other&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}}})</span> <span class="c1"># B(other=B(other=B(other=A(a=2))))</span>
 </code></pre></div>
-<p>This option has the cleanest syntax, but does incur a runtime penalty for
-potentially multiple schema compilations and the need for a field validator
-function, whereas options 1 and 2 can produce static schema. Like option 2,
-the field is able to be interpreted by type checkers as the base class.</p>
-<p>This mechanism is subject to the following limitation currently:</p>
-<ol>
-<li>This flag may only be set on direct descendents of
-    <code>SubclassTrackingModel</code> (base classes).</li>
-<li>This flag does <strong>NOT</strong> inherit, a child of an
-     <code>implicit_polymorphic=True</code> type is not <code>implicit_polymorphic=True</code>.</li>
-<li>A class that is <code>implicit_polymorphic=True</code> may not have a parent which
-    is <code>implicit_polymorphic=True</code>.</li>
-<li>A class which is <code>implicit_polymorphic=True</code> may not be included in its
-    own union.</li>
-</ol>
+<p>This option has the cleanest syntax, as not <code>model_rebuild()</code> calls are
+needed, but does incur a runtime penalty for potentially multiple schema
+compilations and the need for a field validator function, whereas options 1
+and 2 can produce static schema. Like option 2, the field is able to be
+interpreted by type checkers as the base class.</p>
 </li>
 </ol>
+<p>As alluded to in the example for validation-time unions, this behavior can be
+controlled via the model class declaration and the field annotation. Subclasses
+of <code>SubclassTrackingModel</code> can pass a <code>union_realization</code> keyword argument with
+the value of <code>"model-construction"</code> (default) or <code>"validation"</code> (or their
+corresponding <code>UnionRealization</code> enum values) to control the default behavior of
+when <code>dynapydantic.Polymorphic</code> will realize the union. This default can be
+overriden at the <code>Polymorphic</code> call site by passing a second argument:
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">field</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">,</span> <span class="s2">&quot;validation&quot;</span><span class="p">]</span>
+</code></pre></div></p>
 
 
 
