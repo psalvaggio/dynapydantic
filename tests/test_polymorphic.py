@@ -231,3 +231,63 @@ def test_polymorphic_strict_validation() -> None:
 
     with pytest.raises(pydantic.ValidationError):
         Outer.model_validate({"val": {"name": "A", "a": "1"}}, strict=True)
+
+
+def test_polymorphic_union_realization_overrides_class_default() -> None:
+    """Test override behavior of Polymorphic's union realization"""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        union_mode="smart",
+        union_realization=dynapydantic.UnionRealization.VALIDATION,
+    ):
+        pass
+
+    class A(Base):
+        a: int
+
+    class B(Base):
+        b: int
+        other: dynapydantic.Polymorphic[
+            Base,
+            "model-construction",  # type: ignore[unknown-name] # noqa: F821
+        ]
+
+    # No B in the schema because the union was eaglerly made
+    b_schema = B.model_json_schema()
+    assert b_schema["properties"]["other"] == {"$ref": "#/$defs/A"}
+
+    class C(Base):
+        c: int
+        other: dynapydantic.Polymorphic[
+            Base, dynapydantic.UnionRealization.MODEL_CONSTRUCTION
+        ]
+
+    # Same story with no C
+    c_schema = C.model_json_schema()
+    assert c_schema["properties"]["other"] == {
+        "anyOf": [
+            {"$ref": "#/$defs/A"},
+            {"$ref": "#/$defs/B"},
+        ],
+        "title": "Other",
+    }
+
+
+def test_incorrect_num_args() -> None:
+    """Test passing the incorrect number of arguments to Polymorphic"""
+
+    class Base(dynapydantic.SubclassTrackingModel, union_mode="smart"):
+        pass
+
+    class A(Base):
+        a: int
+
+    with pytest.raises(TypeError, match="Polymorphic takes 1 or 2 arguments"):
+
+        class Model(pydantic.BaseModel):
+            val: dynapydantic.Polymorphic[
+                Base,  # type: ignore[bad-index]
+                "validation",  # type: ignore[unknown-name] # noqa: F821
+                "foo",  # type: ignore[unknown-name] # noqa: F821
+            ]

@@ -255,3 +255,42 @@ def test_root_in_union() -> None:
 
     assert Outer(val={"name": "Base", "a": 1}).val == Base(a=1)
     assert Outer(val={"name": "B", "a": 2, "b": 3}).val == B(a=2, b=3)
+
+
+def test_eager_union() -> None:
+    """Test that eager union evaluation works"""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        union_mode="smart",
+    ):
+        pass
+
+    class A(Base):
+        a: int
+
+    class B(Base):
+        b: int
+
+    class Outer(pydantic.BaseModel):
+        val: dynapydantic.Union[Base]
+
+    m = Outer(val=A(a=1))
+    assert m.val == A(a=1)
+    m = Outer(val=B(b=2))
+    assert m.val == B(b=2)
+
+
+@pytest.mark.parametrize("val", ["foo", 1])
+def test_invalid_union_realization(val: int | str) -> None:
+    """Test an invalid value for the the union_realization parameter"""
+    with pytest.raises(
+        dynapydantic.ConfigurationError, match="invalid union_realization"
+    ):
+
+        class Base(
+            dynapydantic.SubclassTrackingModel,
+            union_mode="smart",
+            union_realization=val,
+        ):
+            pass

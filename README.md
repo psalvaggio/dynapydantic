@@ -269,21 +269,22 @@ union from a previous call, so it is important to consider order of operations.
 When using `SubclassTrackingModel`, there are more options and each comes with
 their own tradeoffs:
 
-1. Using `union()` or `Union[T]`: These mechanisms eagerly call `.union()` on
-    `TrackingGroup`, so the union is realized immediately upon using these. This
-    is the "most eager" option, but is also the most sensitive with order of
-    operations. Type checkers will not understand this method, and interpret its
-    resulting type as `Any` or unknown.
+1. **Immediately**: When using `dynapydantic.Union[T]`, the union is realized
+    immediately. This is the "most eager" option, but is also the most sensitive
+    with order of operations. Type checkers will not understand this direct
+    calls to `union()`, but `dynapydantic.Union[T]` will resolved to `T`.
 
-    Despite the tradeoffs, this option can be desireable for applications that
-    inspect field annotations directly. This normally arises in user-implemented
-    model reflection code and with
+    Despite the tradeoff on sensitivity to order of operations, this option can
+    be desireable for applications that inspect field annotations directly.
+    This normally arises in user-implemented model reflection code and with
     [`pydantic_settings`](https://pydantic.dev/docs/validation/latest/api/pydantic_settings/#_top).
 
-2. Using `dynapydantic.Polymorphic[T]`: This method will defer the union
-    realization slightly, into the schema generation step for the model. The
-    difference between this and option 1 is slight and subtle, but does have an
-    affect with recursive models. Consider the following:
+2. **Model-construction time**: Instead of eagerly realizing the union in the
+    field annotation, `dynapydantic.Polymorphic[T]` (in its default ),
+    configuration will defer the union realization slightly, into the schema
+    generation step for the model. The difference between this and option 1 is
+    subtle, but does have an effect with recursive models. Consider the
+    following:
 
     ```python
     import dynapydantic
@@ -308,13 +309,15 @@ their own tradeoffs:
     eager unions, we would have to use a forward reference, like `"BUnion"` then
     call `dynapydantic.union(Base)` right before the `model_rebuild()` calls.
 
-    Unlike direct `union()` calls, the type checker can at least infer the field
-    to be a subclass of `Base`, which is a vast improvement over a type error.
+    Similar to `dynapydantic.Union`, `dyanpydantic.Polymorphic` is interpretable
+    by the type checker, which will constrain fields to be of the base class
+    type.
 
-3. **EXPERIMENTAL** Using `implicit_polymorphic`: If `implicit_polymorphic=True`
-    is passed to a `SubclassTrackingModel`, then union realization is deferred
-    to model validation time, making the process robust to order of operations.
-    This reduces the previous example down to:
+3. **Validation time**: Finally, realization of the union can be deferred to
+    validation time. This makes the union construction process more robust to
+    order of operations. In this formulation, all subclasses must be registered
+    before the use of the union in validation, rather than the declaration of a
+    model using the union field. This reduces the previous example down to:
 
     ```python
     import dynapydantic
@@ -323,7 +326,7 @@ their own tradeoffs:
     class Base(
         dynapydantic.SubclassTrackingModel,
         union_mode="smart",
-        implicit_polymorphic=True,
+        union_realization="validation",
     ):
         pass
 
@@ -331,23 +334,25 @@ their own tradeoffs:
         a: int
 
     class B(Base, extra="forbid"):
-        other: Base
+        other: dynapydantic.Polymorphic[Base]
 
     B(other={"other": {"other": {"a": 2}}}) # B(other=B(other=B(other=A(a=2))))
     ```
 
-    This option has the cleanest syntax, but does incur a runtime penalty for
-    potentially multiple schema compilations and the need for a field validator
-    function, whereas options 1 and 2 can produce static schema. Like option 2,
-    the field is able to be interpreted by type checkers as the base class.
+    This option has the cleanest syntax, as not `model_rebuild()` calls are
+    needed, but does incur a runtime penalty for potentially multiple schema
+    compilations and the need for a field validator function, whereas options 1
+    and 2 can produce static schema. Like option 2, the field is able to be
+    interpreted by type checkers as the base class.
 
-    This mechanism is subject to the following limitation currently:
-
-    1. This flag may only be set on direct descendents of
-        `SubclassTrackingModel` (base classes).
-     2. This flag does **NOT** inherit, a child of an
-         `implicit_polymorphic=True` type is not `implicit_polymorphic=True`.
-     3. A class that is `implicit_polymorphic=True` may not have a parent which
-        is `implicit_polymorphic=True`.
-     4. A class which is `implicit_polymorphic=True` may not be included in its
-        own union.
+As alluded to in the example for validation-time unions, this behavior can be
+controlled via the model class declaration and the field annotation. Subclasses
+of `SubclassTrackingModel` can pass a `union_realization` keyword argument with
+the value of `"model-construction"` (default) or `"validation"` (or their
+corresponding `UnionRealization` enum values) to control the default behavior of
+when `dynapydantic.Polymorphic` will realize the union. This default can be
+overriden at the `Polymorphic` call site by passing a second argument:
+```python
+class Model(pydantic.BaseModel):
+    field: dynapydantic.Polymorphic[Base, "validation"]
+```
