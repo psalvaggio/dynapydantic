@@ -46,7 +46,7 @@ class Polymorphic:
     def __class_getitem__(
         cls,
         item: type[ModelT] | tuple[type[ModelT], UnionRealization | str],
-    ) -> ty.Annotated[type[ModelT], ...] | type[ModelT]:
+    ) -> ty.Annotated[type[ModelT], ...]:
         """Get the annotation for the pydantic field"""
         if isinstance(item, tuple):
             if len(item) > 2:  # noqa: PLR2004
@@ -63,7 +63,7 @@ class Polymorphic:
 def _polymorphic_cgi(
     cls: type[ModelT],
     union_realization: UnionRealization | str | None = None,
-) -> ty.Annotated[type[ModelT], ...] | type[ModelT]:
+) -> ty.Annotated[type[ModelT], ...]:
     if not isinstance(cls, type):
         msg = f"dynapydantic.Polymorphic must be given a type, not {cls}"
         raise TypeError(msg)
@@ -73,9 +73,6 @@ def _polymorphic_cgi(
         raise PydanticSchemaGenerationError(msg)
 
     cfg = cls.__DYNAPYDANTIC_STM_CONFIG__
-    if cfg.implicit_polymorphic:
-        return cls  # type: ignore[bad-return]
-
     union_realization = (
         UnionRealization(union_realization)
         if union_realization is not None

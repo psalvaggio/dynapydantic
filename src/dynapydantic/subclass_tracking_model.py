@@ -5,8 +5,7 @@ import inspect
 import typing as ty
 
 import pydantic
-from pydantic import BaseModel, GetCoreSchemaHandler, GetJsonSchemaHandler, TypeAdapter
-from pydantic.json_schema import JsonSchemaValue
+from pydantic import BaseModel, GetCoreSchemaHandler
 from pydantic_core import PydanticCustomError, core_schema
 
 from .exceptions import ConfigurationError, Error
@@ -34,24 +33,6 @@ class SubclassTrackingModel(pydantic.BaseModel):
            [`UnionRealization`][dynapydantic.UnionRealization] for more details
            on the various options. The default is to realize unions at model
            construction time.
-    3. `implicit_polymorphic`: **EXPERIMENTAL**. If `True`, then the core schema
-           of this class will be overridden to a validator function that
-           realizes the subclass union at validation time. This allows
-           polymorphic parsing to occur without the use of
-           [`Polymorphic`][dynapydantic.Polymorphic]. In addition, it is not
-           necessary to call `model_rebuild` on recursive models. Use of this
-           flag implies `union_realization=UnionRealization.VALIDATION` and that
-           flag will be ignored. This feature is subject to the following
-           limitations at this time:
-
-        1. This flag may only be set on direct descendents of
-            `SubclassTrackingModel` (base classes).
-        2. This flag does **NOT** inherit, a child of an
-            `implicit_polymorphic=True` type is not `implicit_polymorphic=True`.
-        3. A class that is `implicit_polymorphic=True` may not have a parent
-            which is `implicit_polymorphic=True`.
-        4. A class which is `implicit_polymorphic=True` may not be included in
-            its own union.
     """
 
     def __init_subclass__(cls, *args, **kwargs) -> None:
@@ -74,7 +55,6 @@ class SubclassTrackingModel(pydantic.BaseModel):
         *args,
         exclude_from_union: bool | None = None,
         union_realization: str | UnionRealization | None = None,
-        implicit_polymorphic: bool | None = None,
         **kwargs,
     ) -> None:
         """Pydantic subclass hook"""
@@ -95,17 +75,8 @@ class SubclassTrackingModel(pydantic.BaseModel):
             cls,
             exclude_from_union=exclude_from_union,
             union_realization=union_realization,
-            implicit_polymorphic=implicit_polymorphic,
             inherited=getattr(cls, "__DYNAPYDANTIC_STM_CONFIG__", None),
         )
-
-        # If we're an implicit polymorphic model, we need to override our
-        # pydantic schema.
-        if cls.__DYNAPYDANTIC_STM_CONFIG__.implicit_polymorphic:
-            _enforce_implicit_guard_rails(cls)
-
-            cls.__get_pydantic_core_schema__ = _get_pydantic_core_schema  # type: ignore[bad-assignment]
-            cls.__get_pydantic_json_schema__ = _get_pydantic_json_schema  # type: ignore[bad-assignment]
 
         # If we are going to be tracked, walk the entire MRO (to support
         # multi-level tree) and register ourselves with each oe.
@@ -164,7 +135,6 @@ def _init_tracking_group(
 class _StmConfig:
     """Config for SubclassTrackingModel"""
 
-    implicit_polymorphic: bool
     union_realization: UnionRealization
     exclude_from_union: bool
 
@@ -175,20 +145,12 @@ class _StmConfig:
         *,
         exclude_from_union: bool | None,
         union_realization: str | UnionRealization | None = None,
-        implicit_polymorphic: bool | None,
         inherited: "_StmConfig | None" = None,
     ) -> "_StmConfig":
         """Create this model from the user's specified keyword arguments"""
-        # Figure out if we are an implicit polymorphic model. Prefer direct
-        # argument, then default False.
-        if implicit_polymorphic is None:
-            implicit_polymorphic = False
-
         # Figure out the union realization time. Prefer direct argument, then
         # inherited value, then default of model construction time.
-        if implicit_polymorphic:
-            union_realization = UnionRealization.VALIDATION
-        elif union_realization is None:
+        if union_realization is None:
             union_realization = (
                 inherited.union_realization
                 if inherited is not None
@@ -209,103 +171,9 @@ class _StmConfig:
             exclude_from_union = SubclassTrackingModel in model_t.__bases__
 
         return cls(
-            implicit_polymorphic=implicit_polymorphic,
             union_realization=union_realization,
             exclude_from_union=exclude_from_union,
         )
-
-
-def _enforce_implicit_guard_rails(cls: type[SubclassTrackingModel]) -> None:
-    """Enforce the limitations on implicit_polymorphic"""
-    # Only allowable for direct descendents of SubclassTrackingModel
-    if SubclassTrackingModel not in cls.__bases__:
-        msg = (
-            "implicit_polymorphic=True is only allowed on direct descendents "
-            "of SubclassTrackingModel."
-        )
-        raise ConfigurationError(msg)
-
-    # Check for other implicit_polymorphic's in the MRO (we'd like for
-    # this to work, but it isn't yet)
-    implicits = [
-        t
-        for t in cls.__mro__
-        if t is not cls
-        and (stm := getattr(t, "__DYNAPYDANTIC_STM_CONFIG__", None)) is not None
-        and stm.implicit_polymorphic
-    ]
-    if implicits:
-        msg = (
-            "Models with implicit_polymorphic=True may not have parents that "
-            f"also have implicit_polymorphic=True. For type {cls.__name__}, "
-            f"found the following implicit_polymorphic parents: {implicits}"
-        )
-        raise ConfigurationError(msg)
-
-    if cls.__DYNAPYDANTIC_STM_CONFIG__.exclude_from_union is False:
-        msg = (
-            "A model with implicit_polymorphic=True may not set "
-            "exclude_from_union=False"
-        )
-        raise ConfigurationError(msg)
-
-
-def _get_adapter(
-    source_type: type[SubclassTrackingModel],
-) -> TypeAdapter:
-    try:
-        return source_type.__DYNAPYDANTIC__.type_adapter
-    except Error as e:
-        err_t = "dynapydantic_error"
-        raise PydanticCustomError(err_t, "{e}", {"e": str(e)}) from e
-
-
-def _get_pydantic_core_schema(
-    source_type: type[SubclassTrackingModel],
-    handler: GetCoreSchemaHandler,
-) -> core_schema.CoreSchema:
-    """Get the pydantic schema for this type"""
-    if SubclassTrackingModel not in source_type.__bases__:
-        return handler(source_type)
-    return _make_validator_schema(source_type, handler)
-
-
-def _make_validator_schema(
-    source_type: type[SubclassTrackingModel],
-    _handler: GetCoreSchemaHandler,
-) -> core_schema.CoreSchema:
-    def _validate(value: ty.Any) -> ty.Any:  # noqa: ANN401
-        return _get_adapter(source_type).validate_python(value)
-
-    def _serialize(
-        value: BaseModel,
-        info: core_schema.SerializationInfo,
-    ) -> dict[str, ty.Any]:
-        return value.model_dump(mode=info.mode)
-
-    return core_schema.no_info_plain_validator_function(
-        _validate,
-        serialization=core_schema.plain_serializer_function_ser_schema(
-            _serialize,
-            info_arg=True,
-            when_used="unless-none",
-            return_schema=core_schema.dict_schema(
-                core_schema.str_schema(), core_schema.any_schema()
-            ),
-        ),
-        metadata={"__DYNAPYDANTIC_CLS__": source_type},
-    )
-
-
-def _get_pydantic_json_schema(
-    cs: core_schema.CoreSchema,
-    handler: GetJsonSchemaHandler,
-    /,
-) -> JsonSchemaValue:
-    """Get the pydantic JSON schema for this type"""
-    if (orig_cls := cs.get("metadata", {}).get("__DYNAPYDANTIC_CLS__")) is not None:
-        return handler(_get_adapter(orig_cls).core_schema)
-    return handler(cs)
 
 
 class ValidationTimeAdapter:
@@ -314,10 +182,35 @@ class ValidationTimeAdapter:
     This adapter returns a validator that evaluates the union at validation time
     """
 
+    @staticmethod
+    def __get_pydantic_core_schema__(
+        source_type: type[SubclassTrackingModel],
+        _handler: GetCoreSchemaHandler,
+    ) -> core_schema.CoreSchema:
+        """Get the pydantic schema for this type"""
 
-ValidationTimeAdapter.__get_pydantic_core_schema__ = staticmethod(
-    _make_validator_schema
-)
-ValidationTimeAdapter.__get_pydantic_json_schema__ = staticmethod(
-    _get_pydantic_json_schema
-)
+        def _validate(value: ty.Any) -> ty.Any:  # noqa: ANN401
+            try:
+                adapter = source_type.__DYNAPYDANTIC__.type_adapter
+            except Error as e:
+                err_t = "dynapydantic_error"
+                raise PydanticCustomError(err_t, "{e}", {"e": str(e)}) from e
+            return adapter.validate_python(value)
+
+        def _serialize(
+            value: BaseModel,
+            info: core_schema.SerializationInfo,
+        ) -> dict[str, ty.Any]:
+            return value.model_dump(mode=info.mode)
+
+        return core_schema.no_info_plain_validator_function(
+            _validate,
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                _serialize,
+                info_arg=True,
+                when_used="unless-none",
+                return_schema=core_schema.dict_schema(
+                    core_schema.str_schema(), core_schema.any_schema()
+                ),
+            ),
+        )

@@ -206,13 +206,18 @@ def test_subclass_tracking_with_frozen_base() -> None:
         c.x = 10  # type: ignore[read-only]
 
 
-def test_polymorphic_model_dump_json_mode() -> None:
+@pytest.mark.parametrize(
+    "union_realization",
+    [None, "model-construction", "validation"],
+)
+def test_polymorphic_model_dump_json_mode(union_realization: str | None) -> None:
     """model_dump(mode='json') should propagate through our unions"""
 
     class Base(
         dynapydantic.SubclassTrackingModel,
         discriminator_field="name",
         discriminator_value_generator=lambda cls: cls.__name__,
+        union_realization=union_realization,
     ):
         pass
 
@@ -294,3 +299,23 @@ def test_invalid_union_realization(val: int | str) -> None:
             union_realization=val,
         ):
             pass
+
+
+def test_validation_time_union_no_members() -> None:
+    """An error is risen at validation time when no subclasses exist"""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        union_mode="smart",
+        union_realization="validation",
+    ):
+        pass
+
+    class Model(pydantic.BaseModel):
+        field: dynapydantic.Polymorphic[Base]
+
+    with pytest.raises(
+        pydantic.ValidationError,
+        match=r"(?s)field.*Unable to produce a union.*dynapydantic_error",
+    ):
+        Model(field={"some": "dummy value"})
