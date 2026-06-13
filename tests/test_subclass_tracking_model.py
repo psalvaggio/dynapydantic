@@ -321,62 +321,144 @@ def test_validation_time_union_no_members() -> None:
         Model(field={"some": "dummy value"})
 
 
-def test_json_serialization_exclude_options() -> None:
-    """Test that serialization options are correctly propagated"""
-
-    class MyBase(
-        dynapydantic.SubclassTrackingModel,
-        union_mode="smart",
-        union_realization="validation",
-    ):
-        some_value: str = "Some Value"
-
-    class Foo(MyBase):
-        base: MyBase
-        poly_base: dynapydantic.Polymorphic[MyBase]
-        none: None = None
-
-    class Bar(MyBase):
-        hello: str = pydantic.Field(default="Hello", alias="hi")
-        world: str = "World"
-
-    test1 = Foo(
-        base=Bar(world="Expected to be sliced (pydantic's fault)"),
-        poly_base=Bar(world="Expected in output (poly_base)"),
-    )
-
-    # Test propagation of exclude_defaults and indent
-    assert (
-        test1.model_dump_json(indent=2, exclude_defaults=True)
-        == """{
-  "base": {},
-  "poly_base": {
-    "world": "Expected in output (poly_base)"
-  }
-}"""
-    )
-
-    # Test propagation of exclude
-    assert test1.model_dump_json(exclude={"poly_base": {"world"}}) == (
-        '{"some_value":"Some Value",'
-        '"base":{"some_value":"Some Value"},'
-        '"poly_base":{"some_value":"Some Value","hello":"Hello"},'
-        '"none":null}'
-    )
-
-    # Test propagation of include and by_alias
-    assert test1.model_dump(include={"poly_base": {"hello"}}, by_alias=True) == {
-        "poly_base": {"hi": "Hello"}
-    }
-
-    # Test propagation of exclude_unset
-    assert test1.model_dump(exclude_unset=True) == {
-        "base": {},
-        "poly_base": {"world": "Expected in output (poly_base)"},
-    }
-
-
-def test_newer_serialization_options() -> None:
+# mode is tested elsewhere
+@pytest.mark.parametrize(
+    ("data", "kwargs", "truth"),
+    [
+        pytest.param(
+            {"shape": {"width": 4, "length": 5}},
+            {"include": {"shape": {"width"}}},
+            {
+                "shape": {
+                    "width": "4.0",
+                }
+            },
+            id="include",
+        ),
+        pytest.param(
+            {"shape": {"width": 4, "length": 5}},
+            {"exclude": {"shape": {"width", "name"}}},
+            {
+                "shape": {
+                    "length": 5.0,
+                    "area": 20.0,
+                },
+                "non_poly_shape": None,
+            },
+            id="exclude",
+        ),
+        pytest.param(
+            {"shape": {"width": 4, "length": 5}},
+            {"by_alias": True},
+            {
+                "shape": {
+                    "width": "4.0",
+                    "height": 5.0,
+                    "area": 20.0,
+                    "name": "Rectangle",
+                },
+                "non_poly_shape": None,
+            },
+            id="by_alias",
+        ),
+        pytest.param(
+            {"shape": {"width": 4, "length": 5}},
+            {"exclude_unset": True},
+            {
+                "shape": {
+                    "width": "4.0",
+                    "length": 5.0,
+                    "area": 20.0,
+                },
+            },
+            id="exclude-unset",
+        ),
+        pytest.param(
+            {"shape": {"width": 4, "length": 5}},
+            {"exclude_defaults": True},
+            {
+                "shape": {
+                    "width": "4.0",
+                    "length": 5.0,
+                    "area": 20.0,
+                }
+            },
+            id="exclude-defaults",
+        ),
+        pytest.param(
+            {"shape": {"width": 4, "length": 5, "name": None}},
+            {"exclude_none": True},
+            {
+                "shape": {
+                    "width": "4.0",
+                    "length": 5.0,
+                    "area": 20.0,
+                }
+            },
+            id="exclude-none",
+        ),
+        pytest.param(
+            {"shape": {"width": 4, "length": 5}},
+            {"context": {"unit": "m"}},
+            {
+                "shape": {
+                    "width": "4.0 m",
+                    "length": 5.0,
+                    "area": 20.0,
+                    "name": "Rectangle",
+                },
+                "non_poly_shape": None,
+            },
+            id="context",
+        ),
+        pytest.param(
+            {"shape": {"width": 4, "length": 5}},
+            {"exclude_computed_fields": True},
+            {
+                "shape": {
+                    "width": "4.0",
+                    "length": 5.0,
+                    "name": "Rectangle",
+                },
+                "non_poly_shape": None,
+            },
+            id="exclude-computed-fields",
+        ),
+        pytest.param(
+            {"shape": {"width": 4, "length": 5}, "non_poly_shape": {"side": 2}},
+            {"serialize_as_any": True},
+            {
+                "shape": {
+                    "width": "4.0",
+                    "length": 5.0,
+                    "area": 20.0,
+                    "name": "Rectangle",
+                },
+                "non_poly_shape": {"side": 2.0},
+            },
+            id="serialize-as-any",
+        ),
+        pytest.param(
+            {"shape": {"width": 4, "length": 5}, "non_poly_shape": {"side": 2}},
+            {"polymorphic_serialization": True},
+            {
+                "shape": {
+                    "width": "4.0",
+                    "length": 5.0,
+                    "area": 20.0,
+                    "name": "Rectangle",
+                },
+                "non_poly_shape": {"side": 2.0},
+            },
+            id="polymorphic-serialziation",
+        ),
+    ],
+)
+def test_newer_serialization_options(
+    data: dict[str, ty.Any],
+    kwargs: dict[str, ty.Any],
+    truth: dict[str, ty.Any],
+) -> None:
     """Test the serialization options that have been added since 2.0"""
 
     class Shape(
@@ -388,7 +470,8 @@ def test_newer_serialization_options() -> None:
 
     class Rectangle(Shape):
         width: float
-        length: float
+        length: float = pydantic.Field(serialization_alias="height")
+        name: str | None = "Rectangle"
 
         @pydantic.computed_field
         @property
@@ -412,36 +495,10 @@ def test_newer_serialization_options() -> None:
         shape: dynapydantic.Polymorphic[Shape]
         non_poly_shape: Shape | None = None
 
-    # Test context
-    assert M(shape=Rectangle(width=4, length=5)).model_dump(
-        context={"unit": "m"}, exclude_none=True
-    ) == {
-        "shape": {
-            "width": "4.0 m",
-            "length": 5.0,
-            "area": 20.0,
-        }
-    }
+    # Don't slice on the way in
+    if "non_poly_shape" in data:
+        data["non_poly_shape"] = pydantic.TypeAdapter(
+            dynapydantic.Polymorphic[Shape] | None
+        ).validate_python(data["non_poly_shape"])
 
-    # Test exclude_computed_fields and serialize_as_any
-    assert M(
-        shape=Rectangle(width=4, length=5), non_poly_shape=Square(side=2)
-    ).model_dump(exclude_computed_fields=True, serialize_as_any=True) == {
-        "shape": {
-            "width": "4.0",
-            "length": 5.0,
-        },
-        "non_poly_shape": {"side": 2.0},
-    }
-
-    # Test polymorphic_serialization
-    assert M(
-        shape=Rectangle(width=4, length=5), non_poly_shape=Square(side=2)
-    ).model_dump(polymorphic_serialization=True) == {
-        "shape": {
-            "width": "4.0",
-            "length": 5.0,
-            "area": 20.0,
-        },
-        "non_poly_shape": {"side": 2.0},
-    }
+    assert M(**data).model_dump(**kwargs) == truth
