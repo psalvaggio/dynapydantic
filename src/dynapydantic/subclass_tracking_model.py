@@ -176,6 +176,9 @@ class _StmConfig:
         )
 
 
+_UNSET = object()
+
+
 class ValidationTimeAdapter:
     """Pydantic type adapter for a dynapydantic-tracked field
 
@@ -201,7 +204,36 @@ class ValidationTimeAdapter:
             value: BaseModel,
             info: core_schema.SerializationInfo,
         ) -> dict[str, ty.Any]:
-            return value.model_dump(mode=info.mode)
+            # These arguments we're going to attempt but not require
+            soft_args = (
+                # These were added after 2.0 (we pin >= 2)
+                "context",
+                "exclude_computed_fields",
+                "serialize_as_any",
+                "polymorphic_serialization",
+            )
+            args: dict[str, ty.Any] = {
+                # SerializationInfo doesn't expose warnings, so we have to
+                # pick one option
+                "warnings": False,
+            }
+            for arg in soft_args:
+                if (v := getattr(info, arg, _UNSET)) is not _UNSET:
+                    args[arg] = v
+
+            return value.model_dump(
+                mode=info.mode,
+                # Pydantic's types on SerializationInfo's include/exclude don't
+                # match up with the corresponding parameter types on model_dump
+                include=info.include,  # type: ignore[bad-argument-type]
+                exclude=info.exclude,  # type: ignore[bad-argument-type]
+                by_alias=info.by_alias,
+                exclude_unset=info.exclude_unset,
+                exclude_defaults=info.exclude_defaults,
+                exclude_none=info.exclude_none,
+                round_trip=info.round_trip,
+                **args,
+            )
 
         return core_schema.no_info_plain_validator_function(
             _validate,
