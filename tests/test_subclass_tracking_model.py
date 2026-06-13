@@ -319,3 +319,129 @@ def test_validation_time_union_no_members() -> None:
         match=r"(?s)field.*Unable to produce a union.*dynapydantic_error",
     ):
         Model(field={"some": "dummy value"})
+
+
+def test_json_serialization_exclude_options() -> None:
+    """Test that serialization options are correctly propagated"""
+
+    class MyBase(
+        dynapydantic.SubclassTrackingModel,
+        union_mode="smart",
+        union_realization="validation",
+    ):
+        some_value: str = "Some Value"
+
+    class Foo(MyBase):
+        base: MyBase
+        poly_base: dynapydantic.Polymorphic[MyBase]
+        none: None = None
+
+    class Bar(MyBase):
+        hello: str = pydantic.Field(default="Hello", alias="hi")
+        world: str = "World"
+
+    test1 = Foo(
+        base=Bar(world="Expected to be sliced (pydantic's fault)"),
+        poly_base=Bar(world="Expected in output (poly_base)"),
+    )
+
+    # Test propagation of exclude_defaults and indent
+    assert (
+        test1.model_dump_json(indent=2, exclude_defaults=True)
+        == """{
+  "base": {},
+  "poly_base": {
+    "world": "Expected in output (poly_base)"
+  }
+}"""
+    )
+
+    # Test propagation of exclude
+    assert test1.model_dump_json(exclude={"poly_base": {"world"}}) == (
+        '{"some_value":"Some Value",'
+        '"base":{"some_value":"Some Value"},'
+        '"poly_base":{"some_value":"Some Value","hello":"Hello"},'
+        '"none":null}'
+    )
+
+    # Test propagation of include and by_alias
+    assert test1.model_dump(include={"poly_base": {"hello"}}, by_alias=True) == {
+        "poly_base": {"hi": "Hello"}
+    }
+
+    # Test propagation of exclude_unset
+    assert test1.model_dump(exclude_unset=True) == {
+        "base": {},
+        "poly_base": {"world": "Expected in output (poly_base)"},
+    }
+
+
+def test_newer_serialization_options() -> None:
+    """Test the serialization options that have been added since 2.0"""
+
+    class Shape(
+        dynapydantic.SubclassTrackingModel,
+        union_mode="smart",
+        union_realization="validation",
+    ):
+        pass
+
+    class Rectangle(Shape):
+        width: float
+        length: float
+
+        @pydantic.computed_field
+        @property
+        def area(self) -> float:
+            return self.width * self.length
+
+        @pydantic.field_serializer("width")
+        def serialize_courses_in_order(
+            self,
+            width: float,
+            info: pydantic.SerializationInfo,
+        ) -> str:
+            if info.context is not None:
+                return f"{width} {info.context['unit']}"
+            return str(width)
+
+    class Square(Shape):
+        side: float
+
+    class M(pydantic.BaseModel):
+        shape: dynapydantic.Polymorphic[Shape]
+        non_poly_shape: Shape | None = None
+
+    # Test context
+    assert M(shape=Rectangle(width=4, length=5)).model_dump(
+        context={"unit": "m"}, exclude_none=True
+    ) == {
+        "shape": {
+            "width": "4.0 m",
+            "length": 5.0,
+            "area": 20.0,
+        }
+    }
+
+    # Test exclude_computed_fields and serialize_as_any
+    assert M(
+        shape=Rectangle(width=4, length=5), non_poly_shape=Square(side=2)
+    ).model_dump(exclude_computed_fields=True, serialize_as_any=True) == {
+        "shape": {
+            "width": "4.0",
+            "length": 5.0,
+        },
+        "non_poly_shape": {"side": 2.0},
+    }
+
+    # Test polymorphic_serialization
+    assert M(
+        shape=Rectangle(width=4, length=5), non_poly_shape=Square(side=2)
+    ).model_dump(polymorphic_serialization=True) == {
+        "shape": {
+            "width": "4.0",
+            "length": 5.0,
+            "area": 20.0,
+        },
+        "non_poly_shape": {"side": 2.0},
+    }
