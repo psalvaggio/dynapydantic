@@ -186,7 +186,9 @@ def _exclude_from_union_default(model_t: type[SubclassTrackingModel]) -> bool:
         return True
 
     # 3. We are a concrete generic class and our origin is a direct
-    #    descendent of SubclassTrackingModel. Combined cas of 1 and 2.
+    #    descendent of SubclassTrackingModel. Combined case of 1 and 2. A
+    #    concrete generic that is not a direct descendent is the same as any
+    #    other class in the middle of an inheritance tree.
     generic_origin = model_t.__pydantic_generic_metadata__["origin"]
     if generic_origin is None:
         return False
@@ -194,7 +196,7 @@ def _exclude_from_union_default(model_t: type[SubclassTrackingModel]) -> bool:
 
 
 def _is_uninstantiated_generic(model_t: type[SubclassTrackingModel]) -> bool:
-    """Determine if this an a generic model with uninstantiated args"""
+    """Determine if this a generic model with uninstantiated args"""
     generic_args = model_t.__pydantic_generic_metadata__["parameters"]
     return any(isinstance(arg, ty.TypeVar) for arg in generic_args)
 

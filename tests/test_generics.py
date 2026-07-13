@@ -7,6 +7,7 @@ import pydantic
 import dynapydantic
 
 T = ty.TypeVar("T")
+T2 = ty.TypeVar("T2")
 
 
 def test_generic_subclass_tracking_model_basic() -> None:
@@ -96,10 +97,10 @@ def test_multilayer_generic() -> None:
     class ConcreteInt(Base[int]):
         """A concrete subclass of Base[int]"""
 
-    class GenericMid(ConcreteInt, ty.Generic[T]):
+    class GenericMid(ConcreteInt, ty.Generic[T2]):
         """An intermediate generic base"""
 
-        f2: T
+        f2: T2
 
     class ConcreteInt2(GenericMid[int]):
         """A concrete subclass of GenericMid[int]"""
