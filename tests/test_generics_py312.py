@@ -1,16 +1,8 @@
 """Unit tests for the generics"""
 
-import sys
-import typing as ty
-
-import pytest
-
 import dynapydantic
 
-T = ty.TypeVar("T")
 
-
-@pytest.mark.skipif(sys.version_info <= (3, 11), reason="Requires Python > 3.12")
 def test_that_generic_subclass_tracking_models_isolate_py312() -> None:
     """Test that generic SubclassTrackingModels isolate registered models"""
 
