@@ -1,6 +1,6 @@
 [project]
 name = "dynapydantic"
-version = "0.5.2a1"
+version = "0.6.0"
 description = "Dyanmic pydantic models"
 readme = "README.md"
 authors = [
@@ -65,6 +65,9 @@ convention = "numpy"
 "**/cli.py" = [
     "PLC0415", # imports in CLI functions improve load times
 ]
+
+[tool.ruff.per-file-target-version]
+"tests/test_generics_py312.py" = "py312"
 
 [tool.pyrefly]
 # We have a few embedded packages in our tests to test out plugins
