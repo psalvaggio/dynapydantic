@@ -66,6 +66,9 @@ convention = "numpy"
     "PLC0415", # imports in CLI functions improve load times
 ]
 
+[tool.ruff.per-file-target-version]
+"tests/test_generics_py312.py" = "py312"
+
 [tool.pyrefly]
 # We have a few embedded packages in our tests to test out plugins
 search-path = [
