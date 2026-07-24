@@ -85,12 +85,13 @@ class SubclassTrackingModel(pydantic.BaseModel):
         )
 
         # If we are going to be tracked, walk the entire MRO (to support
-        # multi-level tree) and register ourselves with each oe.
+        # multi-level tree) and register ourselves with each one.
         if not cls.__DYNAPYDANTIC_STM_CONFIG__.exclude_from_union:
             for base in cls.__mro__:
                 if (
                     issubclass(base, SubclassTrackingModel)
                     and base is not SubclassTrackingModel
+                    and not _is_uninstantiated_generic(base)
                 ):
                     base.__DYNAPYDANTIC__.register_model(cls)
 
@@ -169,17 +170,41 @@ class _StmConfig:
                 msg = f"invalid union_realization: {e}"
                 raise ConfigurationError(msg) from e
 
-        # Figure out if model_t is are excluded from tracking unions. Prefer
-        # direct argument, default to True if we are direct descendent of
-        # SubclassTrackingModel and False otherwise. This is because direct
-        # descendents tend to be the abstract base classes.
         if exclude_from_union is None:
-            exclude_from_union = SubclassTrackingModel in model_t.__bases__
+            exclude_from_union = _exclude_from_union_default(model_t)
 
         return cls(
             union_realization=union_realization,
             exclude_from_union=exclude_from_union,
         )
+
+
+def _exclude_from_union_default(model_t: type[SubclassTrackingModel]) -> bool:
+    """Determine the default value for exclude_from_union"""
+    # In general, this shall default to False. It will default to True if:
+    # 1. We are direct descendent of SubclassTrackingModel. This is
+    #    because direct descendents tend to be the abstract base classes.
+    if SubclassTrackingModel in model_t.__bases__:
+        return True
+
+    # 2. We are a generic class with a TypeVar argument (non-concrete).
+    if _is_uninstantiated_generic(model_t):
+        return True
+
+    # 3. We are a concrete generic class and our origin is a direct
+    #    descendent of SubclassTrackingModel. Combined case of 1 and 2. A
+    #    concrete generic that is not a direct descendent is the same as any
+    #    other class in the middle of an inheritance tree.
+    generic_origin = model_t.__pydantic_generic_metadata__["origin"]
+    if generic_origin is None:
+        return False
+    return SubclassTrackingModel in generic_origin.__bases__
+
+
+def _is_uninstantiated_generic(model_t: type[SubclassTrackingModel]) -> bool:
+    """Determine if this a generic model with uninstantiated args"""
+    generic_args = model_t.__pydantic_generic_metadata__["parameters"]
+    return any(isinstance(arg, ty.TypeVar) for arg in generic_args)
 
 
 _UNSET = object()
