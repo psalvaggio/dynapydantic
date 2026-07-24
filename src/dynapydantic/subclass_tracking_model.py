@@ -5,7 +5,8 @@ import inspect
 import typing as ty
 
 import pydantic
-from pydantic import BaseModel, GetCoreSchemaHandler
+from pydantic import BaseModel, GetCoreSchemaHandler, GetJsonSchemaHandler
+from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import PydanticCustomError, core_schema
 
 from .exceptions import ConfigurationError, Error
@@ -237,6 +238,7 @@ class ValidationTimeAdapter:
 
         return core_schema.no_info_plain_validator_function(
             _validate,
+            metadata={"dynapydantic_source_type": source_type},
             serialization=core_schema.plain_serializer_function_ser_schema(
                 _serialize,
                 info_arg=True,
@@ -246,3 +248,22 @@ class ValidationTimeAdapter:
                 ),
             ),
         )
+
+    @staticmethod
+    def __get_pydantic_json_schema__(
+        schema: core_schema.CoreSchema,
+        handler: GetJsonSchemaHandler,
+    ) -> JsonSchemaValue:
+        """Lazily build the JSON schema from the currently registered subclasses
+
+        Runs whenever JSON schema generation actually happens (e.g. a call to
+        `model_json_schema()`), not when the core schema was first built.
+        Reflects whatever subclasses are registered with the `TrackingGroup`
+        at the time of the call.
+        """
+        source_type = schema["metadata"]["dynapydantic_source_type"]
+        try:
+            union_schema = source_type.__DYNAPYDANTIC__.type_adapter.core_schema
+        except Error:
+            union_schema = core_schema.any_schema()
+        return handler(union_schema)
