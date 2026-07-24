@@ -564,3 +564,15 @@ def test_validation_time_union_json_schema_error() -> None:
         match="no types have been registered yet",
     ):
         Model.model_json_schema()
+
+    class B(A):
+        b: int
+
+    Model.model_json_schema()  # should not raise
+
+    # This is an overly paranoid test to hit the KeyError
+    with pytest.raises(
+        pydantic.PydanticInvalidForJsonSchema,
+        match=r"Missing dynapydantic schema metadata\.",
+    ):
+        Model.model_fields["a"].metadata[0].__get_pydantic_json_schema__({}, None)

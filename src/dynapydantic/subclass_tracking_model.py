@@ -283,10 +283,16 @@ class ValidationTimeAdapter:
         pydantic.errors.PydanticInvalidForJsonSchema
             If the JSON schema was unable to be generated.
         """
-        source_type = schema["metadata"]["dynapydantic_source_type"]
+        try:
+            source_type = schema["metadata"]["dynapydantic_source_type"]
+        except KeyError as e:
+            msg = "Missing dynapydantic schema metadata."
+            raise PydanticInvalidForJsonSchema(msg) from e
+
         try:
             union_schema = source_type.__DYNAPYDANTIC__.type_adapter.core_schema
         except Error as e:
             msg = str(e)
             raise PydanticInvalidForJsonSchema(msg) from e
+
         return handler(union_schema)
