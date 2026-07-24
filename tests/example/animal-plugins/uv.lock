@@ -1,0 +1,67 @@
+version = 1
+revision = 3
+requires-python = ">=3.13"
+
+[[package]]
+name = "animal-plugins"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "base-package" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "base-package" }]
+
+[[package]]
+name = "base-package"
+version = "0.1.0a1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "coloredlogs" },
+    { name = "humanfriendly" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/16/af/2ccc7dc830344662c61b590d32eb30a560509087df8733c6cedeb86204df/base-package-0.1.0a1.tar.gz", hash = "sha256:f4712dce2b57dcac85ecce5c6655c0ecb95efd824bfd41ccee20510738bff0b1", size = 3194, upload-time = "2019-10-08T22:09:19.347Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/74/87/8ea08a0b2a843a1e3a0ad6332931d46ac0984b6b4c98048c45e1f1edaa5e/base_package-0.1.0a1-py3-none-any.whl", hash = "sha256:3aa9970974bbe87a72ee75ce8e47716a73e9df0d514d45c3bc52ff8f1f4721e9", size = 5082, upload-time = "2019-10-08T22:09:16.62Z" },
+]
+
+[[package]]
+name = "colorama"
+version = "0.4.6"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d8/53/6f443c9a4a8358a93a6792e2acffb9d9d5cb0a5cfd8802644b7b1c9a02e4/colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44", size = 27697, upload-time = "2022-10-25T02:36:22.414Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6", size = 25335, upload-time = "2022-10-25T02:36:20.889Z" },
+]
+
+[[package]]
+name = "coloredlogs"
+version = "10.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "humanfriendly" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/63/09/1da37a51b232eaf9707919123b2413662e95edd50bace5353a548910eb9d/coloredlogs-10.0.tar.gz", hash = "sha256:b869a2dda3fa88154b9dd850e27828d8755bfab5a838a1c97fbc850c6e377c36", size = 273273, upload-time = "2018-05-13T21:01:47.437Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/08/0f/7877fc42fff0b9d70b6442df62d53b3868d3a6ad1b876bdb54335b30ff23/coloredlogs-10.0-py2.py3-none-any.whl", hash = "sha256:34fad2e342d5a559c31b6c889e8d14f97cb62c47d9a2ae7b5ed14ea10a79eff8", size = 47558, upload-time = "2018-05-13T21:01:45.617Z" },
+]
+
+[[package]]
+name = "humanfriendly"
+version = "4.18"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyreadline", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/26/71/e7daf57e819a70228568ff5395fdbc4de81b63067b93167e07825fcf0bcf/humanfriendly-4.18.tar.gz", hash = "sha256:33ee8ceb63f1db61cce8b5c800c531e1a61023ac5488ccde2ba574a85be00a85", size = 345853, upload-time = "2019-02-21T20:22:25.085Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/90/df/88bff450f333114680698dc4aac7506ff7cab164b794461906de31998665/humanfriendly-4.18-py2.py3-none-any.whl", hash = "sha256:23057b10ad6f782e7bc3a20e3cb6768ab919f619bbdc0dd75691121bbde5591d", size = 73374, upload-time = "2019-02-21T20:22:21.903Z" },
+]
+
+[[package]]
+name = "pyreadline"
+version = "2.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/bc/7c/d724ef1ec3ab2125f38a1d53285745445ec4a8f19b9bb0761b4064316679/pyreadline-2.1.zip", hash = "sha256:4530592fc2e85b25b1a9f79664433da09237c1a270e4d78ea5aa3a2c7229e2d1", size = 109189, upload-time = "2015-09-16T08:24:48.745Z" }

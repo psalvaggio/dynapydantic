@@ -5,7 +5,13 @@ import inspect
 import typing as ty
 
 import pydantic
-from pydantic import BaseModel, GetCoreSchemaHandler
+from pydantic import (
+    BaseModel,
+    GetCoreSchemaHandler,
+    GetJsonSchemaHandler,
+    PydanticInvalidForJsonSchema,
+)
+from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import PydanticCustomError, core_schema
 
 from .exceptions import ConfigurationError, Error
@@ -262,6 +268,7 @@ class ValidationTimeAdapter:
 
         return core_schema.no_info_plain_validator_function(
             _validate,
+            metadata={"dynapydantic_source_type": source_type},
             serialization=core_schema.plain_serializer_function_ser_schema(
                 _serialize,
                 info_arg=True,
@@ -271,3 +278,46 @@ class ValidationTimeAdapter:
                 ),
             ),
         )
+
+    @staticmethod
+    def __get_pydantic_json_schema__(
+        schema: core_schema.CoreSchema,
+        handler: GetJsonSchemaHandler,
+    ) -> JsonSchemaValue:
+        """Lazily build the JSON schema from the currently registered subclasses
+
+        Runs whenever JSON schema generation actually happens (e.g. a call to
+        `model_json_schema()`), not when the core schema was first built.
+        Reflects whatever subclasses are registered with the `TrackingGroup`
+        at the time of the call.
+
+        Parameters
+        ----------
+        schema
+            Schema for the field type
+        handler
+            JSON schema handler to convert core_schemas to JSON schemas
+
+        Returns
+        -------
+        JsonSchemaValue
+            JSON schema for the field
+
+        Raises
+        ------
+        pydantic.errors.PydanticInvalidForJsonSchema
+            If the JSON schema was unable to be generated.
+        """
+        try:
+            source_type = schema["metadata"]["dynapydantic_source_type"]
+        except KeyError as e:
+            msg = "Missing dynapydantic schema metadata."
+            raise PydanticInvalidForJsonSchema(msg) from e
+
+        try:
+            union_schema = source_type.__DYNAPYDANTIC__.type_adapter.core_schema
+        except Error as e:
+            msg = str(e)
+            raise PydanticInvalidForJsonSchema(msg) from e
+
+        return handler(union_schema)

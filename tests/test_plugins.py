@@ -1,5 +1,7 @@
 """Test the plugin functionality"""
 
+# ruff: noqa: PLC0415
+
 import importlib.metadata
 import math
 import pathlib
@@ -44,7 +46,7 @@ def setup_env(monkeypatch: pytest.MonkeyPatch) -> None:
         mock_entry_points.return_value = MockEps()
 
         # import while the mocks are in place
-        import base_package  # noqa: F401, PLC0415
+        import base_package  # noqa: F401
 
 
 @pytest.mark.parametrize(
@@ -63,7 +65,7 @@ def test_animal_subclasses(
     """Test that the plugin example works"""
     setup_env(monkeypatch)
 
-    import base_package  # noqa: PLC0415
+    import base_package
 
     class Parse(pydantic.RootModel):
         root: dynapydantic.Polymorphic[base_package.Animal]
@@ -89,10 +91,29 @@ def test_shape_subclasses(
     """Test that the plugin example works"""
     setup_env(monkeypatch)
 
-    import base_package  # noqa: PLC0415
+    import base_package
 
     class Parse(pydantic.RootModel):
         root: dynapydantic.Polymorphic[base_package.Shape]
 
     x = Parse.model_validate_json(shape_json).root
     assert x.area() == pytest.approx(result, abs=1e-10)
+
+
+def test_json_schemas(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test that JSON schemas can be generated"""
+    setup_env(monkeypatch)
+
+    import base_package
+
+    class Model(pydantic.BaseModel):
+        animal: dynapydantic.Polymorphic[base_package.Animal]
+        shape: dynapydantic.Polymorphic[base_package.Shape]
+
+    schema = Model.model_json_schema()
+    animals = {x["$ref"] for x in schema["properties"]["animal"]["oneOf"]}
+    assert animals == {f"#/$defs/{x}" for x in ("Cat", "Dog", "Horse")}
+    shapes = {x["$ref"] for x in schema["properties"]["shape"]["oneOf"]}
+    assert shapes == {
+        f"#/$defs/{x}" for x in ("Circle", "Rectangle", "Square", "Triangle")
+    }

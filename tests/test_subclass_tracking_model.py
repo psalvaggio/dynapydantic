@@ -502,3 +502,77 @@ def test_newer_serialization_options(
         ).validate_python(data["non_poly_shape"])
 
     assert M(**data).model_dump(**kwargs) == truth
+
+
+def test_validation_time_union_json_schema() -> None:
+    """A validation time union should be able to produce a JSON schema"""
+
+    class A(
+        dynapydantic.SubclassTrackingModel,
+        union_mode="smart",
+        union_realization="validation",
+    ):
+        pass
+
+    class Model(pydantic.BaseModel):
+        a: dynapydantic.Polymorphic[A]
+
+    class B(A):
+        b: int
+
+    class C(A):
+        c: int
+
+    schema = Model.model_json_schema()
+    assert schema["properties"]["a"] == {
+        "anyOf": [
+            {"$ref": "#/$defs/B"},
+            {"$ref": "#/$defs/C"},
+        ],
+        "title": "A",
+    }
+
+    class D(A):
+        d: int
+
+    schema = Model.model_json_schema()
+    assert schema["properties"]["a"] == {
+        "anyOf": [
+            {"$ref": "#/$defs/B"},
+            {"$ref": "#/$defs/C"},
+            {"$ref": "#/$defs/D"},
+        ],
+        "title": "A",
+    }
+
+
+def test_validation_time_union_json_schema_error() -> None:
+    """JSON schema errors should propagate via pydantic errors"""
+
+    class A(
+        dynapydantic.SubclassTrackingModel,
+        union_mode="smart",
+        union_realization="validation",
+    ):
+        pass
+
+    class Model(pydantic.BaseModel):
+        a: dynapydantic.Polymorphic[A]
+
+    with pytest.raises(
+        pydantic.PydanticInvalidForJsonSchema,
+        match="no types have been registered yet",
+    ):
+        Model.model_json_schema()
+
+    class B(A):
+        b: int
+
+    Model.model_json_schema()  # should not raise
+
+    # This is an overly paranoid test to hit the KeyError
+    with pytest.raises(
+        pydantic.PydanticInvalidForJsonSchema,
+        match=r"Missing dynapydantic schema metadata\.",
+    ):
+        Model.model_fields["a"].metadata[0].__get_pydantic_json_schema__({}, None)

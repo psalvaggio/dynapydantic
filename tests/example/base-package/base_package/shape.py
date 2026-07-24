@@ -11,6 +11,7 @@ class Shape(
     discriminator_field="type",
     plugin_entry_point="shape.plugins",
     discriminator_value_generator=lambda cls: cls.__name__,
+    union_realization="validation",
 ):
     """Base class for a shape
 
