@@ -5,7 +5,12 @@ import inspect
 import typing as ty
 
 import pydantic
-from pydantic import BaseModel, GetCoreSchemaHandler, GetJsonSchemaHandler
+from pydantic import (
+    BaseModel,
+    GetCoreSchemaHandler,
+    GetJsonSchemaHandler,
+    PydanticInvalidForJsonSchema,
+)
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import PydanticCustomError, core_schema
 
@@ -260,10 +265,28 @@ class ValidationTimeAdapter:
         `model_json_schema()`), not when the core schema was first built.
         Reflects whatever subclasses are registered with the `TrackingGroup`
         at the time of the call.
+
+        Parameters
+        ----------
+        schema
+            Schema for the field type
+        handler
+            JSON schema handler to convert core_schemas to JSON schemas
+
+        Returns
+        -------
+        JsonSchemaValue
+            JSON schema for the field
+
+        Raises
+        ------
+        pydantic.errors.PydanticInvalidForJsonSchema
+            If the JSON schema was unable to be generated.
         """
         source_type = schema["metadata"]["dynapydantic_source_type"]
         try:
             union_schema = source_type.__DYNAPYDANTIC__.type_adapter.core_schema
-        except Error:
-            union_schema = core_schema.any_schema()
+        except Error as e:
+            msg = str(e)
+            raise PydanticInvalidForJsonSchema(msg) from e
         return handler(union_schema)

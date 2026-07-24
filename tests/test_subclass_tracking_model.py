@@ -544,3 +544,23 @@ def test_validation_time_union_json_schema() -> None:
         ],
         "title": "A",
     }
+
+
+def test_validation_time_union_json_schema_error() -> None:
+    """JSON schema errors should propagate via pydantic errors"""
+
+    class A(
+        dynapydantic.SubclassTrackingModel,
+        union_mode="smart",
+        union_realization="validation",
+    ):
+        pass
+
+    class Model(pydantic.BaseModel):
+        a: dynapydantic.Polymorphic[A]
+
+    with pytest.raises(
+        pydantic.PydanticInvalidForJsonSchema,
+        match="no types have been registered yet",
+    ):
+        Model.model_json_schema()
