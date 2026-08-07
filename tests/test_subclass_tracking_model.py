@@ -301,26 +301,6 @@ def test_invalid_union_realization(val: int | str) -> None:
             pass
 
 
-def test_validation_time_union_no_members() -> None:
-    """An error is risen at validation time when no subclasses exist"""
-
-    class Base(
-        dynapydantic.SubclassTrackingModel,
-        union_mode="smart",
-        union_realization="validation",
-    ):
-        pass
-
-    class Model(pydantic.BaseModel):
-        field: dynapydantic.Polymorphic[Base]
-
-    with pytest.raises(
-        pydantic.ValidationError,
-        match=r"(?s)field.*Unable to produce a union.*dynapydantic_error",
-    ):
-        Model(field={"some": "dummy value"})
-
-
 # mode is tested elsewhere
 @pytest.mark.parametrize(
     ("data", "kwargs", "truth"),

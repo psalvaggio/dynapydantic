@@ -223,13 +223,26 @@ class ValidationTimeAdapter:
     ) -> core_schema.CoreSchema:
         """Get the pydantic schema for this type"""
 
-        def _validate(value: ty.Any) -> ty.Any:  # noqa: ANN401
+        def _validate(value: ty.Any, info: core_schema.ValidationInfo) -> ty.Any:  # noqa: ANN401
             try:
                 adapter = source_type.__DYNAPYDANTIC__.type_adapter
             except Error as e:
                 err_t = "dynapydantic_error"
                 raise PydanticCustomError(err_t, "{e}", {"e": str(e)}) from e
-            return adapter.validate_python(value)
+            kwargs: dict[str, ty.Any] = {}
+            if (ctx := getattr(info, "context", None)) is not None:
+                kwargs["context"] = ctx
+            if hasattr(info, "config") and (config := info.config):
+                for src, dst in (
+                    ("strict", "strict"),
+                    ("extra_fields_behavior", "extra"),
+                    ("from_attributes", "from_attributes"),
+                    ("validate_by_alias", "by_alias"),
+                    ("validate_by_name", "by_name"),
+                ):
+                    if (val := config.get(src)) is not None:
+                        kwargs[dst] = val
+            return adapter.validate_python(value, **kwargs)
 
         def _serialize(
             value: BaseModel,
@@ -266,7 +279,7 @@ class ValidationTimeAdapter:
                 **args,
             )
 
-        return core_schema.no_info_plain_validator_function(
+        return core_schema.with_info_plain_validator_function(
             _validate,
             metadata={"dynapydantic_source_type": source_type},
             serialization=core_schema.plain_serializer_function_ser_schema(
