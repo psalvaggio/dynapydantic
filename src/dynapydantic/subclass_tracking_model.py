@@ -2,6 +2,7 @@
 
 import dataclasses
 import inspect
+import json
 import typing as ty
 
 import pydantic
@@ -217,18 +218,15 @@ class ValidationTimeAdapter:
     """
 
     @staticmethod
-    def __get_pydantic_core_schema__(
+    def __get_pydantic_core_schema__(  # noqa: C901
         source_type: type[SubclassTrackingModel],
         _handler: GetCoreSchemaHandler,
     ) -> core_schema.CoreSchema:
         """Get the pydantic schema for this type"""
 
-        def _validate(value: ty.Any, info: core_schema.ValidationInfo) -> ty.Any:  # noqa: ANN401
-            try:
-                adapter = source_type.__DYNAPYDANTIC__.type_adapter
-            except Error as e:
-                err_t = "dynapydantic_error"
-                raise PydanticCustomError(err_t, "{e}", {"e": str(e)}) from e
+        def _validation_kwargs(
+            info: core_schema.ValidationInfo,
+        ) -> dict[str, ty.Any]:
             kwargs: dict[str, ty.Any] = {}
             if (ctx := getattr(info, "context", None)) is not None:
                 kwargs["context"] = ctx
@@ -242,6 +240,22 @@ class ValidationTimeAdapter:
                 ):
                     if (val := config.get(src)) is not None:
                         kwargs[dst] = val
+            return kwargs
+
+        def _validate(value: ty.Any, info: core_schema.ValidationInfo) -> ty.Any:  # noqa: ANN401
+            try:
+                adapter = source_type.__DYNAPYDANTIC__.type_adapter
+            except Error as e:
+                err_t = "dynapydantic_error"
+                raise PydanticCustomError(err_t, "{e}", {"e": str(e)}) from e
+
+            kwargs = _validation_kwargs(info)
+            if info.mode == "json":
+                # Field validators receive JSON after the enclosing document has
+                # already been decoded. Re-encode the field so the nested
+                # adapter can apply JSON-specific strict-validation behavior.
+                kwargs.pop("from_attributes", None)
+                return adapter.validate_json(json.dumps(value), **kwargs)
             return adapter.validate_python(value, **kwargs)
 
         def _serialize(
