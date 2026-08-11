@@ -219,28 +219,11 @@ class ValidationTimeAdapter:
     """
 
     @staticmethod
-    def __get_pydantic_core_schema__(  # noqa: C901
+    def __get_pydantic_core_schema__(
         source_type: type[SubclassTrackingModel],
         _handler: GetCoreSchemaHandler,
     ) -> core_schema.CoreSchema:
         """Get the pydantic schema for this type"""
-
-        def _validation_kwargs(
-            info: core_schema.ValidationInfo,
-        ) -> dict[str, ty.Any]:
-            kwargs: dict[str, ty.Any] = {}
-            if (ctx := getattr(info, "context", None)) is not None:
-                kwargs["context"] = ctx
-            if (config := getattr(info, "config", None)) is not None:
-                for src, dst in (
-                    ("extra_fields_behavior", "extra"),
-                    ("from_attributes", "from_attributes"),
-                    ("validate_by_alias", "by_alias"),
-                    ("validate_by_name", "by_name"),
-                ):
-                    if (val := config.get(src)) is not None:
-                        kwargs[dst] = val
-            return kwargs
 
         def _validate(
             value: ty.Any,  # noqa: ANN401
@@ -264,9 +247,12 @@ class ValidationTimeAdapter:
                 kwargs.pop("from_attributes", None)
                 try:
                     value_j = json.dumps(value)
+                # Since the object came from a JSON load, this shouldn't ever
+                # occur, but just being overly defensive.
                 except (TypeError, ValueError, OverflowError) as e:
-                    msg = f"JSON re-encoding failed: {e}"
-                    raise ValueError(msg) from e
+                    err_t = "json_reencode_failure"
+                    msg = "JSON re-encoding failed: {e}"
+                    raise PydanticCustomError(err_t, msg, {"e": str(e)}) from e
 
                 return adapter.validate_json(value_j, **kwargs)
             return adapter.validate_python(value, **kwargs)
@@ -367,3 +353,22 @@ class ValidationTimeAdapter:
             raise PydanticInvalidForJsonSchema(msg) from e
 
         return handler(union_schema)
+
+
+def _validation_kwargs(
+    info: core_schema.ValidationInfo,
+) -> dict[str, ty.Any]:
+    """Extract keyword arguments for TypeAdapter.validate_python from info."""
+    kwargs: dict[str, ty.Any] = {}
+    if (ctx := getattr(info, "context", None)) is not None:
+        kwargs["context"] = ctx
+    if (config := getattr(info, "config", None)) is not None:
+        for src, dst in (
+            ("extra_fields_behavior", "extra"),
+            ("from_attributes", "from_attributes"),
+            ("validate_by_alias", "by_alias"),
+            ("validate_by_name", "by_name"),
+        ):
+            if (val := config.get(src)) is not None:
+                kwargs[dst] = val
+    return kwargs
