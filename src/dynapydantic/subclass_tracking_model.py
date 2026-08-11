@@ -1,7 +1,9 @@
 """Base class for dynamic pydantic models"""
 
 import dataclasses
+import functools
 import inspect
+import json
 import typing as ty
 
 import pydantic
@@ -223,13 +225,37 @@ class ValidationTimeAdapter:
     ) -> core_schema.CoreSchema:
         """Get the pydantic schema for this type"""
 
-        def _validate(value: ty.Any) -> ty.Any:  # noqa: ANN401
+        def _validate(
+            value: ty.Any,  # noqa: ANN401
+            info: core_schema.ValidationInfo,
+            *,
+            strict: bool,
+        ) -> ty.Any:  # noqa: ANN401
             try:
                 adapter = source_type.__DYNAPYDANTIC__.type_adapter
             except Error as e:
                 err_t = "dynapydantic_error"
                 raise PydanticCustomError(err_t, "{e}", {"e": str(e)}) from e
-            return adapter.validate_python(value)
+
+            kwargs = _validation_kwargs(info)
+            kwargs["strict"] = strict
+            if info.mode == "json":
+                # Field validators receive JSON after the enclosing document has
+                # already been decoded. Re-encode the field so the nested
+                # adapter can apply JSON-specific strict-validation behavior.
+                # https://github.com/pydantic/pydantic/issues/11154
+                kwargs.pop("from_attributes", None)
+                try:
+                    value_j = json.dumps(value)
+                # Since the object came from a JSON load, this shouldn't ever
+                # occur, but just being overly defensive.
+                except (TypeError, ValueError, OverflowError) as e:
+                    err_t = "json_reencode_failure"
+                    msg = "JSON re-encoding failed: {e}"
+                    raise PydanticCustomError(err_t, msg, {"e": str(e)}) from e
+
+                return adapter.validate_json(value_j, **kwargs)
+            return adapter.validate_python(value, **kwargs)
 
         def _serialize(
             value: BaseModel,
@@ -266,17 +292,23 @@ class ValidationTimeAdapter:
                 **args,
             )
 
-        return core_schema.no_info_plain_validator_function(
-            _validate,
-            metadata={"dynapydantic_source_type": source_type},
-            serialization=core_schema.plain_serializer_function_ser_schema(
-                _serialize,
-                info_arg=True,
-                when_used="unless-none",
-                return_schema=core_schema.dict_schema(
-                    core_schema.str_schema(), core_schema.any_schema()
-                ),
+        _validate_lax = functools.partial(_validate, strict=False)
+        _validate_strict = functools.partial(_validate, strict=True)
+
+        serialization = core_schema.plain_serializer_function_ser_schema(
+            _serialize,
+            info_arg=True,
+            when_used="unless-none",
+            return_schema=core_schema.dict_schema(
+                core_schema.str_schema(), core_schema.any_schema()
             ),
+        )
+        metadata = {"dynapydantic_source_type": source_type}
+        return core_schema.lax_or_strict_schema(
+            core_schema.with_info_plain_validator_function(_validate_lax),
+            core_schema.with_info_plain_validator_function(_validate_strict),
+            metadata=metadata,
+            serialization=serialization,
         )
 
     @staticmethod
@@ -321,3 +353,22 @@ class ValidationTimeAdapter:
             raise PydanticInvalidForJsonSchema(msg) from e
 
         return handler(union_schema)
+
+
+def _validation_kwargs(
+    info: core_schema.ValidationInfo,
+) -> dict[str, ty.Any]:
+    """Extract keyword arguments for TypeAdapter.validate_python from info."""
+    kwargs: dict[str, ty.Any] = {}
+    if (ctx := getattr(info, "context", None)) is not None:
+        kwargs["context"] = ctx
+    if (config := getattr(info, "config", None)) is not None:
+        for src, dst in (
+            ("extra_fields_behavior", "extra"),
+            ("from_attributes", "from_attributes"),
+            ("validate_by_alias", "by_alias"),
+            ("validate_by_name", "by_name"),
+        ):
+            if (val := config.get(src)) is not None:
+                kwargs[dst] = val
+    return kwargs

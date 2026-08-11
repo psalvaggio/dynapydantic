@@ -342,7 +342,12 @@ their own tradeoffs:
     This option has the cleanest syntax, as not `model_rebuild()` calls are
     needed, but does incur a runtime penalty for potentially multiple schema
     compilations and the need for a field validator function, whereas options 1
-    and 2 can produce static schema. Like option 2, the field is able to be
+    and 2 can produce static schema. When validating from JSON, the field
+    validator receives data after Pydantic has decoded it. To preserve
+    Pydantic's JSON-specific validation behavior (including strict validation),
+    validation-time unions re-encode the field value before validating it with
+    the realized adapter. This adds JSON encoding and decoding overhead on top
+    of the normal validation cost. Like option 2, the field is able to be
     interpreted by type checkers as the base class.
 
 As alluded to in the example for validation-time unions, this behavior can be
