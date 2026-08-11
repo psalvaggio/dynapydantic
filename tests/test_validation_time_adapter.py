@@ -230,5 +230,33 @@ def test_validation_time_adapter_strict_json_validation() -> None:
     model = Model(data=Child(value=1, file_path=Path("/foo/bar")))
 
     json_str = model.model_dump_json(round_trip=True)
-    model_rt = Model.model_validate_json(json_str)  # crash here
+    model_rt = Model.model_validate_json(json_str)
     assert model == model_rt
+
+
+def test_validation_time_adapter_runtime_strict_json_validation() -> None:
+    """Test type coercions for a strict model through JSON (runtime)"""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        discriminator_field="kind",
+        union_realization="validation",
+    ):
+        value: int
+
+    class Child(Base):
+        kind: ty.Literal["child"] = "child"
+        file_path: Path | None = None
+
+    class Model(pydantic.BaseModel):
+        data: dynapydantic.Polymorphic[Base]
+
+    # Easy path, should not raise
+    model = Model(data=Child(value=1, file_path=Path("/foo/bar")))
+
+    json_str = model.model_dump_json(round_trip=True)
+    model_rt = Model.model_validate_json(json_str, strict=True)
+    assert model == model_rt
+
+    with pytest.raises(pydantic.ValidationError, match="value"):
+        Model.model_validate_json('{"data": {"value": "1"}}', strict=True)
