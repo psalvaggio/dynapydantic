@@ -26,19 +26,25 @@ conda install dynapydantic
 The supported Python/Pydantic compatibility matrix is defined in `noxfile.py`:
 
 <table>
-  <caption>Supported Python and Pydantic versions</caption>
   <thead>
     <tr>
-      <th scope="col">Python version</th>
-      <th scope="col">Pydantic 2.8</th>
-      <th scope="col">Pydantic 2.9</th>
-      <th scope="col">Pydantic 2.10</th>
-      <th scope="col">Pydantic 2.11</th>
-      <th scope="col">Pydantic 2.12</th>
-      <th scope="col">Pydantic 2.13</th>
+      <th></th>
+      <th></th>
+      <th colspan="6"> Pydantic</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th></th>
+      <th scope="col">2.8</th>
+      <th scope="col">2.9</th>
+      <th scope="col">2.10</th>
+      <th scope="col">2.11</th>
+      <th scope="col">2.12</th>
+      <th scope="col">2.13</th>
     </tr>
   </thead>
   <tbody>
+     <th rowspan="7">Python </th>
     <tr>
       <th scope="row">3.10</th>
       <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
