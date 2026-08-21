@@ -76,7 +76,7 @@ jobs:
       - name: Combine coverage data
         run: |
           uv run coverage combine coverage-data/*
-          uv run coverage xml --outfile=coverage.xml
+          uv run coverage xml -o coverage.xml
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@8d6379e14d29928660c4ba802d8e85393440b329 # v2.3.8
         with:
