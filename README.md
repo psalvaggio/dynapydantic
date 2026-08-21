@@ -21,6 +21,21 @@ or with `conda` via the `conda-forge` channel:
 conda install dynapydantic
 ```
 
+## Testing
+
+The supported Python/Pydantic compatibility matrix is defined in `noxfile.py`.
+Run every combination locally with:
+
+```sh
+uv run nox
+```
+
+To run one combination, for example Python 3.13 with Pydantic 2.13:
+
+```sh
+uv run nox -s test-3.13-2.13
+```
+
 
 ## Motiviation
 Consider the following simple class setup:

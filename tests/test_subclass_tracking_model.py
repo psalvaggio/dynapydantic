@@ -8,6 +8,8 @@ import pytest
 
 import dynapydantic
 
+from .version_check import skipif_mark_pydantic_version
+
 
 class SimpleKwargBase(dynapydantic.SubclassTrackingModel, discriminator_field="name"):
     """Initialize the TrackingGroup via kwargs"""
@@ -402,6 +404,7 @@ def test_invalid_union_realization(val: int | str) -> None:
                 },
                 "non_poly_shape": None,
             },
+            marks=[skipif_mark_pydantic_version(lt=(2, 12, 0))],
             id="exclude-computed-fields",
         ),
         pytest.param(
@@ -416,7 +419,38 @@ def test_invalid_union_realization(val: int | str) -> None:
                 },
                 "non_poly_shape": {"side": 2.0},
             },
-            id="serialize-as-any",
+            marks=[skipif_mark_pydantic_version(ge=(2, 12, 0))],
+            id="serialize-as-any-lt-2.12",
+        ),
+        pytest.param(
+            {"shape": {"width": 4, "length": 5}, "non_poly_shape": {"side": 2}},
+            {"serialize_as_any": True},
+            {
+                "shape": {
+                    "width": 4.0,
+                    "length": 5.0,
+                    "area": 20.0,
+                    "name": "Rectangle",
+                },
+                "non_poly_shape": {"side": 2.0},
+            },
+            marks=[skipif_mark_pydantic_version(lt=(2, 12, 0), ge=(2, 13, 0))],
+            id="serialize-as-any-2.12",
+        ),
+        pytest.param(
+            {"shape": {"width": 4, "length": 5}, "non_poly_shape": {"side": 2}},
+            {"serialize_as_any": True},
+            {
+                "shape": {
+                    "width": "4.0",
+                    "length": 5.0,
+                    "area": 20.0,
+                    "name": "Rectangle",
+                },
+                "non_poly_shape": {"side": 2.0},
+            },
+            marks=[skipif_mark_pydantic_version(lt=(2, 13, 0))],
+            id="serialize-as-any-ge-2.13",
         ),
         pytest.param(
             {"shape": {"width": 4, "length": 5}, "non_poly_shape": {"side": 2}},
@@ -430,6 +464,7 @@ def test_invalid_union_realization(val: int | str) -> None:
                 },
                 "non_poly_shape": {"side": 2.0},
             },
+            marks=[skipif_mark_pydantic_version(lt=(2, 13, 0))],
             id="polymorphic-serialziation",
         ),
     ],

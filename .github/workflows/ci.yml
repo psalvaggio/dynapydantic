@@ -13,20 +13,75 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        include:
+          # Pydantic 2.8 added Python 3.13 support; 2.12 added Python 3.14.
+          - {python-version: "3.10", pydantic-version: "2.0"}
+          - {python-version: "3.10", pydantic-version: "2.1"}
+          - {python-version: "3.10", pydantic-version: "2.2"}
+          - {python-version: "3.10", pydantic-version: "2.3"}
+          - {python-version: "3.10", pydantic-version: "2.4"}
+          - {python-version: "3.10", pydantic-version: "2.5"}
+          - {python-version: "3.10", pydantic-version: "2.6"}
+          - {python-version: "3.10", pydantic-version: "2.7"}
+          - {python-version: "3.10", pydantic-version: "2.8"}
+          - {python-version: "3.10", pydantic-version: "2.9"}
+          - {python-version: "3.10", pydantic-version: "2.10"}
+          - {python-version: "3.10", pydantic-version: "2.11"}
+          - {python-version: "3.10", pydantic-version: "2.12"}
+          - {python-version: "3.10", pydantic-version: "2.13"}
+          - {python-version: "3.11", pydantic-version: "2.0"}
+          - {python-version: "3.11", pydantic-version: "2.1"}
+          - {python-version: "3.11", pydantic-version: "2.2"}
+          - {python-version: "3.11", pydantic-version: "2.3"}
+          - {python-version: "3.11", pydantic-version: "2.4"}
+          - {python-version: "3.11", pydantic-version: "2.5"}
+          - {python-version: "3.11", pydantic-version: "2.6"}
+          - {python-version: "3.11", pydantic-version: "2.7"}
+          - {python-version: "3.11", pydantic-version: "2.8"}
+          - {python-version: "3.11", pydantic-version: "2.9"}
+          - {python-version: "3.11", pydantic-version: "2.10"}
+          - {python-version: "3.11", pydantic-version: "2.11"}
+          - {python-version: "3.11", pydantic-version: "2.12"}
+          - {python-version: "3.11", pydantic-version: "2.13"}
+          - {python-version: "3.12", pydantic-version: "2.0"}
+          - {python-version: "3.12", pydantic-version: "2.1"}
+          - {python-version: "3.12", pydantic-version: "2.2"}
+          - {python-version: "3.12", pydantic-version: "2.3"}
+          - {python-version: "3.12", pydantic-version: "2.4"}
+          - {python-version: "3.12", pydantic-version: "2.5"}
+          - {python-version: "3.12", pydantic-version: "2.6"}
+          - {python-version: "3.12", pydantic-version: "2.7"}
+          - {python-version: "3.12", pydantic-version: "2.8"}
+          - {python-version: "3.12", pydantic-version: "2.9"}
+          - {python-version: "3.12", pydantic-version: "2.10"}
+          - {python-version: "3.12", pydantic-version: "2.11"}
+          - {python-version: "3.12", pydantic-version: "2.12"}
+          - {python-version: "3.12", pydantic-version: "2.13"}
+          - {python-version: "3.13", pydantic-version: "2.8"}
+          - {python-version: "3.13", pydantic-version: "2.9"}
+          - {python-version: "3.13", pydantic-version: "2.10"}
+          - {python-version: "3.13", pydantic-version: "2.11"}
+          - {python-version: "3.13", pydantic-version: "2.12"}
+          - {python-version: "3.13", pydantic-version: "2.13"}
+          - {python-version: "3.14", pydantic-version: "2.12"}
+          - {python-version: "3.14", pydantic-version: "2.13"}
     env:
       UV_PYTHON: ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: ${{ matrix.python-version }}
       - name: Install the project
         run: uv sync --locked --all-extras --dev
       - name: Run tests
-        run: uv run pytest --cov-report=xml
+        run: uv run nox -s test-${{ matrix.python-version }}-${{ matrix.pydantic-version }} -- --cov-report=xml
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@8d6379e14d29928660c4ba802d8e85393440b329 # v2.3.8
-        if: matrix.python-version == '3.14'
+        if: matrix.python-version == '3.14' && matrix.pydantic-version == '2.13'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: coverage.xml

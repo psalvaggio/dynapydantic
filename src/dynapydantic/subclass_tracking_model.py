@@ -19,6 +19,7 @@ from pydantic_core import PydanticCustomError, core_schema
 from .exceptions import ConfigurationError, Error
 from .tracking_group import TrackingGroup
 from .union_mode import UnionRealization
+from .version_check import pydantic_ge
 
 
 class SubclassTrackingModel(pydantic.BaseModel):
@@ -360,15 +361,25 @@ def _validation_kwargs(
 ) -> dict[str, ty.Any]:
     """Extract keyword arguments for TypeAdapter.validate_python from info."""
     kwargs: dict[str, ty.Any] = {}
+
     if (ctx := getattr(info, "context", None)) is not None:
         kwargs["context"] = ctx
+
     if (config := getattr(info, "config", None)) is not None:
-        for src, dst in (
-            ("extra_fields_behavior", "extra"),
-            ("from_attributes", "from_attributes"),
-            ("validate_by_alias", "by_alias"),
-            ("validate_by_name", "by_name"),
+        # .validate() didn't support extra until 2.12
+        if (
+            pydantic_ge((2, 12, 0))
+            and (val := config.get("extra_fields_behavior")) is not None
         ):
-            if (val := config.get(src)) is not None:
-                kwargs[dst] = val
+            kwargs["extra"] = val
+
+        if pydantic_ge((2, 11, 0)):
+            if (val := config.get("validate_by_alias")) is not None:
+                kwargs["by_alias"] = val
+            if (val := config.get("validate_by_name")) is not None:
+                kwargs["by_name"] = val
+
+        if (val := config.get("from_attributes")) is not None:
+            kwargs["from_attributes"] = val
+
     return kwargs

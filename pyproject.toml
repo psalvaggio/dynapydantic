@@ -8,7 +8,7 @@ authors = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "pydantic>=2.0",
+    "pydantic>=2.8",
 ]
 
 [dependency-groups]
@@ -20,6 +20,7 @@ dev = [
     "mike>=2.1.3",
     "mkdocs-material>=9.6.15",
     "mkdocstrings[python]>=0.29.1",
+    "nox>=2025.10.16",
     "pip>=25.1.1",
     "prek>=0.3.8",
     "pymdown-extensions>=10.16",
@@ -46,6 +47,7 @@ target-version = "py310"
 select = ["ALL"]
 ignore = [
     "COM812", # trailing commas, handled by formatter
+    "CPY001", # not doing copyrights in each file
     "D400", # docstrings end in .
     "ANN002", # Annotations for *args
     "ANN003", # Annotations for *kwargs
@@ -71,6 +73,7 @@ convention = "numpy"
 [tool.pyrefly]
 # We have a few embedded packages in our tests to test out plugins
 search-path = [
+    ".",
     "tests/example/animal-plugins",
     "tests/example/base-package",
     "tests/example/shape-plugins",

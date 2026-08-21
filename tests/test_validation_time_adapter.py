@@ -7,6 +7,7 @@ import pydantic
 import pytest
 
 import dynapydantic
+from dynapydantic.version_check import pydantic_le, pydantic_lt
 
 
 def test_validation_time_union_no_members() -> None:
@@ -131,6 +132,12 @@ def test_validation_time_adapter_forwards_context() -> None:
             {"extra": "forbid"},
             {"value": {"value": 2, "unexpected": True}},
             "unexpected",
+            marks=[
+                pytest.mark.xfail(
+                    pydantic_le((2, 12, 0)),
+                    reason="TypeAdapter's didn't gain support for extra until 2.12",
+                )
+            ],
             id="extra",
         ),
     ],
@@ -183,6 +190,10 @@ def test_validation_time_adapter_forwards_from_attributes() -> None:
     assert Model.model_validate({"value": Input()}).value == Child(value=7)
 
 
+@pytest.mark.xfail(
+    pydantic_lt((2, 11, 0)),
+    reason="TypeAdapter's didn't support alias config before 2.11.0",
+)
 def test_validation_time_adapter_forwards_alias_configuration() -> None:
     """Alias and field-name settings reach the realized subclass."""
 
