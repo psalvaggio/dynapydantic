@@ -2,6 +2,7 @@
 
 import datetime
 import typing as ty
+from unittest import mock
 
 import pydantic
 import pytest
@@ -117,6 +118,35 @@ def test_invalid_union_modes() -> None:
 
         class Base(dynapydantic.SubclassTrackingModel, union_mode="foo"):
             pass
+
+
+def test_json_reencode_failure() -> None:
+    """A JSON re-encoding failure should become a validation error."""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        discriminator_field="name",
+        union_realization="validation",
+    ):
+        pass
+
+    class A(Base):
+        name: ty.Literal["A"] = "A"
+        a: int
+
+    class Model(pydantic.BaseModel):
+        value: dynapydantic.Polymorphic[Base]
+
+    with (
+        mock.patch(
+            "dynapydantic.subclass_tracking_model.json.dumps",
+            side_effect=TypeError("cannot encode value"),
+        ) as dumps,
+        pytest.raises(pydantic.ValidationError, match="JSON re-encoding failed"),
+    ):
+        Model.model_validate_json('{"value": {"name": "A", "a": 1}}')
+
+    dumps.assert_called_once_with({"name": "A", "a": 1})
 
 
 def test_three_level_subclass_hierarchy() -> None:
