@@ -23,7 +23,16 @@ conda install dynapydantic
 
 ## Testing
 
-The supported Python/Pydantic compatibility matrix is defined in `noxfile.py`.
+The supported Python/Pydantic compatibility matrix is defined in `noxfile.py`:
+
+| Python | Pydantic 2.8 | Pydantic 2.9 | Pydantic 2.10 | Pydantic 2.11 | Pydantic 2.12 | Pydantic 2.13 |
+| ------ | :----------: | :----------: | :-----------: | :-----------: | :-----------: | :-----------: |
+| 3.10   | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 3.11   | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 3.12   | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 3.13   | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 3.14   |   |   |   |   | ✓ | ✓ |
+
 Run every combination locally with:
 
 ```sh
