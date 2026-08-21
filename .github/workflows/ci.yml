@@ -45,11 +45,13 @@ jobs:
         run: uv sync --locked --all-extras --dev
       - name: Run tests
         run: uv run nox -s ${{ matrix.session }}
+      - name: Prepare coverage data
+        run: mv .coverage .coverage.${{ matrix.python-version }}-${{ matrix.pydantic-version }}
       - name: Upload coverage data
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.pydantic-version }}
-          path: .coverage
+          path: .coverage.*
           include-hidden-files: true
 
   coverage:
