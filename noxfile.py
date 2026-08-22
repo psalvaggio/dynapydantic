@@ -10,7 +10,7 @@ PYDANTIC_VERSIONS = tuple(f"2.{minor}" for minor in range(8, 14))
 
 def pydantic_versions_for(python_version: str) -> tuple[str, ...]:
     """Return the Pydantic versions supported by a Python version."""
-    if python_version == "3.14":
+    if python_version == "3.14":  # 3.14 support was first added in 2.12
         return ("2.12", "2.13")
     return PYDANTIC_VERSIONS
 

@@ -81,7 +81,7 @@ uv run nox -s test-3.13-2.13
 ```
 
 
-## Motiviation
+## Motivation
 Consider the following simple class setup:
 ```python
 import pydantic

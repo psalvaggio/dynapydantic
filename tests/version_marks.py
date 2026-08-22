@@ -1,4 +1,4 @@
-"""Version checking utilities."""
+"""Pytest marks related to third-party versions."""
 
 import pytest
 
@@ -17,7 +17,7 @@ def skipif_mark_pydantic_version(
     ge: tuple[int, ...] | None = None,
     gt: tuple[int, ...] | None = None,
 ) -> pytest.MarkDecorator:
-    """Return a pydantic.mark.skipif based on the pydantic version.
+    """Return a pytest.mark.skipif based on the pydantic version.
 
     Skips the test if ANY passed condition is true.
     """
