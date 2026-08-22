@@ -377,10 +377,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#motiviation" class="md-nav__link">
+  <a href="#testing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Motiviation
+        Testing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#motivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Motivation
       
     </span>
   </a>
@@ -583,10 +594,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#motiviation" class="md-nav__link">
+  <a href="#testing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Motiviation
+        Testing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#motivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Motivation
       
     </span>
   </a>
@@ -687,7 +709,58 @@ package that allow for dynamic tracking of <code>pydantic.BaseModel</code> subcl
 or with <code>conda</code> via the <code>conda-forge</code> channel:
 <div class="highlight"><pre><span></span><code>conda install dynapydantic
 </code></pre></div></p>
-<h2 id="motiviation">Motiviation<a class="headerlink" href="#motiviation" title="Permanent link">&para;</a></h2>
+<h2 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h2>
+<p>The supported Python/Pydantic compatibility matrix is defined in <code>noxfile.py</code>:</p>
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th></th>
+      <th colspan="6"> Pydantic</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th></th>
+      <th scope="col">2.8</th>
+      <th scope="col">2.9</th>
+      <th scope="col">2.10</th>
+      <th scope="col">2.11</th>
+      <th scope="col">2.12</th>
+      <th scope="col">2.13</th>
+    </tr>
+  </thead>
+  <tbody>
+     <th rowspan="7">Python </th>
+    <tr>
+      <th scope="row">3.10</th>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.11</th>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.12</th>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.13</th>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.14</th>
+      <td></td><td></td><td></td><td></td><td>✓</td><td>✓</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Run every combination locally with:</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>nox
+</code></pre></div>
+<p>To run one combination, for example Python 3.13 with Pydantic 2.13:</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>nox<span class="w"> </span>-s<span class="w"> </span>test-3.13-2.13
+</code></pre></div>
+<h2 id="motivation">Motivation<a class="headerlink" href="#motivation" title="Permanent link">&para;</a></h2>
 <p>Consider the following simple class setup:
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
 
