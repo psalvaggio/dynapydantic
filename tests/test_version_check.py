@@ -24,5 +24,3 @@ def test_version_comparisons_use_pydantic_version() -> None:
         assert version_check.pydantic_lt((2, 3, 5))
         assert version_check.pydantic_ge((2, 3, 4))
         assert version_check.pydantic_gt((2, 3, 3))
-        assert version_check.pydantic_eq((2, 3, 4))
-        assert version_check.pydantic_ne((2, 3, 5))

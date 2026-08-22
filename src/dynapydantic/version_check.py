@@ -1,4 +1,4 @@
-"""Version checking utilities"""
+"""Version checking utilities."""
 
 import pydantic
 
@@ -21,16 +21,6 @@ def pydantic_ge(version: tuple[int, ...]) -> bool:
 def pydantic_gt(version: tuple[int, ...]) -> bool:
     """Test whether the pydantic version is > ``version``."""
     return _pydantic_version() > version
-
-
-def pydantic_eq(version: tuple[int, ...]) -> bool:
-    """Test whether the pydantic version is == ``version``."""
-    return _pydantic_version() == version
-
-
-def pydantic_ne(version: tuple[int, ...]) -> bool:
-    """Test whether the pydantic version is != ``version``."""
-    return _pydantic_version() != version
 
 
 _PYDANTIC_VERSION: tuple[int, ...] | None = None

@@ -9,7 +9,7 @@ import pytest
 
 import dynapydantic
 
-from .version_check import skipif_mark_pydantic_version
+from .version_marks import skipif_mark_pydantic_version
 
 
 class SimpleKwargBase(dynapydantic.SubclassTrackingModel, discriminator_field="name"):
