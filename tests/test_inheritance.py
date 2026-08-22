@@ -1,9 +1,12 @@
 """Tests for how dynapydantic propagates to subclasses"""
 
+import typing as ty
+
 import pydantic
 import pytest
 
 import dynapydantic
+from dynapydantic.version_check import pydantic_lt
 
 
 def test_inheritance_tree_basic() -> None:
@@ -124,7 +127,7 @@ def test_changing_union_from_smart_to_discriminated() -> None:
         f1: dynapydantic.Polymorphic[Base]
         f2: dynapydantic.Polymorphic[MidA]
 
-    assert Container.model_json_schema() == {
+    truth: dict[str, ty.Any] = {
         "$defs": {
             "B": {
                 "properties": {
@@ -201,3 +204,11 @@ def test_changing_union_from_smart_to_discriminated() -> None:
         "title": "Container",
         "type": "object",
     }
+
+    # redundant enum removed in: https://github.com/pydantic/pydantic/pull/11321
+    if pydantic_lt((2, 10, 0)):
+        truth["$defs"]["B"]["properties"]["name"]["enum"] = ["B"]
+        truth["$defs"]["C"]["properties"]["name"]["enum"] = ["C"]
+        truth["$defs"]["MidA"]["properties"]["name"]["enum"] = ["MidA"]
+
+    assert Container.model_json_schema() == truth

@@ -2,11 +2,14 @@
 
 import datetime
 import typing as ty
+from unittest import mock
 
 import pydantic
 import pytest
 
 import dynapydantic
+
+from .version_marks import skipif_mark_pydantic_version
 
 
 class SimpleKwargBase(dynapydantic.SubclassTrackingModel, discriminator_field="name"):
@@ -115,6 +118,35 @@ def test_invalid_union_modes() -> None:
 
         class Base(dynapydantic.SubclassTrackingModel, union_mode="foo"):
             pass
+
+
+def test_json_reencode_failure() -> None:
+    """A JSON re-encoding failure should become a validation error."""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        discriminator_field="name",
+        union_realization="validation",
+    ):
+        pass
+
+    class A(Base):
+        name: ty.Literal["A"] = "A"
+        a: int
+
+    class Model(pydantic.BaseModel):
+        value: dynapydantic.Polymorphic[Base]
+
+    with (
+        mock.patch(
+            "dynapydantic.subclass_tracking_model.json.dumps",
+            side_effect=TypeError("cannot encode value"),
+        ) as dumps,
+        pytest.raises(pydantic.ValidationError, match="JSON re-encoding failed"),
+    ):
+        Model.model_validate_json('{"value": {"name": "A", "a": 1}}')
+
+    dumps.assert_called_once_with({"name": "A", "a": 1})
 
 
 def test_three_level_subclass_hierarchy() -> None:
@@ -402,6 +434,7 @@ def test_invalid_union_realization(val: int | str) -> None:
                 },
                 "non_poly_shape": None,
             },
+            marks=[skipif_mark_pydantic_version(lt=(2, 12, 0))],
             id="exclude-computed-fields",
         ),
         pytest.param(
@@ -416,7 +449,38 @@ def test_invalid_union_realization(val: int | str) -> None:
                 },
                 "non_poly_shape": {"side": 2.0},
             },
-            id="serialize-as-any",
+            marks=[skipif_mark_pydantic_version(ge=(2, 12, 0))],
+            id="serialize-as-any-lt-2.12",
+        ),
+        pytest.param(
+            {"shape": {"width": 4, "length": 5}, "non_poly_shape": {"side": 2}},
+            {"serialize_as_any": True},
+            {
+                "shape": {
+                    "width": 4.0,
+                    "length": 5.0,
+                    "area": 20.0,
+                    "name": "Rectangle",
+                },
+                "non_poly_shape": {"side": 2.0},
+            },
+            marks=[skipif_mark_pydantic_version(lt=(2, 12, 0), ge=(2, 13, 0))],
+            id="serialize-as-any-2.12",
+        ),
+        pytest.param(
+            {"shape": {"width": 4, "length": 5}, "non_poly_shape": {"side": 2}},
+            {"serialize_as_any": True},
+            {
+                "shape": {
+                    "width": "4.0",
+                    "length": 5.0,
+                    "area": 20.0,
+                    "name": "Rectangle",
+                },
+                "non_poly_shape": {"side": 2.0},
+            },
+            marks=[skipif_mark_pydantic_version(lt=(2, 13, 0))],
+            id="serialize-as-any-ge-2.13",
         ),
         pytest.param(
             {"shape": {"width": 4, "length": 5}, "non_poly_shape": {"side": 2}},
@@ -430,6 +494,7 @@ def test_invalid_union_realization(val: int | str) -> None:
                 },
                 "non_poly_shape": {"side": 2.0},
             },
+            marks=[skipif_mark_pydantic_version(lt=(2, 13, 0))],
             id="polymorphic-serialziation",
         ),
     ],

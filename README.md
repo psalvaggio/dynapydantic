@@ -21,8 +21,67 @@ or with `conda` via the `conda-forge` channel:
 conda install dynapydantic
 ```
 
+## Testing
 
-## Motiviation
+The supported Python/Pydantic compatibility matrix is defined in `noxfile.py`:
+
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th></th>
+      <th colspan="6"> Pydantic</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th></th>
+      <th scope="col">2.8</th>
+      <th scope="col">2.9</th>
+      <th scope="col">2.10</th>
+      <th scope="col">2.11</th>
+      <th scope="col">2.12</th>
+      <th scope="col">2.13</th>
+    </tr>
+  </thead>
+  <tbody>
+     <th rowspan="7">Python </th>
+    <tr>
+      <th scope="row">3.10</th>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.11</th>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.12</th>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.13</th>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.14</th>
+      <td></td><td></td><td></td><td></td><td>✓</td><td>✓</td>
+    </tr>
+  </tbody>
+</table>
+
+Run every combination locally with:
+
+```sh
+uv run nox
+```
+
+To run one combination, for example Python 3.13 with Pydantic 2.13:
+
+```sh
+uv run nox -s test-3.13-2.13
+```
+
+
+## Motivation
 Consider the following simple class setup:
 ```python
 import pydantic
