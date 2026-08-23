@@ -10,10 +10,10 @@
 
 Runtime polymorphic validation and serialization for
 [Pydantic](https://pydantic.dev) models. `dynapydantic` lets Pydantic fields
-accept, validate, and serialize dynamically discovered models without
+accept, validate, and serialize dynamically-discovered models without
 maintaining a manually-updated union.
 
-### "When should I use this?
+### When should I use this?
 
 | Use a regular union | Use `dynapydantic` |
 | :-----------------: | :----------------: |
@@ -65,6 +65,71 @@ assert model.model_dump() == {
 round_trip = Model.model_validate(model.model_dump())
 assert isinstance(round_trip.event, UserCreated)
 ```
+
+### Plugin discovery
+
+`SubclassTrackingModel` can discover models provided by separately installed
+packages through Python entry points. Give the base model an entry-point group,
+load the plugins before defining the polymorphic field, and each plugin can
+register subclasses without the base package importing them directly:
+
+```python
+# base_package/models.py
+import dynapydantic
+
+class Animal(
+    dynapydantic.SubclassTrackingModel,
+    discriminator_field="type",
+    plugin_entry_point="animal.plugins",
+):
+    pass
+```
+
+A plugin package declares the same group in its `pyproject.toml`. An entry
+point may name a module (everything imported by that module is registered):
+
+```toml
+[project.entry-points."animal.plugins"]
+cats-and-dogs = "animal_plugins"
+```
+
+```python
+# animal_plugins/__init__.py
+import typing as ty
+from base_package.models import Animal
+
+class Dog(Animal):
+    type: ty.Literal["Dog"] = "Dog"
+    bark_volume: int
+```
+
+The application loads the group before constructing its model schema:
+
+```python
+import dynapydantic
+import pydantic
+from base_package.models import Animal
+
+dynapydantic.load_plugins(Animal)
+
+class Model(pydantic.BaseModel):
+    animal: dynapydantic.Polymorphic[Animal]
+
+model = Model.model_validate({"animal": {"type": "Dog", "bark_volume": 100}})
+assert model.animal.type == "Dog"
+```
+
+For plugins that need explicit registration or deferred imports, point the
+entry point at a callable instead:
+
+```toml
+[project.entry-points."animal.plugins"]
+more-animals = "animal_plugins.registration:register_models"
+```
+
+The callable is invoked when `load_plugins()` runs. Entry points are provided
+by the plugin distributions, so installing a new plugin adds its models to
+the runtime union without changing the base package.
 
 ## Motivation
 Consider the following simple class setup:
@@ -194,8 +259,8 @@ will inject it for you, as was shown with `A`.
    discriminator value.
 2. `plugin_entry_point`: This parameter indicates to `dynapydantic` that there
   might be models to be discovered in other packages. Packages are discovered
-  by the Python entrypoint mechanism. See the `tests/example` directory for an
-  example of how this works.
+  by the Python entrypoint mechanism. See the [plugin discovery example](#plugin-discovery)
+  above for the package declarations and loading code.
 
 ### `SubclassTrackingModel`
 The most common use case of this pattern is to automatically register subclasses
