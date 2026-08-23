@@ -11,6 +11,13 @@ dependencies = [
     "pydantic>=2.8,<3",
 ]
 
+[project.optional-dependencies]
+bench = [
+    "pyperf>=2.9.0",
+    "pytest-benchmark>=5.1.0",
+    "pytest-codspeed>=3.0.0",
+]
+
 [dependency-groups]
 dev = [
     "click>=8.2.1",
@@ -63,6 +70,17 @@ convention = "numpy"
     "FBT", # Don't care about booleans as positional arguments in tests, e.g. via @pytest.mark.parametrize()
     "PLR2004", # Magic value used in comparison
 ]
+"benchmarks/**/*.py" = [
+    "ANN", # pytest fixtures and benchmark callables are dynamically typed
+    "ARG", # parametrized benchmark fixtures are intentionally unused
+    "INP001", # benchmark conftest is loaded by pytest
+    "PLR2004", # benchmark sizes are intentionally explicit
+    "SLF001", # benchmark internal registry reset is deliberate
+    "PLC0415", # dynamic benchmark setup keeps imports local where useful
+    "E501", # benchmark callables are easier to compare when kept on one line
+    "EM101", # expected-failure guard has no useful exception detail
+    "TRY003", # expected-failure guard has no useful exception detail
+]
 "**/cli.py" = [
     "PLC0415", # imports in CLI functions improve load times
 ]
@@ -78,3 +96,4 @@ search-path = [
     "tests/example/base-package",
     "tests/example/shape-plugins",
 ]
+project-includes = ["src", "tests", "benchmarks"]
