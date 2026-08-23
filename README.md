@@ -7,75 +7,10 @@
 [![Coverage Status](https://coveralls.io/repos/github/psalvaggio/dynapydantic/badge.svg?branch=main)](https://coveralls.io/github/psalvaggio/dynapydantic?branch=main)
 [![Conda Version](https://img.shields.io/conda/v/conda-forge/dynapydantic)](https://anaconda.org/conda-forge/dynapydantic)
 
-## Table of contents
-
-- [Why dynapydantic?](#why-dynapydantic)
-- [When should I use this?](#when-should-i-use-this)
-- [The problem it solves](#the-problem-it-solves)
-- [Quick start](#quick-start)
-  - [Installation](#installation)
-  - [Polymorphic models](#polymorphic-models)
-  - [Plugin discovery](#plugin-discovery)
-- [How it works](#how-it-works)
-  - [`TrackingGroup`](#trackinggroup)
-  - [`SubclassTrackingModel`](#subclasstrackingmodel)
-  - [Alternative union methods](#alternative-union-methods)
-  - [Union realization](#union-realization)
-- [API at a glance](#api-at-a-glance)
-- [Caveats and limitations](#caveats-and-limitations)
-- [Testing](#testing)
-
-
 Runtime polymorphic validation and serialization for
 [Pydantic](https://pydantic.dev) models, with automatic subclass discovery and
-optional plugin support. `dynapydantic` lets Pydantic fields accept, validate,
-and serialize dynamically discovered models without maintaining a manually
-updated union.
-
-- Automatically build unions from registered subclasses.
-- Preserve concrete model types during validation and serialization.
-- Discover subclasses from separately installed plugin packages.
-
-### Why dynapydantic?
-
-Pydantic can serialize subclasses with `serialize_as_any` and
-`polymorphic_serialization`, but it does not provide a corresponding way to
-validate arbitrary subclasses through a base model field. The usual solution is
-an explicit union, which must be updated whenever a new model is added.
-`dynapydantic` automates that union while retaining Pydantic's validation and
-serialization behavior.
-
-| Approach | Limitation |
-| --- | --- |
-| Explicit union | Must be manually maintained |
-| Base Pydantic model | Concrete types can be lost during validation and serialization |
-| `SerializeAsAny` | Helps serialization, but not polymorphic validation |
-| `dynapydantic` | Builds a runtime union, with optional plugin discovery |
-
-### When should I use this?
-
-| Use a regular union | Use `dynapydantic` |
-| :-----------------: | :----------------: |
-| Types are fixed and local | Types are extension points |
-| You control every type | Types are scattered or come from plugins |
-| Static typing is the priority | Runtime discovery is required |
-
-`dynapydantic` is most useful when the union becomes difficult or impossible to
-maintain, such as when types are extension points, come from plugins, or an
-explicit union would introduce a circular dependency.
-
-
-## Quick start
-
-### Installation
-This project supports Python >=3.10 and Pydantic >=2.8,<3. It can be installed
-via PyPI or conda:
-```
-pip install dynapydantic
-conda install -c conda-forge dynapydantic
-```
-
-### Polymorphic models
+optional plugin support. Define a base model once, discover its subclasses
+automatically, and validate/serialize them without maintaining a manual union.
 
 ```python
 import dynapydantic
@@ -103,8 +38,47 @@ assert model.model_dump() == {
 round_trip = Model.model_validate(model.model_dump())
 assert isinstance(round_trip.event, UserCreated)
 ```
+Without `dynapydantic`, the annotation for `event` would need to be an explicit
+union that must be updated each time a subclass is added.
 
-### Plugin discovery
+## Why dynapydantic?
+
+Pydantic can serialize subclasses with `serialize_as_any` and
+`polymorphic_serialization`, but it does not provide a corresponding way to
+validate arbitrary subclasses through a base model field. The usual solution is
+an explicit union, which must be updated whenever a new model is added.
+`dynapydantic` automates that union while retaining Pydantic's validation and
+serialization behavior.
+
+| Approach | Limitation |
+| --- | --- |
+| Explicit union | Must be manually maintained |
+| Base Pydantic model | Concrete types can be lost during validation and serialization |
+| `SerializeAsAny` | Helps serialization, but not polymorphic validation |
+| `dynapydantic` | Builds a runtime union, with optional plugin discovery |
+
+A quick decision matrix for when to use this library:
+
+| Use a regular union | Use `dynapydantic` |
+| ------------------- | ------------------ |
+| Types are fixed and local | Types are extension points |
+| You control every type | Types are scattered or come from plugins |
+| Static typing is the priority | Runtime discovery is required |
+
+`dynapydantic` is most useful when the union becomes difficult or impossible to
+maintain, such as when types are extension points, come from plugins, or an
+explicit union would introduce a circular dependency.
+
+
+## Installation and Compatibility
+This project supports Python >=3.10 and Pydantic >=2.8,<3. It can be installed
+via PyPI or conda:
+```
+pip install dynapydantic
+conda install -c conda-forge dynapydantic
+```
+
+## Plugin discovery
 
 `SubclassTrackingModel` can discover models provided by separately installed
 packages through Python entry points. Give the base model an entry-point group,
