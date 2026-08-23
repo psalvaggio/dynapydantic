@@ -318,7 +318,7 @@ overridden for an individual `Polymorphic` field. In all cases, subclasses
 must be registered before the relevant realization point; validation-time mode
 defers that point until validation.
 
-See [Picking a union realization mode](docs/union_realizations.md) for the
+See [Picking a union realization mode](union_realizations.md) for the
 complete explanation, configuration examples, and guidance for recursive
 models and plugin-based registration.
 
