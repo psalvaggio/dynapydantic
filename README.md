@@ -2,159 +2,173 @@
 
 [![CI](https://github.com/psalvaggio/dynapydantic/actions/workflows/ci.yml/badge.svg)](https://github.com/psalvaggio/dynapydantic/actions/workflows/ci.yml)
 [![Pre-commit](https://github.com/psalvaggio/dynapydantic/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/psalvaggio/dynapydantic/actions/workflows/pre-commit.yml)
-[![Docs](https://img.shields.io/badge/docs-Docs-blue?style=flat-square&logo=github&logoColor=white&link=https://psalvaggio.github.io/dynapydantic/dev/)](https://psalvaggio.github.io/dynapydantic/dev/)
+[![Docs](https://img.shields.io/badge/docs-Docs-blue?style=flat-square&logo=github&logoColor=white&link=https://psalvaggio.github.io/dynapydantic/latest/)](https://psalvaggio.github.io/dynapydantic/latest/)
 [![PyPI - Version](https://img.shields.io/pypi/v/dynapydantic)](https://pypi.org/project/dynapydantic/)
 [![Coverage Status](https://coveralls.io/repos/github/psalvaggio/dynapydantic/badge.svg?branch=main)](https://coveralls.io/github/psalvaggio/dynapydantic?branch=main)
 [![Conda Version](https://img.shields.io/conda/v/conda-forge/dynapydantic)](https://anaconda.org/conda-forge/dynapydantic)
 
+Runtime polymorphic validation and serialization for
+[Pydantic](https://pydantic.dev) models, with automatic subclass discovery and
+optional plugin support. Define a base model once, discover its subclasses
+automatically, and validate/serialize them without maintaining a manual union.
 
-`dynapydantic` is an extension to the [pydantic](https://pydantic.dev) Python
-package that allow for dynamic tracking of `pydantic.BaseModel` subclasses.
+## Quick start
 
-## Installation
-This project can be installed via PyPI:
-```
-pip install dynapydantic
-```
-or with `conda` via the `conda-forge` channel:
-```
-conda install dynapydantic
-```
+The recommended setup is a discriminated `SubclassTrackingModel` with
+`Polymorphic[T]`:
 
-## Testing
+### Polymorphic models
 
-The supported Python/Pydantic compatibility matrix is defined in `noxfile.py`:
-
-<table>
-  <thead>
-    <tr>
-      <th></th>
-      <th></th>
-      <th colspan="6"> Pydantic</th>
-    </tr>
-    <tr>
-      <th></th>
-      <th></th>
-      <th scope="col">2.8</th>
-      <th scope="col">2.9</th>
-      <th scope="col">2.10</th>
-      <th scope="col">2.11</th>
-      <th scope="col">2.12</th>
-      <th scope="col">2.13</th>
-    </tr>
-  </thead>
-  <tbody>
-     <th rowspan="7">Python </th>
-    <tr>
-      <th scope="row">3.10</th>
-      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
-    </tr>
-    <tr>
-      <th scope="row">3.11</th>
-      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
-    </tr>
-    <tr>
-      <th scope="row">3.12</th>
-      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
-    </tr>
-    <tr>
-      <th scope="row">3.13</th>
-      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
-    </tr>
-    <tr>
-      <th scope="row">3.14</th>
-      <td></td><td></td><td></td><td></td><td>✓</td><td>✓</td>
-    </tr>
-  </tbody>
-</table>
-
-Run every combination locally with:
-
-```sh
-uv run nox
-```
-
-To run one combination, for example Python 3.13 with Pydantic 2.13:
-
-```sh
-uv run nox -s test-3.13-2.13
-```
-
-
-## Motivation
-Consider the following simple class setup:
-```python
-import pydantic
-
-class Base(pydantic.BaseModel):
-    pass
-
-class A(Base):
-    field: int
-
-class B(Base):
-    field: str
-
-class Model(pydantic.BaseModel):
-    val: Base
-```
-As expected, we can use `A`'s and `B`'s for `Model.val`:
-```python
->>> m = Model(val=A(field=1))
->>> m
-Model(val=A(field=1))
-```
-However, we quickly run into trouble when serializing and validating:
-```python
->>> m.model_dump()
-{'base': {}}
->>> m.model_dump(serialize_as_any=True)
-{'val': {'field': 1}}
->>> Model.model_validate(m.model_dump(serialize_as_any=True))
-Model(val=Base())
-```
-
-Pydantic provides a solution for serialization via `serialize_as_any` (and
-its corresponding field annotation `SerializeAsAny`), but offers no native
-solution for the validation half. Currently, the canonical way of doing this
-is to annotate the field as a union of all subclasses. Often, a single field
-in the model is chosen as the "discriminator" in a
-[discriminated union](https://docs.pydantic.dev/latest/concepts/unions/#discriminated-unions).
-The discriminated pattern is the most robust way to do this, as it eliminates
-ambiguity between the union members. This library, `dynapydantic`, automates
-this process.
-
-Let's reframe the above problem with `dynapydantic`:
 ```python
 import dynapydantic
 import pydantic
 
-class Base(
+class Event(
     dynapydantic.SubclassTrackingModel,
-    discriminator_field="name",
-    discriminator_value_generator=lambda t: t.__name__,
+    discriminator_field="type",
+    discriminator_value_generator=lambda cls: cls.__name__,
 ):
     pass
 
-class A(Base):
-    field: int
-
-class B(Base):
-    field: str
+class UserCreated(Event):
+    user_id: int
 
 class Model(pydantic.BaseModel):
-    val: dynapydantic.Polymorphic[Base]
+    event: dynapydantic.Polymorphic[Event]
+
+model = Model.model_validate({"event": {"type": "UserCreated", "user_id": 42}})
+assert isinstance(model.event, UserCreated)
+assert model.model_dump() == {
+    "event": {"type": "UserCreated", "user_id": 42}
+}
+
+round_trip = Model.model_validate(model.model_dump())
+assert isinstance(round_trip.event, UserCreated)
 ```
-Now, the same set of operations works as intended:
+Without `dynapydantic`, the annotation for `event` would need to be an explicit
+union that must be updated each time a subclass is added.
+
+## Why dynapydantic?
+
+Pydantic can serialize subclasses with `serialize_as_any` and
+`polymorphic_serialization`, but it does not provide a corresponding way to
+validate arbitrary subclasses through a base model field. The usual solution is
+an explicit union, which must be updated whenever a new model is added.
+`SerializeAsAny` solves the serialization side of the problem, but not the
+validation side: validating the serialized data through a base model produces
+the base type rather than the concrete subclass. `dynapydantic` automates the
+discriminated union needed for both operations while retaining Pydantic's
+validation and serialization behavior.
+
+| Approach | Best when | Limitation |
+| --- | --- | --- |
+| Explicit union | Types are fixed and local; you control every type; static typing is the priority | Must be manually maintained |
+| Base Pydantic model | A single base type is sufficient; Round-tripping is not needed | Subclass types can be lost during validation and serialization |
+| `SerializeAsAny` | You need subclass serialization | Helps serialization, but not polymorphic validation |
+| `dynapydantic` | Types are extension points, scattered, or provided by plugins; runtime discovery is required | [Caveats and limitations](#caveats-and-limitations) |
+
+`dynapydantic` is most useful when the union becomes difficult or impossible to
+maintain, such as when types are extension points, come from plugins, or an
+explicit union would introduce a circular dependency.
+
+## Installation and compatibility
+
+The package declares support for Python >=3.10 and Pydantic >=2.8,<3. Pydantic
+1 is not supported. The current CI matrix verifies compatibility up to the
+currently-available upper bounds. Install via PyPI or conda:
+
+```sh
+pip install dynapydantic
+conda install -c conda-forge dynapydantic
+```
+
+## Plugin discovery
+
+`SubclassTrackingModel` can discover models provided by separately installed
+packages through Python entry points. Give the base model an entry-point group,
+load the plugins before defining the polymorphic field, and each plugin can
+register subclasses without the base package importing them directly. Plugin
+discovery happens in the application environment, so the plugin distribution
+must be installed alongside the base package.
+
+The base package and plugin package can be separate distributions:
+
+```text
+base-package/
+  pyproject.toml
+  base_package/models.py
+
+animal-plugin/
+  pyproject.toml
+  animal_plugins/__init__.py
+```
+
+The plugin must be installed in the same environment as the application and
+must depend on the package that defines the base model.
+
 ```python
->>> m = Model(val=A(field=1))
->>> m
-Model(val=A(field=1, name='A'))
->>> m.model_dump()
-{'val': {'field': 1, 'name': 'A'}}
->>> Model.model_validate(m.model_dump())
-Model(val=A(field=1, name='A')
+# base_package/models.py
+import dynapydantic
+
+class Animal(
+    dynapydantic.SubclassTrackingModel,
+    discriminator_field="type",
+    plugin_entry_point="animal.plugins",
+):
+    pass
 ```
+
+A plugin package declares the same group in its `pyproject.toml`. An entry
+point may name a module (everything imported by that module is registered):
+
+```toml
+[project.entry-points."animal.plugins"]
+cats-and-dogs = "animal_plugins"
+```
+
+```python
+# animal_plugins/__init__.py
+import typing as ty
+from base_package.models import Animal
+
+class Dog(Animal):
+    type: ty.Literal["Dog"] = "Dog"
+    bark_volume: int
+```
+
+The application loads the group before constructing its model schema:
+
+```python
+import dynapydantic
+import pydantic
+from base_package.models import Animal
+
+dynapydantic.load_plugins(Animal)
+
+class Model(pydantic.BaseModel):
+    animal: dynapydantic.Polymorphic[Animal]
+
+model = Model.model_validate({"animal": {"type": "Dog", "bark_volume": 100}})
+assert model.animal.type == "Dog"
+```
+
+For plugins that need explicit registration or deferred imports, point the
+entry point at a callable instead:
+
+```toml
+[project.entry-points."animal.plugins"]
+more-animals = "animal_plugins.registration:register_models"
+```
+
+The callable is invoked when `load_plugins()` runs. Entry points are provided
+by the plugin distributions, so installing a new plugin adds its models to
+the runtime union without changing the base package.
+
+For reliable plugin discovery, use a discriminator-based union. Discriminator
+values must be unique within a tracking group, and concrete subclasses should
+normally declare the discriminator field with a `typing.Literal` value. The
+discriminator value generator can inject that field when a subclass does not
+declare it explicitly.
 
 ## How it works
 
@@ -199,8 +213,12 @@ which was configured by the `discriminator_field` argument to `TrackingGroup`.
 The field can be created by hand, as was shown with `B`, or `dynapydantic`
 will inject it for you, as was shown with `A`.
 
+Discriminator values must be unique within a `TrackingGroup`. Discriminated
+unions are the recommended default because they avoid ambiguity between
+subclasses.
+
 `TrackingGroup` has a few opt-in features to make it more powerful and easier to use:
-1. `discriminator_value_generator`: This parameter is a optional callback
+1. `discriminator_value_generator`: This parameter is an optional callback
   function that is called with each class that gets registered and produces a
   default value for the discriminator field. This allows the user to call
   `register()` without a value for the discriminator. For example, passing:
@@ -208,8 +226,8 @@ will inject it for you, as was shown with `A`.
    discriminator value.
 2. `plugin_entry_point`: This parameter indicates to `dynapydantic` that there
   might be models to be discovered in other packages. Packages are discovered
-  by the Python entrypoint mechanism. See the `tests/example` directory for an
-  example of how this works.
+  by the Python entry point mechanism. See the [plugin discovery example](#plugin-discovery)
+  above for the package declarations and loading code.
 
 ### `SubclassTrackingModel`
 The most common use case of this pattern is to automatically register subclasses
@@ -251,10 +269,10 @@ class Derived2(Intermediate):
     name: ty.Literal["Custom"] = "Custom"
     a: int
 
-print(Base.registered_subclasses())
+print(dynapydantic.registered_models(Base))
 # {'Derived1': <class '__main__.Derived1'>, 'Custom': <class '__main__.Derived2'>}
 
-# if plugin_entry_point was specificed, load plugin packages
+# if plugin_entry_point was specified, load plugin packages
 # Base.load_plugins()
 
 class Model(pydantic.BaseModel):
@@ -271,6 +289,17 @@ were defined *prior* to defining the model that uses `dynapydantic.Polymorphic`
 (`Model` in the above example). If you declare additional subclasses afterwards,
 you must call `.model_rebuild(force=True)` on the model that uses the subclass
 union.
+
+The usual application order is:
+
+```text
+define subclasses → load plugins → define the model using Polymorphic[T]
+```
+
+If subclasses are added after model declaration, rebuild the affected Pydantic
+model. Alternatively, configure `union_realization="validation"` when the
+registration order cannot be known in advance; this defers union construction
+until validation and adds runtime overhead.
 
 ### Alternative union methods
 !!! warning "Caution"
@@ -293,8 +322,6 @@ field can be omitted and a
 union may be used. `TrackingGroup` and `SubclassTrackingModel` support these
 modes as well via the `union_mode` argument:
 ```python
-import typing as ty
-
 import dynapydantic
 import pydantic
 
@@ -317,106 +344,125 @@ print(Model(field={"b": 5}))
 # field=B(b=5)
 ```
 
-### When are unions realized?
+### Union realization
 
-When using `TrackingModel` directly, there is only one option for when the union
-is realized, which is the moment you call `.union()`. At this point, any classes
-that have been registered will be present in the union. Registration of
-additional classes after a call to `.union()` will not update the returned
-union from a previous call, so it is important to consider order of operations.
+Union realization determines when registered subclasses are collected into the
+union used by Pydantic.
 
-When using `SubclassTrackingModel`, there are more options and each comes with
-their own tradeoffs:
+For most applications, use `dynapydantic.Polymorphic[T]` with the default
+model-construction realization. Use validation-time realization when subclasses
+may be registered after model declarations or when recursive or plugin-heavy
+schemas require it.
 
-1. **Immediately**: When using `dynapydantic.Union[T]`, the union is realized
-    immediately. This is the "most eager" option, but is also the most sensitive
-    with order of operations. Type checkers will not understand this direct
-    calls to `union()`, but `dynapydantic.Union[T]` will resolved to `T`.
+| Mode | API | Tradeoff |
+| --- | --- | --- |
+| Immediate | `dynapydantic.Union[T]` | Easiest to inspect, but most sensitive to declaration order |
+| Model construction | `dynapydantic.Polymorphic[T]` (default) | Supports static schemas, but new subclasses may require `model_rebuild(force=True)` |
+| Validation | `union_realization="validation"` | Most tolerant of registration order, but adds runtime overhead |
 
-    Despite the tradeoff on sensitivity to order of operations, this option can
-    be desireable for applications that inspect field annotations directly.
-    This normally arises in user-implemented model reflection code and with
-    [`pydantic_settings`](https://pydantic.dev/docs/validation/latest/api/pydantic_settings/#_top).
+With `TrackingGroup`, the union is realized when `.union()` is called. With
+`SubclassTrackingModel`, the mode can be configured on the base class or
+overridden for an individual `Polymorphic` field. In all cases, subclasses
+must be registered before the relevant realization point; validation-time mode
+defers that point until validation.
 
-2. **Model-construction time**: Instead of eagerly realizing the union in the
-    field annotation, `dynapydantic.Polymorphic[T]` (in its default ),
-    configuration will defer the union realization slightly, into the schema
-    generation step for the model. The difference between this and option 1 is
-    subtle, but does have an effect with recursive models. Consider the
-    following:
+See [Picking a union realization mode](https://psalvaggio.github.io/dynapydantic/latest/union_realizations/)
+for the complete explanation, configuration examples, and guidance for
+recursive models and plugin-based registration.
 
-    ```python
-    import dynapydantic
-    import pydantic
+## API at a glance
 
-    class Base(dynapydantic.SubclassTrackingModel, union_mode="smart"):
-        pass
+| API | Purpose |
+| --- | --- |
+| `SubclassTrackingModel` | Automatically tracks subclasses of a base model |
+| `TrackingGroup` | Explicitly registers model types |
+| `Polymorphic[T]` | Runtime-generated polymorphic annotation |
+| `Union[T]` | Eagerly realized runtime union |
+| `load_plugins(T)` | Loads entry-point plugins for a tracking group |
+| `registered_models(T)` | Inspects registered subclasses |
 
-    class A(Base, extra="forbid"):
-        a: int
+See the [API reference](https://psalvaggio.github.io/dynapydantic/latest/reference/)
+for signatures, configuration options, and exception types.
 
-    class B(Base, extra="forbid"):
-        other: dynapydantic.Polymorphic[Base]
+## Caveats and limitations
 
-    B(other={"other": {"other": {"a": 2}}}) # ValidationError (union only has A)
+While `dynapydantic` does enable polymorphic validation, it is important to note
+that several limitations exist:
 
-    B.model_rebuild(force=True)
-    B(other={"other": {"other": {"a": 2}}}) # B(other=B(other=B(other=A(a=2))))
-    ```
-    if we used `Union[Base]`, the `model_rebuild()` call would do nothing, as
-    the union had already been realized. To accomplish the same thing with
-    eager unions, we would have to use a forward reference, like `"BUnion"` then
-    call `dynapydantic.union(Base)` right before the `model_rebuild()` calls.
+- Subclasses must be registered before union/schema realization, depending on
+  the selected mode.
+- New subclasses may require `model_rebuild(force=True)` to update a schema,
+  unless validation-time union realization is used.
+- Non-discriminated unions can be ambiguous.
+- Discriminator values must be unique within a tracking group.
+- Plugin discovery depends on Python entry points.
+- Runtime-generated unions are not fully visible to static type checkers. The
+  field is generally typed as the base class, so use `isinstance()` or the
+  discriminator value when narrowing to a concrete subclass.
 
-    Similar to `dynapydantic.Union`, `dyanpydantic.Polymorphic` is interpretable
-    by the type checker, which will constrain fields to be of the base class
-    type.
+Both normal and JSON Pydantic workflows are supported. For example, the
+polymorphic field can be serialized with `model_dump_json()` and reconstructed
+with `model_validate_json()`; the discriminator remains part of the serialized
+data when using a discriminated union.
 
-3. **Validation time**: Finally, realization of the union can be deferred to
-    validation time. This makes the union construction process more robust to
-    order of operations. In this formulation, all subclasses must be registered
-    before the use of the union in validation, rather than the declaration of a
-    model using the union field. This reduces the previous example down to:
+## Testing
 
-    ```python
-    import dynapydantic
-    import pydantic
+The following Python and Pydantic combinations are verified via automated
+testing (defined in `noxfile.py`):
 
-    class Base(
-        dynapydantic.SubclassTrackingModel,
-        union_mode="smart",
-        union_realization="validation",
-    ):
-        pass
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th></th>
+      <th colspan="6" style="text-align: center;">Pydantic</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th></th>
+      <th scope="col">2.8</th>
+      <th scope="col">2.9</th>
+      <th scope="col">2.10</th>
+      <th scope="col">2.11</th>
+      <th scope="col">2.12</th>
+      <th scope="col">2.13</th>
+    </tr>
+  </thead>
+  <tbody>
+     <th rowspan="7" style="text-align: center; vertical-align: middle;">
+       Python
+      </th>
+    <tr>
+      <th scope="row">3.10</th>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.11</th>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.12</th>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.13</th>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.14</th>
+      <td></td><td></td><td></td><td></td><td>✓</td><td>✓</td>
+    </tr>
+  </tbody>
+</table>
 
-    class A(Base, extra="forbid"):
-        a: int
+Run every combination locally with:
 
-    class B(Base, extra="forbid"):
-        other: dynapydantic.Polymorphic[Base]
+```sh
+uv run nox
+```
 
-    B(other={"other": {"other": {"a": 2}}}) # B(other=B(other=B(other=A(a=2))))
-    ```
+To run one combination, for example Python 3.13 with Pydantic 2.13:
 
-    This option has the cleanest syntax, as not `model_rebuild()` calls are
-    needed, but does incur a runtime penalty for potentially multiple schema
-    compilations and the need for a field validator function, whereas options 1
-    and 2 can produce static schema. When validating from JSON, the field
-    validator receives data after Pydantic has decoded it. To preserve
-    Pydantic's JSON-specific validation behavior (including strict validation),
-    validation-time unions re-encode the field value before validating it with
-    the realized adapter. This adds JSON encoding and decoding overhead on top
-    of the normal validation cost. Like option 2, the field is able to be
-    interpreted by type checkers as the base class.
-
-As alluded to in the example for validation-time unions, this behavior can be
-controlled via the model class declaration and the field annotation. Subclasses
-of `SubclassTrackingModel` can pass a `union_realization` keyword argument with
-the value of `"model-construction"` (default) or `"validation"` (or their
-corresponding `UnionRealization` enum values) to control the default behavior of
-when `dynapydantic.Polymorphic` will realize the union. This default can be
-overriden at the `Polymorphic` call site by passing a second argument:
-```python
-class Model(pydantic.BaseModel):
-    field: dynapydantic.Polymorphic[Base, "validation"]
+```sh
+uv run nox -s test-3.13-2.13
 ```
