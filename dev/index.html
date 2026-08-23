@@ -884,7 +884,7 @@ automatically, and validate/serialize them without maintaining a manual union.</
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Event</span><span class="p">(</span>
     <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
-    <span class="n">discriminator_field</span><span class="o">=</span><span class="s2">&quot;type&quot;</span><span class="p">,</span>
+    <span class="n">discriminator_field</span><span class="o">=</span><span class="s2">"type"</span><span class="p">,</span>
     <span class="n">discriminator_value_generator</span><span class="o">=</span><span class="k">lambda</span> <span class="bp">cls</span><span class="p">:</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="k">pass</span>
@@ -895,10 +895,10 @@ automatically, and validate/serialize them without maintaining a manual union.</
 <span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="n">event</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Event</span><span class="p">]</span>
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="o">.</span><span class="n">model_validate</span><span class="p">({</span><span class="s2">&quot;event&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;UserCreated&quot;</span><span class="p">,</span> <span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="mi">42</span><span class="p">}})</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="o">.</span><span class="n">model_validate</span><span class="p">({</span><span class="s2">"event"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"UserCreated"</span><span class="p">,</span> <span class="s2">"user_id"</span><span class="p">:</span> <span class="mi">42</span><span class="p">}})</span>
 <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">event</span><span class="p">,</span> <span class="n">UserCreated</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">model</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span>
-    <span class="s2">&quot;event&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;UserCreated&quot;</span><span class="p">,</span> <span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="mi">42</span><span class="p">}</span>
+    <span class="s2">"event"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"UserCreated"</span><span class="p">,</span> <span class="s2">"user_id"</span><span class="p">:</span> <span class="mi">42</span><span class="p">}</span>
 <span class="p">}</span>
 
 <span class="n">round_trip</span> <span class="o">=</span> <span class="n">Model</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">model_dump</span><span class="p">())</span>
@@ -980,22 +980,22 @@ must depend on the package that defines the base model.</p>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Animal</span><span class="p">(</span>
     <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
-    <span class="n">discriminator_field</span><span class="o">=</span><span class="s2">&quot;type&quot;</span><span class="p">,</span>
-    <span class="n">plugin_entry_point</span><span class="o">=</span><span class="s2">&quot;animal.plugins&quot;</span><span class="p">,</span>
+    <span class="n">discriminator_field</span><span class="o">=</span><span class="s2">"type"</span><span class="p">,</span>
+    <span class="n">plugin_entry_point</span><span class="o">=</span><span class="s2">"animal.plugins"</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="k">pass</span>
 </code></pre></div>
 <p>A plugin package declares the same group in its <code>pyproject.toml</code>. An entry
 point may name a module (everything imported by that module is registered):</p>
-<div class="highlight"><pre><span></span><code><span class="k">[project.entry-points.</span><span class="s2">&quot;animal.plugins&quot;</span><span class="k">]</span>
-<span class="n">cats-and-dogs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;animal_plugins&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="k">[project.entry-points.</span><span class="s2">"animal.plugins"</span><span class="k">]</span>
+<span class="n">cats-and-dogs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"animal_plugins"</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1"># animal_plugins/__init__.py</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ty</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">base_package.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Animal</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Dog</span><span class="p">(</span><span class="n">Animal</span><span class="p">):</span>
-    <span class="nb">type</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;Dog&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Dog&quot;</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"Dog"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Dog"</span>
     <span class="n">bark_volume</span><span class="p">:</span> <span class="nb">int</span>
 </code></pre></div>
 <p>The application loads the group before constructing its model schema:</p>
@@ -1008,13 +1008,13 @@ point may name a module (everything imported by that module is registered):</p>
 <span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="n">animal</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Animal</span><span class="p">]</span>
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="o">.</span><span class="n">model_validate</span><span class="p">({</span><span class="s2">&quot;animal&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Dog&quot;</span><span class="p">,</span> <span class="s2">&quot;bark_volume&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">}})</span>
-<span class="k">assert</span> <span class="n">model</span><span class="o">.</span><span class="n">animal</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;Dog&quot;</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="o">.</span><span class="n">model_validate</span><span class="p">({</span><span class="s2">"animal"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Dog"</span><span class="p">,</span> <span class="s2">"bark_volume"</span><span class="p">:</span> <span class="mi">100</span><span class="p">}})</span>
+<span class="k">assert</span> <span class="n">model</span><span class="o">.</span><span class="n">animal</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">"Dog"</span>
 </code></pre></div>
 <p>For plugins that need explicit registration or deferred imports, point the
 entry point at a callable instead:</p>
-<div class="highlight"><pre><span></span><code><span class="k">[project.entry-points.</span><span class="s2">&quot;animal.plugins&quot;</span><span class="k">]</span>
-<span class="n">more-animals</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;animal_plugins.registration:register_models&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="k">[project.entry-points.</span><span class="s2">"animal.plugins"</span><span class="k">]</span>
+<span class="n">more-animals</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"animal_plugins.registration:register_models"</span>
 </code></pre></div>
 <p>The callable is invoked when <code>load_plugins()</code> runs. Entry points are provided
 by the plugin distributions, so installing a new plugin adds its models to
@@ -1033,27 +1033,27 @@ declare it explicitly.</p>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
 
 <span class="n">mygroup</span> <span class="o">=</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">TrackingGroup</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;mygroup&quot;</span><span class="p">,</span>
-    <span class="n">discriminator_field</span><span class="o">=</span><span class="s2">&quot;name&quot;</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"mygroup"</span><span class="p">,</span>
+    <span class="n">discriminator_field</span><span class="o">=</span><span class="s2">"name"</span>
 <span class="p">)</span>
 
-<span class="nd">@mygroup</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">)</span>
+<span class="nd">@mygroup</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"A"</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to be tracked, will be tracked as &quot;A&quot;.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A class to be tracked, will be tracked as "A"."""</span>
     <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
 
 <span class="nd">@mygroup</span><span class="o">.</span><span class="n">register</span><span class="p">()</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Another class, will be tracked as &quot;B&quot;.&quot;&quot;&quot;</span>
-    <span class="n">name</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;B&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;B&quot;</span>
+<span class="w">    </span><span class="sd">"""Another class, will be tracked as "B"."""</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"B"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"B"</span>
     <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A model that can have A or B&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A model that can have A or B"""</span>
     <span class="n">field</span><span class="p">:</span> <span class="n">mygroup</span><span class="o">.</span><span class="n">union</span><span class="p">()</span>  <span class="c1"># call after all subclasses have been registered</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}))</span> <span class="c1"># field=A(a=4, name=&#39;A&#39;)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">}))</span> <span class="c1"># field=B(name=&#39;B&#39;, a=5)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"A"</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">:</span> <span class="mi">4</span><span class="p">}))</span> <span class="c1"># field=A(a=4, name='A')</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"B"</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">:</span> <span class="mi">5</span><span class="p">}))</span> <span class="c1"># field=B(name='B', a=5)</span>
 </code></pre></div></p>
 <p>The <code>union()</code> method produces a <a href="https://docs.pydantic.dev/latest/concepts/unions/#discriminated-unions">discriminated union</a>
 of all registered <code>pydantic.BaseModel</code> subclasses. It also accepts an
@@ -1088,48 +1088,48 @@ of a given <code>pydantic.BaseModel</code>. This is supported via the use of
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span>
     <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
-    <span class="n">discriminator_field</span><span class="o">=</span><span class="s2">&quot;name&quot;</span><span class="p">,</span>
+    <span class="n">discriminator_field</span><span class="o">=</span><span class="s2">"name"</span><span class="p">,</span>
     <span class="n">discriminator_value_generator</span><span class="o">=</span><span class="k">lambda</span> <span class="bp">cls</span><span class="p">:</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base model, will track its subclasses&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Base model, will track its subclasses"""</span>
 
     <span class="c1"># The TrackingGroup can be specified here like model_config, or passed in</span>
     <span class="c1"># kwargs of the class declaration, just like how model_config works with</span>
     <span class="c1"># pydantic.BaseModel. If you do it like this, you have to give the tracking</span>
     <span class="c1"># group a name, whereas using kwargs will generate the name for you.</span>
     <span class="c1"># tracking_config: ty.ClassVar[dynapydantic.TrackingGroup] = dynapydantic.TrackingGroup(</span>
-    <span class="c1">#     name=&quot;BaseSubclasses&quot;,</span>
-    <span class="c1">#     discriminator_field=&quot;name&quot;,</span>
+    <span class="c1">#     name="BaseSubclasses",</span>
+    <span class="c1">#     discriminator_field="name",</span>
     <span class="c1">#     discriminator_value_generator=lambda cls: cls.__name__,</span>
     <span class="c1"># )</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Intermediate</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">exclude_from_union</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subclasses can opt out of being tracked&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Subclasses can opt out of being tracked"""</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Derived1</span><span class="p">(</span><span class="n">Intermediate</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Non-direct descendants are registered&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Non-direct descendants are registered"""</span>
     <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Derived2</span><span class="p">(</span><span class="n">Intermediate</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;You can override the value generator if desired&quot;&quot;&quot;</span>
-    <span class="n">name</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;Custom&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Custom&quot;</span>
+<span class="w">    </span><span class="sd">"""You can override the value generator if desired"""</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"Custom"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Custom"</span>
     <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">dynapydantic</span><span class="o">.</span><span class="n">registered_models</span><span class="p">(</span><span class="n">Base</span><span class="p">))</span>
-<span class="c1"># {&#39;Derived1&#39;: &lt;class &#39;__main__.Derived1&#39;&gt;, &#39;Custom&#39;: &lt;class &#39;__main__.Derived2&#39;&gt;}</span>
+<span class="c1"># {'Derived1': &lt;class '__main__.Derived1'&gt;, 'Custom': &lt;class '__main__.Derived2'&gt;}</span>
 
 <span class="c1"># if plugin_entry_point was specified, load plugin packages</span>
 <span class="c1"># Base.load_plugins()</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A model that can have any registered Base subclass&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A model that can have any registered Base subclass"""</span>
     <span class="n">field</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">]</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Derived1&quot;</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}))</span>
-<span class="c1"># field=Derived1(a=4, name=&#39;Derived1&#39;)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Custom&quot;</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">}))</span>
-<span class="c1"># field=Derived2(name=&#39;Custom&#39;, a=5)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Derived1"</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">:</span> <span class="mi">4</span><span class="p">}))</span>
+<span class="c1"># field=Derived1(a=4, name='Derived1')</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Custom"</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">:</span> <span class="mi">5</span><span class="p">}))</span>
+<span class="c1"># field=Derived2(name='Custom', a=5)</span>
 </code></pre></div>
 It is important to note that the subclasses that are supported are those that
 were defined <em>prior</em> to defining the model that uses <code>dynapydantic.Polymorphic</code>
@@ -1167,9 +1167,9 @@ modes as well via the <code>union_mode</code> argument:
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span>
     <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
-    <span class="n">union_mode</span><span class="o">=</span><span class="s2">&quot;smart&quot;</span><span class="p">,</span>
+    <span class="n">union_mode</span><span class="o">=</span><span class="s2">"smart"</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;dynapydantic.Polymorphic[Base] will be a &quot;smart&quot; A | B&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""dynapydantic.Polymorphic[Base] will be a "smart" A | B"""</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
     <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
@@ -1180,7 +1180,7 @@ modes as well via the <code>union_mode</code> argument:
 <span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="n">field</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">]</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">}))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">"b"</span><span class="p">:</span> <span class="mi">5</span><span class="p">}))</span>
 <span class="c1"># field=B(b=5)</span>
 </code></pre></div></p>
 <h3 id="union-realization">Union realization<a class="headerlink" href="#union-realization" title="Permanent link">&para;</a></h3>
