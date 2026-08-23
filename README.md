@@ -7,6 +7,22 @@
 [![Coverage Status](https://coveralls.io/repos/github/psalvaggio/dynapydantic/badge.svg?branch=main)](https://coveralls.io/github/psalvaggio/dynapydantic?branch=main)
 [![Conda Version](https://img.shields.io/conda/v/conda-forge/dynapydantic)](https://anaconda.org/conda-forge/dynapydantic)
 
+## Table of contents
+
+- [When should I use this?](#when-should-i-use-this)
+- [Quick start](#quick-start)
+  - [Installation](#installation)
+  - [Basic Example](#basic-example)
+  - [Plugin discovery](#plugin-discovery)
+- [Motivation](#motivation)
+- [How it works](#how-it-works)
+  - [`TrackingGroup`](#trackinggroup)
+  - [`SubclassTrackingModel`](#subclasstrackingmodel)
+  - [Alternative union methods](#alternative-union-methods)
+  - [Union realization](#union-realization)
+- [Caveats and Limitations](#caveats-and-limitations)
+- [Testing](#testing)
+
 
 Runtime polymorphic validation and serialization for
 [Pydantic](https://pydantic.dev) models. `dynapydantic` lets Pydantic fields
