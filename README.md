@@ -60,25 +60,16 @@ the base type rather than the concrete subclass. `dynapydantic` automates the
 discriminated union needed for both operations while retaining Pydantic's
 validation and serialization behavior.
 
-| Approach | Limitation |
-| --- | --- |
-| Explicit union | Must be manually maintained |
-| Base Pydantic model | Concrete types can be lost during validation and serialization |
-| `SerializeAsAny` | Helps serialization, but not polymorphic validation |
-| `dynapydantic` | Builds a runtime union, with optional plugin discovery |
-
-A quick decision matrix for when to use this library:
-
-| Use a regular union | Use `dynapydantic` |
-| ------------------- | ------------------ |
-| Types are fixed and local | Types are extension points |
-| You control every type | Types are scattered or come from plugins |
-| Static typing is the priority | Runtime discovery is required |
+| Approach | Best when | Limitation |
+| --- | --- | --- |
+| Explicit union | Types are fixed and local; you control every type; static typing is the priority | Must be manually maintained |
+| Base Pydantic model | A single base type is sufficient; Round-tripping is not needed | Subclass types can be lost during validation and serialization |
+| `SerializeAsAny` | You need subclass serialization | Helps serialization, but not polymorphic validation |
+| `dynapydantic` | Types are extension points, scattered, or provided by plugins; runtime discovery is required | [Caveats and limitations](#caveats-and-limitations) |
 
 `dynapydantic` is most useful when the union becomes difficult or impossible to
 maintain, such as when types are extension points, come from plugins, or an
 explicit union would introduce a circular dependency.
-
 
 ## Installation and compatibility
 
@@ -278,7 +269,7 @@ class Derived2(Intermediate):
     name: ty.Literal["Custom"] = "Custom"
     a: int
 
-print(Base.registered_subclasses())
+print(dynapydantic.registered_models(Base))
 # {'Derived1': <class '__main__.Derived1'>, 'Custom': <class '__main__.Derived2'>}
 
 # if plugin_entry_point was specified, load plugin packages
@@ -414,12 +405,10 @@ polymorphic field can be serialized with `model_dump_json()` and reconstructed
 with `model_validate_json()`; the discriminator remains part of the serialized
 data when using a discriminated union.
 
-
 ## Testing
 
 The following Python and Pydantic combinations are verified via automated
-testing (defined in
-`noxfile.py`):
+testing (defined in `noxfile.py`):
 
 <table>
   <thead>
