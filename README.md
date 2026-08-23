@@ -2,32 +2,55 @@
 
 [![CI](https://github.com/psalvaggio/dynapydantic/actions/workflows/ci.yml/badge.svg)](https://github.com/psalvaggio/dynapydantic/actions/workflows/ci.yml)
 [![Pre-commit](https://github.com/psalvaggio/dynapydantic/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/psalvaggio/dynapydantic/actions/workflows/pre-commit.yml)
-[![Docs](https://img.shields.io/badge/docs-Docs-blue?style=flat-square&logo=github&logoColor=white&link=https://psalvaggio.github.io/dynapydantic/dev/)](https://psalvaggio.github.io/dynapydantic/dev/)
+[![Docs](https://img.shields.io/badge/docs-Docs-blue?style=flat-square&logo=github&logoColor=white&link=https://psalvaggio.github.io/dynapydantic/latest/)](https://psalvaggio.github.io/dynapydantic/latest/)
 [![PyPI - Version](https://img.shields.io/pypi/v/dynapydantic)](https://pypi.org/project/dynapydantic/)
 [![Coverage Status](https://coveralls.io/repos/github/psalvaggio/dynapydantic/badge.svg?branch=main)](https://coveralls.io/github/psalvaggio/dynapydantic?branch=main)
 [![Conda Version](https://img.shields.io/conda/v/conda-forge/dynapydantic)](https://anaconda.org/conda-forge/dynapydantic)
 
 ## Table of contents
 
+- [Why dynapydantic?](#why-dynapydantic)
 - [When should I use this?](#when-should-i-use-this)
+- [The problem it solves](#the-problem-it-solves)
 - [Quick start](#quick-start)
   - [Installation](#installation)
-  - [Basic Example](#basic-example)
+  - [Polymorphic models](#polymorphic-models)
   - [Plugin discovery](#plugin-discovery)
-- [Motivation](#motivation)
 - [How it works](#how-it-works)
   - [`TrackingGroup`](#trackinggroup)
   - [`SubclassTrackingModel`](#subclasstrackingmodel)
   - [Alternative union methods](#alternative-union-methods)
   - [Union realization](#union-realization)
-- [Caveats and Limitations](#caveats-and-limitations)
+- [API at a glance](#api-at-a-glance)
+- [Caveats and limitations](#caveats-and-limitations)
 - [Testing](#testing)
 
 
 Runtime polymorphic validation and serialization for
-[Pydantic](https://pydantic.dev) models. `dynapydantic` lets Pydantic fields
-accept, validate, and serialize dynamically-discovered models without
-maintaining a manually-updated union.
+[Pydantic](https://pydantic.dev) models, with automatic subclass discovery and
+optional plugin support. `dynapydantic` lets Pydantic fields accept, validate,
+and serialize dynamically discovered models without maintaining a manually
+updated union.
+
+- Automatically build unions from registered subclasses.
+- Preserve concrete model types during validation and serialization.
+- Discover subclasses from separately installed plugin packages.
+
+### Why dynapydantic?
+
+Pydantic can serialize subclasses with `serialize_as_any` and
+`polymorphic_serialization`, but it does not provide a corresponding way to
+validate arbitrary subclasses through a base model field. The usual solution is
+an explicit union, which must be updated whenever a new model is added.
+`dynapydantic` automates that union while retaining Pydantic's validation and
+serialization behavior.
+
+| Approach | Limitation |
+| --- | --- |
+| Explicit union | Must be manually maintained |
+| Base Pydantic model | Concrete types can be lost during validation and serialization |
+| `SerializeAsAny` | Helps serialization, but not polymorphic validation |
+| `dynapydantic` | Builds a runtime union, with optional plugin discovery |
 
 ### When should I use this?
 
@@ -37,23 +60,22 @@ maintaining a manually-updated union.
 | You control every type | Types are scattered or come from plugins |
 | Static typing is the priority | Runtime discovery is required |
 
-`dynapydantic` eliminates the need to manually track all options in an
-explicit union. It adds more value as this union becomes harder to maintain. It
-becomes extremely valuable when such a union is impossible to write, such as
-when doing so would introduce a ciruclar dependency or plugin discovery is
-needed.
+`dynapydantic` is most useful when the union becomes difficult or impossible to
+maintain, such as when types are extension points, come from plugins, or an
+explicit union would introduce a circular dependency.
 
 
 ## Quick start
 
 ### Installation
-This project can be installed via the PyPI or conda ecosystems:
+This project supports Python >=3.10 and Pydantic >=2.8,<3. It can be installed
+via PyPI or conda:
 ```
 pip install dynapydantic
 conda install -c conda-forge dynapydantic
 ```
 
-### Basic Example
+### Polymorphic models
 
 ```python
 import dynapydantic
@@ -88,6 +110,21 @@ assert isinstance(round_trip.event, UserCreated)
 packages through Python entry points. Give the base model an entry-point group,
 load the plugins before defining the polymorphic field, and each plugin can
 register subclasses without the base package importing them directly:
+
+The base package and plugin package can be separate distributions:
+
+```text
+base-package/
+  pyproject.toml
+  base_package/models.py
+
+animal-plugin/
+  pyproject.toml
+  animal_plugins/__init__.py
+```
+
+The plugin must be installed in the same environment as the application and
+must depend on the package that defines the base model.
 
 ```python
 # base_package/models.py
@@ -147,7 +184,13 @@ The callable is invoked when `load_plugins()` runs. Entry points are provided
 by the plugin distributions, so installing a new plugin adds its models to
 the runtime union without changing the base package.
 
-## Motivation
+For reliable plugin discovery, use a discriminator-based union. Discriminator
+values must be unique within a tracking group, and concrete subclasses should
+normally declare the discriminator field with a `typing.Literal` value. The
+discriminator value generator can inject that field when a subclass does not
+declare it explicitly.
+
+## The problem it solves
 Consider the following simple class setup:
 ```python
 import pydantic
@@ -266,6 +309,10 @@ which was configured by the `discriminator_field` argument to `TrackingGroup`.
 The field can be created by hand, as was shown with `B`, or `dynapydantic`
 will inject it for you, as was shown with `A`.
 
+Discriminator values must be unique within a `TrackingGroup`. Discriminated
+unions are the recommended default because they avoid ambiguity between
+subclasses.
+
 `TrackingGroup` has a few opt-in features to make it more powerful and easier to use:
 1. `discriminator_value_generator`: This parameter is an optional callback
   function that is called with each class that gets registered and produces a
@@ -275,7 +322,7 @@ will inject it for you, as was shown with `A`.
    discriminator value.
 2. `plugin_entry_point`: This parameter indicates to `dynapydantic` that there
   might be models to be discovered in other packages. Packages are discovered
-  by the Python entrypoint mechanism. See the [plugin discovery example](#plugin-discovery)
+  by the Python entry point mechanism. See the [plugin discovery example](#plugin-discovery)
   above for the package declarations and loading code.
 
 ### `SubclassTrackingModel`
@@ -387,6 +434,11 @@ print(Model(field={"b": 5}))
 Union realization determines when registered subclasses are collected into the
 union used by Pydantic:
 
+For most applications, use `dynapydantic.Polymorphic[T]` with the default
+model-construction realization. Use validation-time realization when subclasses
+may be registered after model declarations or when recursive or plugin-heavy
+schemas require it.
+
 | Mode | API | Tradeoff |
 | --- | --- | --- |
 | Immediately | `dynapydantic.Union[T]` | Easiest to inspect, but most sensitive to declaration order |
@@ -403,7 +455,18 @@ See [Picking a union realization mode](union_realizations.md) for the
 complete explanation, configuration examples, and guidance for recursive
 models and plugin-based registration.
 
-## Caveats and Limitations
+## API at a glance
+
+| API | Purpose |
+| --- | --- |
+| `SubclassTrackingModel` | Automatically tracks subclasses of a base model |
+| `TrackingGroup` | Explicitly registers model types |
+| `Polymorphic[T]` | Runtime-generated polymorphic annotation |
+| `Union[T]` | Eagerly realized runtime union |
+| `load_plugins(T)` | Loads entry-point plugins for a tracking group |
+| `registered_models(T)` | Inspects registered subclasses |
+
+## Caveats and limitations
 
 While `dynapydantic` does enable polymorphic validation, it is important to note
 that several limitations exist:
@@ -420,8 +483,8 @@ that several limitations exist:
 
 ## Testing
 
-`dynapydantic` currently supports Python >= 3.10 and Pydantic >=2.8. The
-following combinations are verified via automated testing (defined in
+The following Python and Pydantic combinations are verified via automated
+testing (defined in
 `noxfile.py`):
 
 <table>
@@ -429,7 +492,7 @@ following combinations are verified via automated testing (defined in
     <tr>
       <th></th>
       <th></th>
-      <th colspan="6">Pydantic</th>
+      <th colspan="6" style="text-align: center;">Pydantic</th>
     </tr>
     <tr>
       <th></th>
@@ -443,7 +506,9 @@ following combinations are verified via automated testing (defined in
     </tr>
   </thead>
   <tbody>
-     <th rowspan="7">Python </th>
+     <th rowspan="7" style="text-align: center; vertical-align: middle;">
+       Python
+      </th>
     <tr>
       <th scope="row">3.10</th>
       <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
