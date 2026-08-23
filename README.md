@@ -356,7 +356,7 @@ print(Model(field={"b": 5}))
 ### Union realization
 
 Union realization determines when registered subclasses are collected into the
-union used by Pydantic:
+union used by Pydantic.
 
 For most applications, use `dynapydantic.Polymorphic[T]` with the default
 model-construction realization. Use validation-time realization when subclasses
@@ -365,7 +365,7 @@ schemas require it.
 
 | Mode | API | Tradeoff |
 | --- | --- | --- |
-| Immediately | `dynapydantic.Union[T]` | Easiest to inspect, but most sensitive to declaration order |
+| Immediate | `dynapydantic.Union[T]` | Easiest to inspect, but most sensitive to declaration order |
 | Model construction | `dynapydantic.Polymorphic[T]` (default) | Supports static schemas, but new subclasses may require `model_rebuild(force=True)` |
 | Validation | `union_realization="validation"` | Most tolerant of registration order, but adds runtime overhead |
 
