@@ -1,6 +1,7 @@
 """Serialization scaling benchmarks."""
 
 import pytest
+from pytest_codspeed.plugin import BenchmarkFixture
 
 from benchmarks.conftest import PARAM_SIZES, BenchmarkCase
 
@@ -15,12 +16,12 @@ def instances(tracking_case: BenchmarkCase) -> tuple:
 
 
 @pytest.mark.parametrize("size", PARAM_SIZES)
-def test_model_dump(benchmark, instances, size: int) -> None:
+def test_model_dump(benchmark: BenchmarkFixture, instances, size: int) -> None:
     """Dump all N variants to Python objects."""
     benchmark(lambda: [instance.model_dump() for instance in instances])
 
 
 @pytest.mark.parametrize("size", PARAM_SIZES)
-def test_model_dump_json(benchmark, instances, size: int) -> None:
+def test_model_dump_json(benchmark: BenchmarkFixture, instances, size: int) -> None:
     """Dump all N variants to JSON."""
     benchmark(lambda: [instance.model_dump_json() for instance in instances])

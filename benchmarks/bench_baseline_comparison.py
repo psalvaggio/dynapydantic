@@ -1,4 +1,20 @@
-"""Compare dynapydantic with a hand-written discriminated union."""
+"""Compare dynapydantic with an equivalent hand-written discriminated union.
+
+These are the most direct benchmarks for estimating per-operation library
+overhead.  Model creation, subclass registration, union creation, and schema
+compilation all happen in ``_setups`` and are deliberately excluded from the
+timed call.  The reported validation ratio is therefore approximately
+``dynamic validation time / manual validation time``; subtracting one and
+multiplying by 100 gives the percentage overhead.  The same interpretation
+applies to serialization.
+
+Both variants use Pydantic models and a discriminator, and the payload selects
+the last of ``N`` variants.  This measures the cost of using dynapydantic's
+polymorphic field at steady state, not the cost of maintaining the registry or
+discovering plugins.  Compare the curves as ``N`` grows rather than treating a
+single absolute time as universal: Pydantic and Python versions, hardware,
+and model shape all affect the baseline.
+"""
 
 from __future__ import annotations
 
@@ -12,7 +28,7 @@ import pytest
 import dynapydantic
 
 if ty.TYPE_CHECKING:
-    from pytest_benchmark.fixture import BenchmarkFixture
+    from pytest_codspeed.plugin import BenchmarkFixture
 
 
 def _setups(
@@ -66,34 +82,53 @@ def _setups(
 
 
 @pytest.mark.parametrize("size", [1, 10, 50, 100, 500])
+@pytest.mark.benchmark(group="validation")
 def test_validation(benchmark: BenchmarkFixture, size: int) -> None:
-    """Compare validation of equivalent last-variant payloads."""
+    """Time steady-state dynapydantic validation for the last variant.
+
+    Compare this result with :func:`test_validation_manual` at the same
+    ``size``.  A result of 1.20x means dynapydantic took about 20% longer;
+    it does not mean 20 percentage points of application latency.
+    """
     _, dynamic, _, payload = _setups(size)
-    benchmark.group = "validation"
     benchmark(dynamic.model_validate, payload)
 
 
 @pytest.mark.parametrize("size", [1, 10, 50, 100, 500])
+@pytest.mark.benchmark(group="validation")
 def test_validation_manual(benchmark: BenchmarkFixture, size: int) -> None:
-    """Manual-union counterpart to dynamic validation."""
+    """Time the hand-written discriminated-union validation baseline.
+
+    This is the denominator for the validation overhead ratio.  Setup and
+    schema compilation are intentionally outside the benchmark, so this does
+    not answer how much registration or startup costs.
+    """
     manual, _, payload, _ = _setups(size)
-    benchmark.group = "validation"
     benchmark(manual.model_validate, payload)
 
 
 @pytest.mark.parametrize("size", [1, 10, 50, 100, 500])
+@pytest.mark.benchmark(group="serialization")
 def test_serialization(benchmark: BenchmarkFixture, size: int) -> None:
-    """Compare serialization of equivalent validated instances."""
+    """Time steady-state serialization of a dynapydantic instance.
+
+    The instance is validated before timing.  Compare with
+    :func:`test_serialization_manual` to estimate serialization overhead only;
+    validation and model construction are not included.
+    """
     _, dynamic, _, payload = _setups(size)
     instance = dynamic.model_validate(payload)
-    benchmark.group = "serialization"
     benchmark(instance.model_dump)
 
 
 @pytest.mark.parametrize("size", [1, 10, 50, 100, 500])
+@pytest.mark.benchmark(group="serialization")
 def test_serialization_manual(benchmark: BenchmarkFixture, size: int) -> None:
-    """Manual-union counterpart to dynamic serialization."""
+    """Time serialization of the equivalent manual-union instance.
+
+    Use this as the denominator for the serialization overhead ratio at the
+    same registry size.
+    """
     manual, _, payload, _ = _setups(size)
     instance = manual.model_validate(payload)
-    benchmark.group = "serialization"
     benchmark(instance.model_dump)

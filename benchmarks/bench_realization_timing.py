@@ -1,9 +1,26 @@
-"""Compare union realization strategies and recursive validation."""
+"""Compare union realization strategies and recursive validation.
+
+The realization benchmarks separate *when* dynapydantic pays to assemble a
+union from *how* that union validates.  ``immediate`` constructs the union
+explicitly before the model is defined, ``model-construction`` resolves it
+while Pydantic builds the model schema, and ``validation`` checks the registry
+generation and resolves the current union through a cached nested
+``TypeAdapter`` on every validation.  Setup is outside the timed call for all
+three cases.
+
+Use ``validation`` versus ``model-construction`` to estimate the incremental
+validation-time dispatch cost.  Use the incremental rebuild benchmark when
+you want to quantify the cost of keeping a construction-time schema current
+as subclasses arrive; it is a registration/rebuild workload, not request
+validation.  Results are most useful as ratios at the same subclass count
+and payload shape.
+"""
 
 import typing as ty
 
 import pydantic
 import pytest
+from pytest_codspeed.plugin import BenchmarkFixture
 
 import dynapydantic
 
@@ -39,8 +56,16 @@ def _populate(base: type[dynapydantic.SubclassTrackingModel], size: int) -> None
 @pytest.mark.parametrize(
     "realization", ["immediate", "model-construction", "validation"]
 )
-def test_one_shot_validation(benchmark, realization: str) -> None:
-    """Compare validation after 50 subclasses have been registered."""
+def test_one_shot_validation(benchmark: BenchmarkFixture, realization: str) -> None:
+    """Compare one validation after 50 subclasses have been registered.
+
+    The timed operation is only ``Model.model_validate``.  The meaningful
+    validation-time-union comparison is ``validation / model-construction``:
+    values above 1 indicate extra per-validation overhead, while values near
+    1 indicate that the dispatch cost is small relative to Pydantic's own
+    validation work.  ``immediate`` is a useful lower-level reference for
+    explicit union construction, but it is not a manual-library baseline.
+    """
     base = _base(None if realization == "immediate" else realization)
     _populate(base, 50)
     annotation = (
@@ -56,8 +81,14 @@ def test_one_shot_validation(benchmark, realization: str) -> None:
     benchmark(Model.model_validate, payload)
 
 
-def test_incremental_rebuild(benchmark) -> None:
-    """Rebuild a construction-time schema after each incremental registration."""
+def test_incremental_rebuild(benchmark: BenchmarkFixture) -> None:
+    """Measure registration plus schema rebuild after each new subclass.
+
+    This intentionally includes the repeated ``model_rebuild`` calls and is
+    not comparable with the one-shot validation timings.  It represents an
+    application that discovers subclasses incrementally while using
+    construction-time unions.
+    """
     base = _base()
     subclasses = [
         pydantic.create_model(f"Incremental{index}", __base__=base, value=(int, index))
@@ -79,8 +110,13 @@ def test_incremental_rebuild(benchmark) -> None:
 
 
 @pytest.mark.parametrize("depth", [1, 5, 20])
-def test_recursive_validation(benchmark, depth: int) -> None:
-    """Validate the recursive B.other example at several nesting depths."""
+def test_recursive_validation(benchmark: BenchmarkFixture, depth: int) -> None:
+    """Validate recursive nesting to show per-level validation-time cost.
+
+    Compare depths by slope: a roughly linear increase indicates recurring
+    adapter/union work at each nested level.  This benchmark uses a smart
+    union and is separate from the realization-mode comparison above.
+    """
 
     class Base(dynapydantic.SubclassTrackingModel, union_mode="smart"):
         pass

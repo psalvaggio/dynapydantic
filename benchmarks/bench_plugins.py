@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 import pydantic
 import pytest
+from pytest_codspeed.plugin import BenchmarkFixture
 
 import dynapydantic
 
@@ -55,6 +56,6 @@ def plugin_case(request: pytest.FixtureRequest):
 
 
 @pytest.mark.parametrize("size", [1, 10, 50, 100, 500])
-def test_load_plugins(benchmark, plugin_case, size: int) -> None:
+def test_load_plugins(benchmark: BenchmarkFixture, plugin_case, size: int) -> None:
     """Time loading N entry-point plugins."""
     benchmark(dynapydantic.load_plugins, plugin_case)

@@ -4,12 +4,13 @@ import typing as ty
 
 import pydantic
 import pytest
+from pytest_codspeed.plugin import BenchmarkFixture
 
 from benchmarks.conftest import PARAM_SIZES, make_tracking_group
 
 
 @pytest.mark.parametrize("size", PARAM_SIZES)
-def test_register_existing_registry(benchmark, size: int) -> None:
+def test_register_existing_registry(benchmark: BenchmarkFixture, size: int) -> None:
     """Time one registration after a registry has already reached N-1 entries."""
     group, _ = make_tracking_group(size - 1)
     model = pydantic.create_model(
@@ -19,7 +20,7 @@ def test_register_existing_registry(benchmark, size: int) -> None:
     )
     baseline = dict(group.models)
 
-    def reset() -> None:
+    def reset(*_args: ty.Any) -> None:
         group.models = dict(baseline)
         group._generation = len(baseline)
 

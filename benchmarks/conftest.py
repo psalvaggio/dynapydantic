@@ -15,7 +15,13 @@ PARAM_SIZES = (1, 10, 50, 100, 500)
 
 @dataclasses.dataclass(frozen=True)
 class BenchmarkCase:
-    """A fully constructed model setup, ready for timing."""
+    """A fully constructed setup whose expensive preparation is pre-timed.
+
+    Fixtures build models, register variants, create annotations, and compile
+    the wrapper schema before the benchmark function runs.  Consequently,
+    benchmarks consuming this case measure the operation named by the test,
+    rather than setup, registration, or schema compilation.
+    """
 
     group: dynapydantic.TrackingGroup
     models: tuple[type[pydantic.BaseModel], ...]

@@ -27,7 +27,6 @@ dev = [
     "pyperf>=2.9.0",
     "pyrefly>=0.44.1",
     "pytest>=8.4.1",
-    "pytest-benchmark>=5.1.0",
     "pytest-codspeed>=3.0.0",
     "pytest-cov>=6.2.1",
     "pytest-xdist>=3.8.0",
