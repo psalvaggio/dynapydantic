@@ -440,17 +440,10 @@ wheels = [
 
 [[package]]
 name = "dynapydantic"
-version = "0.6.2"
+version = "0.7.0a1"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
-]
-
-[package.optional-dependencies]
-bench = [
-    { name = "pyperf" },
-    { name = "pytest-benchmark" },
-    { name = "pytest-codspeed" },
 ]
 
 [package.dev-dependencies]
@@ -466,21 +459,18 @@ dev = [
     { name = "pip" },
     { name = "prek" },
     { name = "pymdown-extensions" },
+    { name = "pyperf" },
     { name = "pyrefly" },
     { name = "pytest" },
+    { name = "pytest-benchmark" },
+    { name = "pytest-codspeed" },
     { name = "pytest-cov" },
     { name = "pytest-xdist" },
     { name = "ruff" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "pydantic", specifier = ">=2.8,<3" },
-    { name = "pyperf", marker = "extra == 'bench'", specifier = ">=2.9.0" },
-    { name = "pytest-benchmark", marker = "extra == 'bench'", specifier = ">=5.1.0" },
-    { name = "pytest-codspeed", marker = "extra == 'bench'", specifier = ">=3.0.0" },
-]
-provides-extras = ["bench"]
+requires-dist = [{ name = "pydantic", specifier = ">=2.8,<3" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -495,8 +485,11 @@ dev = [
     { name = "pip", specifier = ">=25.1.1" },
     { name = "prek", specifier = ">=0.3.8" },
     { name = "pymdown-extensions", specifier = ">=10.16" },
+    { name = "pyperf", specifier = ">=2.9.0" },
     { name = "pyrefly", specifier = ">=0.44.1" },
     { name = "pytest", specifier = ">=8.4.1" },
+    { name = "pytest-benchmark", specifier = ">=5.1.0" },
+    { name = "pytest-codspeed", specifier = ">=3.0.0" },
     { name = "pytest-cov", specifier = ">=6.2.1" },
     { name = "pytest-xdist", specifier = ">=3.8.0" },
     { name = "ruff", specifier = ">=0.12.3" },

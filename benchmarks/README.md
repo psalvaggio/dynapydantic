@@ -3,7 +3,7 @@
 Install the benchmark extra and run the suite locally with:
 
 ```sh
-uv sync --extra bench --dev
+uv sync --dev
 uv run pytest benchmarks/ --benchmark-only
 ```
 

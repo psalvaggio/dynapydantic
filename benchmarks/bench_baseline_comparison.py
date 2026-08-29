@@ -1,5 +1,7 @@
 """Compare dynapydantic with a hand-written discriminated union."""
 
+from __future__ import annotations
+
 import functools
 import operator
 import typing as ty
@@ -9,8 +11,18 @@ import pytest
 
 import dynapydantic
 
+if ty.TYPE_CHECKING:
+    from pytest_benchmark.fixture import BenchmarkFixture
 
-def _setups(size: int):
+
+def _setups(
+    size: int,
+) -> tuple[
+    type[pydantic.BaseModel],
+    type[pydantic.BaseModel],
+    dict[str, ty.Any],
+    dict[str, ty.Any],
+]:
     """Build equivalent manual and dynamic models outside benchmark timing."""
     manual_models = tuple(
         pydantic.create_model(
@@ -54,7 +66,7 @@ def _setups(size: int):
 
 
 @pytest.mark.parametrize("size", [1, 10, 50, 100, 500])
-def test_validation(benchmark, size: int) -> None:
+def test_validation(benchmark: BenchmarkFixture, size: int) -> None:
     """Compare validation of equivalent last-variant payloads."""
     _, dynamic, _, payload = _setups(size)
     benchmark.group = "validation"
@@ -62,7 +74,7 @@ def test_validation(benchmark, size: int) -> None:
 
 
 @pytest.mark.parametrize("size", [1, 10, 50, 100, 500])
-def test_validation_manual(benchmark, size: int) -> None:
+def test_validation_manual(benchmark: BenchmarkFixture, size: int) -> None:
     """Manual-union counterpart to dynamic validation."""
     manual, _, payload, _ = _setups(size)
     benchmark.group = "validation"
@@ -70,7 +82,7 @@ def test_validation_manual(benchmark, size: int) -> None:
 
 
 @pytest.mark.parametrize("size", [1, 10, 50, 100, 500])
-def test_serialization(benchmark, size: int) -> None:
+def test_serialization(benchmark: BenchmarkFixture, size: int) -> None:
     """Compare serialization of equivalent validated instances."""
     _, dynamic, _, payload = _setups(size)
     instance = dynamic.model_validate(payload)
@@ -79,7 +91,7 @@ def test_serialization(benchmark, size: int) -> None:
 
 
 @pytest.mark.parametrize("size", [1, 10, 50, 100, 500])
-def test_serialization_manual(benchmark, size: int) -> None:
+def test_serialization_manual(benchmark: BenchmarkFixture, size: int) -> None:
     """Manual-union counterpart to dynamic serialization."""
     manual, _, payload, _ = _setups(size)
     instance = manual.model_validate(payload)
