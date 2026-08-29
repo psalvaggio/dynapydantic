@@ -6,7 +6,8 @@
 polymorphic validation, annotations, and version handling are split into
 focused modules; update public exports in `src/dynapydantic/__init__.py` when
 adding public APIs. `tests/` contains the pytest suite, including example
-distributions under `tests/example/` for plugin behavior. User-facing
+distributions under `tests/example/` for plugin behavior. `benchmarks/`
+contains the `pytest-codspeed` performance benchmarks. User-facing
 documentation lives in `README.md` and `docs/`; `mkdocs.yml` configures the
 documentation site. `noxfile.py` defines the supported Python/Pydantic test
 matrix.
@@ -23,6 +24,7 @@ Common checks are:
 
 ```sh
 uv run pytest tests                 # Run tests and generate HTML coverage
+uv run pytest benchmarks --codspeed --no-cov  # Run the performance benchmarks
 uv run nox                          # Run the full Python/Pydantic matrix
 uv run ruff check                   # Lint Python files
 uv run ruff format --check         # Verify formatting
