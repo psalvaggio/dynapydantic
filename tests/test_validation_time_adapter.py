@@ -2,11 +2,13 @@
 
 import typing as ty
 from pathlib import Path
+from unittest import mock
 
 import pydantic
 import pytest
 
 import dynapydantic
+from dynapydantic.subclass_tracking_model import _validation_kwargs
 from dynapydantic.version_check import pydantic_le, pydantic_lt
 
 
@@ -28,6 +30,13 @@ def test_validation_time_union_no_members() -> None:
         match=r"(?s)field.*Unable to produce a union.*dynapydantic_error",
     ):
         Model(field={"some": "dummy value"})
+
+
+def test_validation_kwargs_without_model_config() -> None:
+    """Context is forwarded when validation info has no model config."""
+    info = mock.Mock(context={"offset": 3}, config=None)
+
+    assert _validation_kwargs(info) == {"context": {"offset": 3}}
 
 
 def test_validation_time_realization_inherits() -> None:

@@ -2,7 +2,6 @@
 
 import dataclasses
 import functools
-import inspect
 import json
 import typing as ty
 
@@ -48,13 +47,13 @@ class SubclassTrackingModel(pydantic.BaseModel):
         """Subclass hook"""
         # Intercept any kwargs that are intended for TrackingGroup or
         # __pydantic_init_subclass__
-        sig = inspect.signature(SubclassTrackingModel.__pydantic_init_subclass__)
         super().__init_subclass__(
             *args,
             **{
                 k: v
                 for k, v in kwargs.items()
-                if k not in TrackingGroup.model_fields and k not in sig.parameters
+                if k not in TrackingGroup.model_fields
+                and k not in ("exclude_from_union", "union_realization")
             },
         )
 
@@ -112,15 +111,10 @@ def _init_tracking_group(
     # parent class(es) if they have TrackingGroup's and then allow any
     # kwargs directly passed here to override.
     if isinstance(parent_tg := getattr(cls, "__DYNAPYDANTIC__", None), TrackingGroup):
-        tg_kwargs = parent_tg.model_dump(
-            exclude={
-                "name",
-                "models",
-                "discriminator_field",
-                "discriminator_value_generator",
-            }
-        )
-        tg_kwargs |= kwargs
+        tg_kwargs: dict[str, ty.Any] = {
+            "union_mode": parent_tg.union_mode,
+            "plugin_entry_point": parent_tg.plugin_entry_point,
+        } | kwargs
         if "discriminator_field" in kwargs:
             tg_kwargs.pop("union_mode", None)
     else:

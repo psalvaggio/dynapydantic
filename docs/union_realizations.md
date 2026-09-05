@@ -93,8 +93,15 @@ tradeoffs:
     Pydantic's JSON-specific validation behavior (including strict validation),
     validation-time unions re-encode the field value before validating it with
     the realized adapter. This adds JSON encoding and decoding overhead on top
-    of the normal validation cost. Like option 2, the field is able to be
-    interpreted by type checkers as the base class.
+    of the normal validation cost.
+
+    See the [benchmarks](benchmarks.md) for a full picture of how
+    validation-time unions perform. They have a significant first-time
+    validation penalty for building the schema and a consistent per-validation
+    penalty for the validator-based schema rather than a static schema.
+
+    Like option 2, the field is able to be interpreted by type checkers as the
+    base class.
 
 The union realization mode can be configured in the following ways:
 

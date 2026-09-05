@@ -1,0 +1,53 @@
+table.benchmark-table {
+    background-color: var(--md-default-bg-color);
+    border: .05rem solid var(--md-typeset-table-color);
+    border-radius: .1rem;
+    display: inline-block;
+    font-size: .64rem;
+    max-width: 100%;
+    overflow: auto;
+    touch-action: auto;
+}
+
+table.benchmark-table + * {
+    margin-top:1.5em;
+}
+
+table.benchmark-table td > :first-child, .md-typeset table:not([class]) th > :first-child {
+    margin-top:0;
+}
+
+table.benchmark-table td > :last-child, .md-typeset table:not([class]) th > :last-child {
+    margin-bottom:0;
+}
+
+table.benchmark-table td:not([align]), table.benchmark-table th:not([align]) {
+    text-align:center;
+}
+
+table.benchmark-table th {
+    font-weight: 700;
+    min-width: 5rem;
+    padding: .9375em 1.25em;
+    vertical-align: middle;
+}
+
+table.benchmark-table td {
+    border-top: .05rem solid var(--md-typeset-table-color);
+    padding: .9375em 1.25em;
+    vertical-align:top;
+    white-space: nowrap;
+}
+
+table.benchmark-table tbody tr {
+    transition:background-color 125ms
+}
+
+table.benchmark-table tbody tr:hover {
+    background-color: var(--md-typeset-table-color--light);
+    box-shadow:0 .05rem 0 var(--md-default-bg-color) inset
+}
+
+table.benchmark-table a {
+    word-break:normal
+}

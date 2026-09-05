@@ -360,12 +360,12 @@ class TrackingGroup(pydantic.BaseModel):
 
         if isinstance(union_mode, DiscriminatedConfig):
             return ty.Annotated[
-                functools.reduce(
-                    operator.or_,
-                    tuple(
+                # This is significantly faster than |'ing into a UnionType
+                ty.Union[  # noqa: UP007
+                    tuple(  # type: ignore[not-a-type]
                         ty.Annotated[x, pydantic.Tag(v)] for v, x in self.models.items()
-                    ),
-                ),
+                    )
+                ],
                 pydantic.Field(discriminator=union_mode.discriminator_field),
             ]
 

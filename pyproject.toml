@@ -27,8 +27,10 @@ dev = [
     "pyrefly>=0.44.1",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
+    "pytest-codspeed>=4.2.0",
     "pytest-xdist>=3.8.0",
     "ruff>=0.12.3",
+    "snakeviz>=2.2.2",
 ]
 
 [build-system]

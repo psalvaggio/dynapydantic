@@ -18,6 +18,9 @@ theme:
       primary: indigo
       accent: indigo
 
+extra_css:
+  - custom.css
+
 plugins:
   - search
   - mkdocstrings:
