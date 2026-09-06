@@ -9,10 +9,6 @@
       
       
       
-        <link rel="prev" href="..">
-      
-      
-        <link rel="next" href="../reference/">
       
       
         
@@ -23,7 +19,7 @@
     
     
       
-        <title>Union Realization - dynapydantic</title>
+        <title>dynapydantic Benchmarks - dynapydantic</title>
       
     
     
@@ -78,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#picking-a-union-realization-mode" class="md-skip">
+        <a href="#dynapydantic-benchmarks" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Union Realization
+              dynapydantic Benchmarks
             
           </span>
         </div>
@@ -238,11 +234,9 @@
   
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href="../union_realizations/" class="md-tabs__link">
         
   
   
@@ -353,19 +347,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../union_realizations/" class="md-nav__link">
         
   
   
@@ -381,7 +366,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -495,6 +479,47 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#legend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legend
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#class-hierarchy-creation-median-iqr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class hierarchy creation (median ± IQR)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation-overhead-per-validation-median-iqr-10-subclasses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation overhead per validation (median ± IQR; 10 subclasses)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -513,138 +538,109 @@
   
 
 
-<h1 id="picking-a-union-realization-mode">Picking a union realization mode<a class="headerlink" href="#picking-a-union-realization-mode" title="Permanent link">&para;</a></h1>
-<p>A "union realization" refers to the moment at which the members of a union are
-decided. At realization time, the types that are being tracked in a
-<code>TrackingGroup</code> are extracted from the internal mapping and produce a union for
-use in a <code>pydantic</code> schema.</p>
-<p>When using <code>TrackingGroup</code> directly, there is only one option for when the union
-is realized, which is the moment you call <code>.union()</code>. At this point, any classes
-that have been registered will be present in the union. Registration of
-additional classes after a call to <code>.union()</code> will not update the returned
-union from a previous call, so it is important to consider order of operations.</p>
-<p><code>SubclassTrackingModel</code>, is a bit more flexible in this regard. There are
-currently three options for when a union may be realized, each with their own
-tradeoffs:</p>
-<ol>
-<li>
-<p><strong>Immediately</strong>: When using <code>dynapydantic.Union[T]</code>, the union is realized
-    immediately. This is the "most eager" option, but is also the most sensitive
-    with order of operations. Type checkers will not understand direct calls to
-    <code>union()</code>, but <code>dynapydantic.Union[T]</code> will resolve to <code>T</code>.</p>
-<p>Despite the tradeoff on sensitivity to order of operations, this option can
-be desirable for applications that inspect field annotations directly. This
-normally arises in user-implemented model reflection code and with
-<a href="https://pydantic.dev/docs/validation/latest/api/pydantic_settings/"><code>pydantic_settings</code></a>.</p>
-</li>
-<li>
-<p><strong>Model-construction time</strong>: Instead of eagerly realizing the union in the
-    field annotation, <code>dynapydantic.Polymorphic[T]</code>, in its default
-    configuration, will defer the union realization slightly, into the schema
-    generation step for the model. The difference between this and option 1 is
-    subtle, but does have an effect with recursive models. Consider the
-    following:</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
+<h1 id="dynapydantic-benchmarks"><code>dynapydantic</code> Benchmarks<a class="headerlink" href="#dynapydantic-benchmarks" title="Permanent link">&para;</a></h1>
+<h3 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h3>
+<ul>
+<li>MC = Model-construction time union realization</li>
+<li>VT = Validation-time union realization</li>
+<li>Disc = Discriminated union</li>
+<li>Smart = Smart union</li>
+</ul>
+<h2 id="class-hierarchy-creation-median-iqr">Class hierarchy creation (median ± IQR) <a id="registration"></a><a class="headerlink" href="#class-hierarchy-creation-median-iqr" title="Permanent link">&para;</a></h2>
+<table class="benchmark-table">
+  <thead>
+    <tr>
+      <th rowspan="2">Mode</th>
+     <th colspan="3" scope="colgroup">Subclass Count</th>
+    </tr>
+    <tr>
+      <th>5</th>
+      <th>25</th>
+      <th>100</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>Disc MC</th>
+      <td>0.441 ± 0.048 ms<br>19.28% ± 2.14%</td>
+      <td>1.838 ± 0.102 ms<br>18.55% ± 1.04%</td>
+      <td>7.239 ± 0.373 ms<br>18.92% ± 0.98%</td>
+    </tr>
+    <tr>
+      <th>Disc VT</th>
+      <td>-51.375 ± 47.025 us<br>-2.25% ± 2.06%</td>
+      <td>94.312 ± 100.083 us<br>0.95% ± 1.01%</td>
+      <td>0.674 ± 0.317 ms<br>1.76% ± 0.83%</td>
+    </tr>
+    <tr>
+      <th>Disc MC<br>Injected</th>
+      <td>1.023 ± 0.055 ms<br>44.73% ± 2.52%</td>
+      <td>4.831 ± 0.122 ms<br>48.75% ± 1.27%</td>
+      <td>19.018 ± 0.468 ms<br>49.69% ± 1.25%</td>
+    </tr>
+    <tr>
+      <th>Disc VT<br>Injected</th>
+      <td>0.548 ± 0.057 ms<br>23.96% ± 2.51%</td>
+      <td>2.966 ± 0.142 ms<br>29.94% ± 1.44%</td>
+      <td>12.016 ± 0.291 ms<br>31.40% ± 0.77%</td>
+    </tr>
+    <tr>
+      <th>Smart MC</th>
+      <td>0.272 ± 0.047 ms<br>12.64% ± 2.17%</td>
+      <td>1.094 ± 0.098 ms<br>11.37% ± 1.02%</td>
+      <td>4.110 ± 0.476 ms<br>10.88% ± 1.27%</td>
+    </tr>
+    <tr>
+      <th>Smart VT</th>
+      <td>64.292 ± 34.243 us<br>2.98% ± 1.59%</td>
+      <td>0.236 ± 0.105 ms<br>2.46% ± 1.09%</td>
+      <td>0.765 ± 0.633 ms<br>2.03% ± 1.68%</td>
+    </tr>
+  </tbody>
+</table>
 
-<span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span><span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span> <span class="n">union_mode</span><span class="o">=</span><span class="s2">"smart"</span><span class="p">):</span>
-    <span class="k">pass</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
-    <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
-    <span class="n">other</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">]</span>
-
-<span class="n">B</span><span class="p">(</span><span class="n">other</span><span class="o">=</span><span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}}})</span> <span class="c1"># ValidationError (union only has A)</span>
-
-<span class="n">B</span><span class="o">.</span><span class="n">model_rebuild</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">B</span><span class="p">(</span><span class="n">other</span><span class="o">=</span><span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}}})</span> <span class="c1"># B(other=B(other=B(other=A(a=2))))</span>
-</code></pre></div>
-if we used <code>Union[Base]</code>, the <code>model_rebuild()</code> call would do nothing, as
-the union had already been realized. To accomplish the same thing with
-eager unions, we would have to use a forward reference, like <code>"BUnion"</code> then
-call <code>dynapydantic.union(Base)</code> right before the <code>model_rebuild()</code> calls.</p>
-<p>Similar to <code>dynapydantic.Union</code>, <code>dynapydantic.Polymorphic</code> is interpretable
-by the type checker, which will constrain fields to be of the base class
-type.</p>
-</li>
-<li>
-<p><strong>Validation time</strong>: Finally, realization of the union can be deferred to
-    validation time. This makes the union construction process more robust to
-    order of operations. In this formulation, all subclasses must be registered
-    before the use of the union in validation, rather than the declaration of a
-    model using the union field. This reduces the previous example down to:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span>
-    <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
-    <span class="n">union_mode</span><span class="o">=</span><span class="s2">"smart"</span><span class="p">,</span>
-    <span class="n">union_realization</span><span class="o">=</span><span class="s2">"validation"</span><span class="p">,</span>
-<span class="p">):</span>
-    <span class="k">pass</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
-    <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
-    <span class="n">other</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">]</span>
-
-<span class="n">B</span><span class="p">(</span><span class="n">other</span><span class="o">=</span><span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}}})</span> <span class="c1"># B(other=B(other=B(other=A(a=2))))</span>
-</code></pre></div>
-<p>This option has the cleanest syntax, as no <code>model_rebuild()</code> calls are
-needed, but does incur a runtime penalty for potentially multiple schema
-compilations and the need for a field validator function, whereas options 1
-and 2 can produce static schema. When validating from JSON, the field
-validator receives data after Pydantic has decoded it. To preserve
-Pydantic's JSON-specific validation behavior (including strict validation),
-validation-time unions re-encode the field value before validating it with
-the realized adapter. This adds JSON encoding and decoding overhead on top
-of the normal validation cost.</p>
-<p>See the <a href="../benchmarks/">benchmarks</a> for a full picture of how
-validation-time unions perform. They have a significant first-time
-validation penalty for building the schema and a consistent per-validation
-penalty for the validator-based schema rather than a static schema.</p>
-<p>Like option 2, the field is able to be interpreted by type checkers as the
-base class.</p>
-</li>
-</ol>
-<p>The union realization mode can be configured in the following ways:</p>
-<ol>
-<li>Via a class keyword argument to define the default behavior for a base type:
-    <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span>
-    <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
-    <span class="n">union_mode</span><span class="o">=</span><span class="s2">"smart"</span><span class="p">,</span>
-    <span class="n">union_realization</span><span class="o">=</span><span class="s2">"validation"</span><span class="p">,</span>
-<span class="p">):</span>
-    <span class="k">pass</span>
-
-<span class="c1"># subclass definitions...</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">field</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">]</span>  <span class="c1"># validation-time</span>
-</code></pre></div></li>
-<li>Via a per-usage override via the <code>dynapydantic.Polymorphic</code> annotation:
-    <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span>
-    <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
-    <span class="n">union_mode</span><span class="o">=</span><span class="s2">"smart"</span><span class="p">,</span>
-<span class="p">):</span>
-    <span class="k">pass</span>
-
-<span class="c1"># subclass definitions...</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">field</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">,</span> <span class="s2">"validation"</span><span class="p">]</span>
-</code></pre></div></li>
-</ol>
-<p>The supported options are <code>"model-construction"</code> (default) or <code>"validation"</code>
-(or their corresponding <code>UnionRealization</code> enum values).</p>
+<h2 id="validation-overhead-per-validation-median-iqr-10-subclasses">Validation overhead per validation (median ± IQR; 10 subclasses) <a id="validation"></a><a class="headerlink" href="#validation-overhead-per-validation-median-iqr-10-subclasses" title="Permanent link">&para;</a></h2>
+<table class="benchmark-table">
+  <thead>
+    <tr>
+      <th rowspan="2" scope="col">Mode</th>
+      <th scope="col">Python (N=1)</th>
+      <th scope="col">Python (N=1000)</th>
+      <th scope="col">JSON (N=1)</th>
+      <th scope="col">JSON (N=1000)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">Disc MC</th>
+      <td>0.561 ± 0.393 us<br>10.06% ± 7.05%</td>
+      <td>0.033 ± 0.053 us<br>1.61% ± 2.60%</td>
+      <td>0.417 ± 0.301 us<br>7.47% ± 5.39%</td>
+      <td>0.021 ± 0.055 us<br>1.06% ± 2.79%</td>
+    </tr>
+    <tr>
+      <th scope="row">Disc VT</th>
+      <td>0.882 ± 0.012 ms<br>15801.46% ± 627.69%</td>
+      <td>8.054 ± 0.102 us<br>398.84% ± 7.91%</td>
+      <td>0.885 ± 0.008 ms<br>15850.21% ± 497.23%</td>
+      <td>11.486 ± 0.092 us<br>581.20% ± 12.48%</td>
+    </tr>
+    <tr>
+      <th scope="row">Smart MC</th>
+      <td>0.667 ± 1.217 us<br>4.00% ± 7.30%</td>
+      <td>0.053 ± 0.187 us<br>0.47% ± 1.67%</td>
+      <td>0.458 ± 0.593 us<br>3.09% ± 4.00%</td>
+      <td>-0.064 ± 0.079 us<br>-0.66% ± 0.82%</td>
+    </tr>
+    <tr>
+      <th scope="row">Smart VT</th>
+      <td>0.419 ± 0.008 ms<br>2516.69% ± 122.76%</td>
+      <td>7.905 ± 0.239 us<br>70.90% ± 2.32%</td>
+      <td>0.426 ± 0.006 ms<br>2873.94% ± 83.54%</td>
+      <td>11.576 ± 0.214 us<br>120.26% ± 2.34%</td>
+    </tr>
+  </tbody>
+</table>
 
 
 

@@ -49,6 +49,8 @@
     
       <link rel="stylesheet" href="assets/_mkdocstrings.css">
     
+      <link rel="stylesheet" href="custom.css">
+    
     <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -879,17 +881,19 @@ automatically, and validate/serialize them without maintaining a manual union.</
 <p>The recommended setup is a discriminated <code>SubclassTrackingModel</code> with
 <code>Polymorphic[T]</code>:</p>
 <h3 id="polymorphic-models">Polymorphic models<a class="headerlink" href="#polymorphic-models" title="Permanent link">&para;</a></h3>
-<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ty</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Event</span><span class="p">(</span>
     <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
     <span class="n">discriminator_field</span><span class="o">=</span><span class="s2">"type"</span><span class="p">,</span>
-    <span class="n">discriminator_value_generator</span><span class="o">=</span><span class="k">lambda</span> <span class="bp">cls</span><span class="p">:</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="k">pass</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">UserCreated</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"UserCreated"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"UserCreated"</span>
     <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
@@ -950,6 +954,12 @@ validation and serialization behavior.</p>
 <p><code>dynapydantic</code> is most useful when the union becomes difficult or impossible to
 maintain, such as when types are extension points, come from plugins, or an
 explicit union would introduce a circular dependency.</p>
+<p>See the <a href="benchmarks/">benchmarks</a> to get an understanding on how much overhead
+<code>dynapydantic</code> adds at runtime. In short, if you are using the recommended path
+of discriminated unions realized at model-construction time, the overhead for
+both class hierarchy construction and validation is minimal. Advanced features,
+such as discriminator field injection and validation-time union realization,
+come with a runtime overhead for their convenience.</p>
 <h2 id="installation-and-compatibility">Installation and compatibility<a class="headerlink" href="#installation-and-compatibility" title="Permanent link">&para;</a></h2>
 <p>The package declares support for Python &gt;=3.10 and Pydantic &gt;=2.8,&lt;3. Pydantic
 1 is not supported. The current CI matrix verifies compatibility up to the
