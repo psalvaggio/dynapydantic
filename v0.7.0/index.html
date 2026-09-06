@@ -1,0 +1,1403 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+        <link rel="next" href="union_realizations/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>dynapydantic</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="custom.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#dynapydantic" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="dynapydantic" class="md-header__button md-logo" aria-label="dynapydantic" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            dynapydantic
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Home
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_1">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/psalvaggio/dynapydantic" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="union_realizations/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Union Realization
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="dynapydantic" class="md-nav__button md-logo" aria-label="dynapydantic" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    dynapydantic
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/psalvaggio/dynapydantic" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick start">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#polymorphic-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Polymorphic models
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-dynapydantic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why dynapydantic?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation-and-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation and compatibility
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plugin-discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plugin discovery
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How it works">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#trackinggroup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TrackingGroup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subclasstrackingmodel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SubclassTrackingModel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternative-union-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternative union methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#union-realization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Union realization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-at-a-glance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API at a glance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caveats-and-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caveats and limitations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="union_realizations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Union Realization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick start">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#polymorphic-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Polymorphic models
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-dynapydantic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why dynapydantic?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation-and-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation and compatibility
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plugin-discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plugin discovery
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How it works">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#trackinggroup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TrackingGroup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subclasstrackingmodel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SubclassTrackingModel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternative-union-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternative union methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#union-realization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Union realization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-at-a-glance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API at a glance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caveats-and-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caveats and limitations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="dynapydantic">dynapydantic<a class="headerlink" href="#dynapydantic" title="Permanent link">&para;</a></h1>
+<p><a href="https://github.com/psalvaggio/dynapydantic/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/psalvaggio/dynapydantic/actions/workflows/ci.yml/badge.svg" /></a>
+<a href="https://github.com/psalvaggio/dynapydantic/actions/workflows/pre-commit.yml"><img alt="Pre-commit" src="https://github.com/psalvaggio/dynapydantic/actions/workflows/pre-commit.yml/badge.svg" /></a>
+<a href="https://psalvaggio.github.io/dynapydantic/latest/"><img alt="Docs" src="https://img.shields.io/badge/docs-Docs-blue?style=flat-square&amp;logo=github&amp;logoColor=white&amp;link=https://psalvaggio.github.io/dynapydantic/latest/" /></a>
+<a href="https://pypi.org/project/dynapydantic/"><img alt="PyPI - Version" src="https://img.shields.io/pypi/v/dynapydantic" /></a>
+<a href="https://coveralls.io/github/psalvaggio/dynapydantic?branch=main"><img alt="Coverage Status" src="https://coveralls.io/repos/github/psalvaggio/dynapydantic/badge.svg?branch=main" /></a>
+<a href="https://anaconda.org/conda-forge/dynapydantic"><img alt="Conda Version" src="https://img.shields.io/conda/v/conda-forge/dynapydantic" /></a></p>
+<p>Runtime polymorphic validation and serialization for
+<a href="https://pydantic.dev">Pydantic</a> models, with automatic subclass discovery and
+optional plugin support. Define a base model once, discover its subclasses
+automatically, and validate/serialize them without maintaining a manual union.</p>
+<h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<p>The recommended setup is a discriminated <code>SubclassTrackingModel</code> with
+<code>Polymorphic[T]</code>:</p>
+<h3 id="polymorphic-models">Polymorphic models<a class="headerlink" href="#polymorphic-models" title="Permanent link">&para;</a></h3>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ty</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Event</span><span class="p">(</span>
+    <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
+    <span class="n">discriminator_field</span><span class="o">=</span><span class="s2">"type"</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">UserCreated</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"UserCreated"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"UserCreated"</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">event</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Event</span><span class="p">]</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="o">.</span><span class="n">model_validate</span><span class="p">({</span><span class="s2">"event"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"UserCreated"</span><span class="p">,</span> <span class="s2">"user_id"</span><span class="p">:</span> <span class="mi">42</span><span class="p">}})</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">event</span><span class="p">,</span> <span class="n">UserCreated</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">model</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span>
+    <span class="s2">"event"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"UserCreated"</span><span class="p">,</span> <span class="s2">"user_id"</span><span class="p">:</span> <span class="mi">42</span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">round_trip</span> <span class="o">=</span> <span class="n">Model</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">model_dump</span><span class="p">())</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">round_trip</span><span class="o">.</span><span class="n">event</span><span class="p">,</span> <span class="n">UserCreated</span><span class="p">)</span>
+</code></pre></div>
+Without <code>dynapydantic</code>, the annotation for <code>event</code> would need to be an explicit
+union that must be updated each time a subclass is added.</p>
+<h2 id="why-dynapydantic">Why dynapydantic?<a class="headerlink" href="#why-dynapydantic" title="Permanent link">&para;</a></h2>
+<p>Pydantic can serialize subclasses with <code>serialize_as_any</code> and
+<code>polymorphic_serialization</code>, but it does not provide a corresponding way to
+validate arbitrary subclasses through a base model field. The usual solution is
+an explicit union, which must be updated whenever a new model is added.
+<code>SerializeAsAny</code> solves the serialization side of the problem, but not the
+validation side: validating the serialized data through a base model produces
+the base type rather than the concrete subclass. <code>dynapydantic</code> automates the
+discriminated union needed for both operations while retaining Pydantic's
+validation and serialization behavior.</p>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Best when</th>
+<th>Limitation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Explicit union</td>
+<td>Types are fixed and local; you control every type; static typing is the priority</td>
+<td>Must be manually maintained</td>
+</tr>
+<tr>
+<td>Base Pydantic model</td>
+<td>A single base type is sufficient; Round-tripping is not needed</td>
+<td>Subclass types can be lost during validation and serialization</td>
+</tr>
+<tr>
+<td><code>SerializeAsAny</code></td>
+<td>You need subclass serialization</td>
+<td>Helps serialization, but not polymorphic validation</td>
+</tr>
+<tr>
+<td><code>dynapydantic</code></td>
+<td>Types are extension points, scattered, or provided by plugins; runtime discovery is required</td>
+<td><a href="#caveats-and-limitations">Caveats and limitations</a></td>
+</tr>
+</tbody>
+</table>
+<p><code>dynapydantic</code> is most useful when the union becomes difficult or impossible to
+maintain, such as when types are extension points, come from plugins, or an
+explicit union would introduce a circular dependency.</p>
+<p>See the <a href="benchmarks/">benchmarks</a> to get an understanding on how much overhead
+<code>dynapydantic</code> adds at runtime. In short, if you are using the recommended path
+of discriminated unions realized at model-construction time, the overhead for
+both class hierarchy construction and validation is minimal. Advanced features,
+such as discriminator field injection and validation-time union realization,
+come with a runtime overhead for their convenience.</p>
+<h2 id="installation-and-compatibility">Installation and compatibility<a class="headerlink" href="#installation-and-compatibility" title="Permanent link">&para;</a></h2>
+<p>The package declares support for Python &gt;=3.10 and Pydantic &gt;=2.8,&lt;3. Pydantic
+1 is not supported. The current CI matrix verifies compatibility up to the
+currently-available upper bounds. Install via PyPI or conda:</p>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>dynapydantic
+conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>dynapydantic
+</code></pre></div>
+<h2 id="plugin-discovery">Plugin discovery<a class="headerlink" href="#plugin-discovery" title="Permanent link">&para;</a></h2>
+<p><code>SubclassTrackingModel</code> can discover models provided by separately installed
+packages through Python entry points. Give the base model an entry-point group,
+load the plugins before defining the polymorphic field, and each plugin can
+register subclasses without the base package importing them directly. Plugin
+discovery happens in the application environment, so the plugin distribution
+must be installed alongside the base package.</p>
+<p>The base package and plugin package can be separate distributions:</p>
+<div class="highlight"><pre><span></span><code>base-package/
+  pyproject.toml
+  base_package/models.py
+
+animal-plugin/
+  pyproject.toml
+  animal_plugins/__init__.py
+</code></pre></div>
+<p>The plugin must be installed in the same environment as the application and
+must depend on the package that defines the base model.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># base_package/models.py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Animal</span><span class="p">(</span>
+    <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
+    <span class="n">discriminator_field</span><span class="o">=</span><span class="s2">"type"</span><span class="p">,</span>
+    <span class="n">plugin_entry_point</span><span class="o">=</span><span class="s2">"animal.plugins"</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="k">pass</span>
+</code></pre></div>
+<p>A plugin package declares the same group in its <code>pyproject.toml</code>. An entry
+point may name a module (everything imported by that module is registered):</p>
+<div class="highlight"><pre><span></span><code><span class="k">[project.entry-points.</span><span class="s2">"animal.plugins"</span><span class="k">]</span>
+<span class="n">cats-and-dogs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"animal_plugins"</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="c1"># animal_plugins/__init__.py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ty</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">base_package.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Animal</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Dog</span><span class="p">(</span><span class="n">Animal</span><span class="p">):</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"Dog"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Dog"</span>
+    <span class="n">bark_volume</span><span class="p">:</span> <span class="nb">int</span>
+</code></pre></div>
+<p>The application loads the group before constructing its model schema:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">base_package.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Animal</span>
+
+<span class="n">dynapydantic</span><span class="o">.</span><span class="n">load_plugins</span><span class="p">(</span><span class="n">Animal</span><span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">animal</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Animal</span><span class="p">]</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="o">.</span><span class="n">model_validate</span><span class="p">({</span><span class="s2">"animal"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Dog"</span><span class="p">,</span> <span class="s2">"bark_volume"</span><span class="p">:</span> <span class="mi">100</span><span class="p">}})</span>
+<span class="k">assert</span> <span class="n">model</span><span class="o">.</span><span class="n">animal</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">"Dog"</span>
+</code></pre></div>
+<p>For plugins that need explicit registration or deferred imports, point the
+entry point at a callable instead:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[project.entry-points.</span><span class="s2">"animal.plugins"</span><span class="k">]</span>
+<span class="n">more-animals</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"animal_plugins.registration:register_models"</span>
+</code></pre></div>
+<p>The callable is invoked when <code>load_plugins()</code> runs. Entry points are provided
+by the plugin distributions, so installing a new plugin adds its models to
+the runtime union without changing the base package.</p>
+<p>For reliable plugin discovery, use a discriminator-based union. Discriminator
+values must be unique within a tracking group, and concrete subclasses should
+normally declare the discriminator field with a <code>typing.Literal</code> value. The
+discriminator value generator can inject that field when a subclass does not
+declare it explicitly.</p>
+<h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
+<h3 id="trackinggroup"><code>TrackingGroup</code><a class="headerlink" href="#trackinggroup" title="Permanent link">&para;</a></h3>
+<p>The core entity in this library is the <code>dynapydantic.TrackingGroup</code>:
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ty</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
+
+<span class="n">mygroup</span> <span class="o">=</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">TrackingGroup</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"mygroup"</span><span class="p">,</span>
+    <span class="n">discriminator_field</span><span class="o">=</span><span class="s2">"name"</span>
+<span class="p">)</span>
+
+<span class="nd">@mygroup</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"A"</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A class to be tracked, will be tracked as "A"."""</span>
+    <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="nd">@mygroup</span><span class="o">.</span><span class="n">register</span><span class="p">()</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Another class, will be tracked as "B"."""</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"B"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"B"</span>
+    <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A model that can have A or B"""</span>
+    <span class="n">field</span><span class="p">:</span> <span class="n">mygroup</span><span class="o">.</span><span class="n">union</span><span class="p">()</span>  <span class="c1"># call after all subclasses have been registered</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"A"</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">:</span> <span class="mi">4</span><span class="p">}))</span> <span class="c1"># field=A(a=4, name='A')</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"B"</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">:</span> <span class="mi">5</span><span class="p">}))</span> <span class="c1"># field=B(name='B', a=5)</span>
+</code></pre></div></p>
+<p>The <code>union()</code> method produces a <a href="https://docs.pydantic.dev/latest/concepts/unions/#discriminated-unions">discriminated union</a>
+of all registered <code>pydantic.BaseModel</code> subclasses. It also accepts an
+<code>plain=True</code> keyword argument to produce a plain <code>UnionType</code> for use
+in type annotations, but since this is a runtime-computed union, this will not
+work with static type checkers. This union is based on a discriminator field,
+which was configured by the <code>discriminator_field</code> argument to <code>TrackingGroup</code>.
+The field can be created by hand, as was shown with <code>B</code>, or <code>dynapydantic</code>
+will inject it for you, as was shown with <code>A</code>.</p>
+<p>Discriminator values must be unique within a <code>TrackingGroup</code>. Discriminated
+unions are the recommended default because they avoid ambiguity between
+subclasses.</p>
+<p><code>TrackingGroup</code> has a few opt-in features to make it more powerful and easier to use:
+1. <code>discriminator_value_generator</code>: This parameter is an optional callback
+  function that is called with each class that gets registered and produces a
+  default value for the discriminator field. This allows the user to call
+  <code>register()</code> without a value for the discriminator. For example, passing:
+  <code>lambda cls: cls.__name__</code> would use the name of the class as the
+   discriminator value.
+2. <code>plugin_entry_point</code>: This parameter indicates to <code>dynapydantic</code> that there
+  might be models to be discovered in other packages. Packages are discovered
+  by the Python entry point mechanism. See the <a href="#plugin-discovery">plugin discovery example</a>
+  above for the package declarations and loading code.</p>
+<h3 id="subclasstrackingmodel"><code>SubclassTrackingModel</code><a class="headerlink" href="#subclasstrackingmodel" title="Permanent link">&para;</a></h3>
+<p>The most common use case of this pattern is to automatically register subclasses
+of a given <code>pydantic.BaseModel</code>. This is supported via the use of
+<code>dynapydantic.SubclassTrackingModel</code>. For example:
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ty</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span>
+    <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
+    <span class="n">discriminator_field</span><span class="o">=</span><span class="s2">"name"</span><span class="p">,</span>
+    <span class="n">discriminator_value_generator</span><span class="o">=</span><span class="k">lambda</span> <span class="bp">cls</span><span class="p">:</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Base model, will track its subclasses"""</span>
+
+    <span class="c1"># The TrackingGroup can be specified here like model_config, or passed in</span>
+    <span class="c1"># kwargs of the class declaration, just like how model_config works with</span>
+    <span class="c1"># pydantic.BaseModel. If you do it like this, you have to give the tracking</span>
+    <span class="c1"># group a name, whereas using kwargs will generate the name for you.</span>
+    <span class="c1"># tracking_config: ty.ClassVar[dynapydantic.TrackingGroup] = dynapydantic.TrackingGroup(</span>
+    <span class="c1">#     name="BaseSubclasses",</span>
+    <span class="c1">#     discriminator_field="name",</span>
+    <span class="c1">#     discriminator_value_generator=lambda cls: cls.__name__,</span>
+    <span class="c1"># )</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Intermediate</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">exclude_from_union</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Subclasses can opt out of being tracked"""</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Derived1</span><span class="p">(</span><span class="n">Intermediate</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Non-direct descendants are registered"""</span>
+    <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Derived2</span><span class="p">(</span><span class="n">Intermediate</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""You can override the value generator if desired"""</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"Custom"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Custom"</span>
+    <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">dynapydantic</span><span class="o">.</span><span class="n">registered_models</span><span class="p">(</span><span class="n">Base</span><span class="p">))</span>
+<span class="c1"># {'Derived1': &lt;class '__main__.Derived1'&gt;, 'Custom': &lt;class '__main__.Derived2'&gt;}</span>
+
+<span class="c1"># if plugin_entry_point was specified, load plugin packages</span>
+<span class="c1"># Base.load_plugins()</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A model that can have any registered Base subclass"""</span>
+    <span class="n">field</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Derived1"</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">:</span> <span class="mi">4</span><span class="p">}))</span>
+<span class="c1"># field=Derived1(a=4, name='Derived1')</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Custom"</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">:</span> <span class="mi">5</span><span class="p">}))</span>
+<span class="c1"># field=Derived2(name='Custom', a=5)</span>
+</code></pre></div>
+It is important to note that the subclasses that are supported are those that
+were defined <em>prior</em> to defining the model that uses <code>dynapydantic.Polymorphic</code>
+(<code>Model</code> in the above example). If you declare additional subclasses afterwards,
+you must call <code>.model_rebuild(force=True)</code> on the model that uses the subclass
+union.</p>
+<p>The usual application order is:</p>
+<div class="highlight"><pre><span></span><code>define subclasses → load plugins → define the model using Polymorphic[T]
+</code></pre></div>
+<p>If subclasses are added after model declaration, rebuild the affected Pydantic
+model. Alternatively, configure <code>union_realization="validation"</code> when the
+registration order cannot be known in advance; this defers union construction
+until validation and adds runtime overhead.</p>
+<h3 id="alternative-union-methods">Alternative union methods<a class="headerlink" href="#alternative-union-methods" title="Permanent link">&para;</a></h3>
+<div class="admonition warning">
+<p class="admonition-title">Caution</p>
+<p><code>dynapydantic</code> does <strong>NOT</strong> test if your models have ambiguities in them.
+This is up to <strong>YOU</strong>.</p>
+<p>Non-discriminated unions should only be used when you can <strong>PROVE</strong> that all
+possible subclasses will parse unambiguously. If there is ambiguity in the
+models, you can get unexpected results. If plugins are used, it is highly
+discouraged to use anything besides discriminated unions.</p>
+</div>
+<p>While the default discriminated union is the recommended and most robust
+approach, it does require a field in the model to act as the discriminator. If
+the full list of union members is known to the author ahead of time and can be
+proven to be unambiguous from a validation perspective, then the discriminator
+field can be omitted and a
+<a href="https://docs.pydantic.dev/latest/concepts/unions/#smart-mode"><code>"smart"</code></a> or
+<a href="https://docs.pydantic.dev/latest/concepts/unions/#left-to-right-mode"><code>"left_to_right"</code></a>
+union may be used. <code>TrackingGroup</code> and <code>SubclassTrackingModel</code> support these
+modes as well via the <code>union_mode</code> argument:
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span>
+    <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
+    <span class="n">union_mode</span><span class="o">=</span><span class="s2">"smart"</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""dynapydantic.Polymorphic[Base] will be a "smart" A | B"""</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="n">b</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">field</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="p">{</span><span class="s2">"b"</span><span class="p">:</span> <span class="mi">5</span><span class="p">}))</span>
+<span class="c1"># field=B(b=5)</span>
+</code></pre></div></p>
+<h3 id="union-realization">Union realization<a class="headerlink" href="#union-realization" title="Permanent link">&para;</a></h3>
+<p>Union realization determines when registered subclasses are collected into the
+union used by Pydantic.</p>
+<p>For most applications, use <code>dynapydantic.Polymorphic[T]</code> with the default
+model-construction realization. Use validation-time realization when subclasses
+may be registered after model declarations or when recursive or plugin-heavy
+schemas require it.</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>API</th>
+<th>Tradeoff</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Immediate</td>
+<td><code>dynapydantic.Union[T]</code></td>
+<td>Easiest to inspect, but most sensitive to declaration order</td>
+</tr>
+<tr>
+<td>Model construction</td>
+<td><code>dynapydantic.Polymorphic[T]</code> (default)</td>
+<td>Supports static schemas, but new subclasses may require <code>model_rebuild(force=True)</code></td>
+</tr>
+<tr>
+<td>Validation</td>
+<td><code>union_realization="validation"</code></td>
+<td>Most tolerant of registration order, but adds runtime overhead</td>
+</tr>
+</tbody>
+</table>
+<p>With <code>TrackingGroup</code>, the union is realized when <code>.union()</code> is called. With
+<code>SubclassTrackingModel</code>, the mode can be configured on the base class or
+overridden for an individual <code>Polymorphic</code> field. In all cases, subclasses
+must be registered before the relevant realization point; validation-time mode
+defers that point until validation.</p>
+<p>See <a href="https://psalvaggio.github.io/dynapydantic/latest/union_realizations/">Picking a union realization mode</a>
+for the complete explanation, configuration examples, and guidance for
+recursive models and plugin-based registration.</p>
+<h2 id="api-at-a-glance">API at a glance<a class="headerlink" href="#api-at-a-glance" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>API</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SubclassTrackingModel</code></td>
+<td>Automatically tracks subclasses of a base model</td>
+</tr>
+<tr>
+<td><code>TrackingGroup</code></td>
+<td>Explicitly registers model types</td>
+</tr>
+<tr>
+<td><code>Polymorphic[T]</code></td>
+<td>Runtime-generated polymorphic annotation</td>
+</tr>
+<tr>
+<td><code>Union[T]</code></td>
+<td>Eagerly realized runtime union</td>
+</tr>
+<tr>
+<td><code>load_plugins(T)</code></td>
+<td>Loads entry-point plugins for a tracking group</td>
+</tr>
+<tr>
+<td><code>registered_models(T)</code></td>
+<td>Inspects registered subclasses</td>
+</tr>
+</tbody>
+</table>
+<p>See the <a href="https://psalvaggio.github.io/dynapydantic/latest/reference/">API reference</a>
+for signatures, configuration options, and exception types.</p>
+<h2 id="caveats-and-limitations">Caveats and limitations<a class="headerlink" href="#caveats-and-limitations" title="Permanent link">&para;</a></h2>
+<p>While <code>dynapydantic</code> does enable polymorphic validation, it is important to note
+that several limitations exist:</p>
+<ul>
+<li>Subclasses must be registered before union/schema realization, depending on
+  the selected mode.</li>
+<li>New subclasses may require <code>model_rebuild(force=True)</code> to update a schema,
+  unless validation-time union realization is used.</li>
+<li>Non-discriminated unions can be ambiguous.</li>
+<li>Discriminator values must be unique within a tracking group.</li>
+<li>Plugin discovery depends on Python entry points.</li>
+<li>Runtime-generated unions are not fully visible to static type checkers. The
+  field is generally typed as the base class, so use <code>isinstance()</code> or the
+  discriminator value when narrowing to a concrete subclass.</li>
+</ul>
+<p>Both normal and JSON Pydantic workflows are supported. For example, the
+polymorphic field can be serialized with <code>model_dump_json()</code> and reconstructed
+with <code>model_validate_json()</code>; the discriminator remains part of the serialized
+data when using a discriminated union.</p>
+<h2 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h2>
+<p>The following Python and Pydantic combinations are verified via automated
+testing (defined in <code>noxfile.py</code>):</p>
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th></th>
+      <th colspan="6" style="text-align: center;">Pydantic</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th></th>
+      <th scope="col">2.8</th>
+      <th scope="col">2.9</th>
+      <th scope="col">2.10</th>
+      <th scope="col">2.11</th>
+      <th scope="col">2.12</th>
+      <th scope="col">2.13</th>
+    </tr>
+  </thead>
+  <tbody>
+     <th rowspan="7" style="text-align: center; vertical-align: middle;">
+       Python
+      </th>
+    <tr>
+      <th scope="row">3.10</th>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.11</th>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.12</th>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.13</th>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.14</th>
+      <td></td><td></td><td></td><td></td><td>✓</td><td>✓</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Run every combination locally with:</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>nox
+</code></pre></div>
+<p>To run one combination, for example Python 3.13 with Pydantic 2.13:</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>nox<span class="w"> </span>-s<span class="w"> </span>test-3.13-2.13
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.tabs", "navigation.indexes", "search.suggest", "search.highlight"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
