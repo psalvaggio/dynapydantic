@@ -1,6 +1,7 @@
 """Unit test for SubclassTrackingModel"""
 
 import datetime
+import inspect
 import typing as ty
 from unittest import mock
 
@@ -8,8 +9,22 @@ import pydantic
 import pytest
 
 import dynapydantic
+from dynapydantic.subclass_tracking_model import _STM_INIT_SUBCLASS_KWARGS
 
 from .version_marks import skipif_mark_pydantic_version
+
+
+def test_init_subclass_kwargs_in_sync() -> None:
+    """The hardcoded exclude set in __init_subclass__ stay in sync."""
+    sig = inspect.signature(
+        dynapydantic.SubclassTrackingModel.__pydantic_init_subclass__
+    )
+    named_params = sorted(
+        name
+        for name, p in sig.parameters.items()
+        if p.kind == inspect.Parameter.KEYWORD_ONLY
+    )
+    assert named_params == sorted(_STM_INIT_SUBCLASS_KWARGS)
 
 
 class SimpleKwargBase(dynapydantic.SubclassTrackingModel, discriminator_field="name"):

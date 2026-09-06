@@ -20,17 +20,19 @@ The recommended setup is a discriminated `SubclassTrackingModel` with
 ### Polymorphic models
 
 ```python
+import typing as ty
+
 import dynapydantic
 import pydantic
 
 class Event(
     dynapydantic.SubclassTrackingModel,
     discriminator_field="type",
-    discriminator_value_generator=lambda cls: cls.__name__,
 ):
     pass
 
 class UserCreated(Event):
+    type: ty.Literal["UserCreated"] = "UserCreated"
     user_id: int
 
 class Model(pydantic.BaseModel):
@@ -70,6 +72,13 @@ validation and serialization behavior.
 `dynapydantic` is most useful when the union becomes difficult or impossible to
 maintain, such as when types are extension points, come from plugins, or an
 explicit union would introduce a circular dependency.
+
+See the [benchmarks](benchmarks.md) to get an understanding on how much overhead
+`dynapydantic` adds at runtime. In short, if you are using the recommended path
+of discriminated unions realized at model-construction time, the overhead for
+both class hierarchy construction and validation is minimal. Advanced features,
+such as discriminator field injection and validation-time union realization,
+come with a runtime overhead for their convenience.
 
 ## Installation and compatibility
 
