@@ -73,13 +73,12 @@ validation and serialization behavior.
 maintain, such as when types are extension points, come from plugins, or an
 explicit union would introduce a circular dependency.
 
-See the [benchmarks](benchmarks.md) to get an understaning on how much overhead
+See the [benchmarks](benchmarks.md) to get an understanding on how much overhead
 `dynapydantic` adds at runtime. In short, if you are using the recommended path
 of discriminated unions realized at model-construction time, the overhead for
 both class hierarchy construction and validation is minimal. Advanced features,
 such as discriminator field injection and validation-time union realization,
 come with a runtime overhead for their convenience.
-
 
 ## Installation and compatibility
 

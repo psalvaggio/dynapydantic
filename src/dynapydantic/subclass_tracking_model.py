@@ -20,6 +20,10 @@ from .tracking_group import TrackingGroup
 from .union_mode import UnionRealization
 from .version_check import pydantic_ge
 
+# Names of kwargs to __pydantic_init_subclass__. This has to be manually kept
+# in sync to avoid a call to inspect.signature on the registration hot path.
+_STM_INIT_SUBCLASS_KWARGS = ("exclude_from_union", "union_realization")
+
 
 class SubclassTrackingModel(pydantic.BaseModel):
     """Subclass-tracking BaseModel
@@ -53,7 +57,7 @@ class SubclassTrackingModel(pydantic.BaseModel):
                 k: v
                 for k, v in kwargs.items()
                 if k not in TrackingGroup.model_fields
-                and k not in ("exclude_from_union", "union_realization")
+                and k not in _STM_INIT_SUBCLASS_KWARGS
             },
         )
 

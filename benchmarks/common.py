@@ -412,7 +412,7 @@ def _build_manual_class_hierarchy(
         if (name := _subclass_name(i))
     ]
 
-    union = ty.Union[tuple(subclasses)]  # noqa: UP007 # type: ignore[not-a-ty  pe]
+    union = ty.Union[tuple(subclasses)]  # noqa: UP007 # type: ignore[not-a-type]
     return (
         ty.Annotated[union, pydantic.Discriminator("name")]
         if union_mode == UnionMode.DISCRIMINATED

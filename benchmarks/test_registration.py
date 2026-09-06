@@ -95,6 +95,6 @@ def test_registration(  # noqa: PLR0913
             "inject": inject,
         },
         iterations=1,
-        rounds=100,
+        rounds=250,
         warmup_rounds=1,
     )

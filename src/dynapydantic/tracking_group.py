@@ -1,8 +1,6 @@
 """Base class for dynamic pydantic models"""
 
 import contextlib
-import functools
-import operator
 import typing as ty
 import warnings
 
@@ -369,7 +367,9 @@ class TrackingGroup(pydantic.BaseModel):
                 pydantic.Field(discriminator=union_mode.discriminator_field),
             ]
 
-        plain_union = functools.reduce(operator.or_, self.models.values())
+        plain_union = ty.Union[  # noqa: UP007
+            tuple(self.models.values())  # type: ignore[not-a-type]
+        ]
         if union_mode == "left_to_right":
             return ty.Annotated[plain_union, pydantic.Field(union_mode="left_to_right")]
 

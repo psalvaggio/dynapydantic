@@ -128,7 +128,7 @@ def test_validation(  # noqa: PLR0913
     benchmark.pedantic(
         _run,
         setup=_setup,
-        rounds=100,
+        rounds=250,
         iterations=1,
         warmup_rounds=0,
     )
