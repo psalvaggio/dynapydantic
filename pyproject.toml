@@ -1,6 +1,6 @@
 [project]
 name = "dynapydantic"
-version = "0.6.2"
+version = "0.7.0"
 description = "Runtime tracking and polymorphic validation for pydantic models"
 readme = "README.md"
 authors = [
