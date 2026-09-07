@@ -36,19 +36,23 @@ tradeoffs:
     import dynapydantic
     import pydantic
 
+
     class Base(dynapydantic.SubclassTrackingModel, union_mode="smart"):
         pass
+
 
     class A(Base, extra="forbid"):
         a: int
 
+
     class B(Base, extra="forbid"):
         other: dynapydantic.Polymorphic[Base]
 
-    B(other={"other": {"other": {"a": 2}}}) # ValidationError (union only has A)
+
+    B(other={"other": {"other": {"a": 2}}})  # ValidationError (union only has A)
 
     B.model_rebuild(force=True)
-    B(other={"other": {"other": {"a": 2}}}) # B(other=B(other=B(other=A(a=2))))
+    B(other={"other": {"other": {"a": 2}}})  # B(other=B(other=B(other=A(a=2))))
     ```
     if we used `Union[Base]`, the `model_rebuild()` call would do nothing, as
     the union had already been realized. To accomplish the same thing with
@@ -69,6 +73,7 @@ tradeoffs:
     import dynapydantic
     import pydantic
 
+
     class Base(
         dynapydantic.SubclassTrackingModel,
         union_mode="smart",
@@ -76,13 +81,16 @@ tradeoffs:
     ):
         pass
 
+
     class A(Base, extra="forbid"):
         a: int
+
 
     class B(Base, extra="forbid"):
         other: dynapydantic.Polymorphic[Base]
 
-    B(other={"other": {"other": {"a": 2}}}) # B(other=B(other=B(other=A(a=2))))
+
+    B(other={"other": {"other": {"a": 2}}})  # B(other=B(other=B(other=A(a=2))))
     ```
 
     This option has the cleanest syntax, as no `model_rebuild()` calls are
@@ -109,6 +117,7 @@ The union realization mode can be configured in the following ways:
     ```python
     import dynapydantic
 
+
     class Base(
         dynapydantic.SubclassTrackingModel,
         union_mode="smart",
@@ -116,7 +125,9 @@ The union realization mode can be configured in the following ways:
     ):
         pass
 
+
     # subclass definitions...
+
 
     class Model(pydantic.BaseModel):
         field: dynapydantic.Polymorphic[Base]  # validation-time
@@ -126,13 +137,16 @@ The union realization mode can be configured in the following ways:
     import dynapydantic
     import pydantic
 
+
     class Base(
         dynapydantic.SubclassTrackingModel,
         union_mode="smart",
     ):
         pass
 
+
     # subclass definitions...
+
 
     class Model(pydantic.BaseModel):
         field: dynapydantic.Polymorphic[Base, "validation"]

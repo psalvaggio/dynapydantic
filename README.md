@@ -25,24 +25,26 @@ import typing as ty
 import dynapydantic
 import pydantic
 
+
 class Event(
     dynapydantic.SubclassTrackingModel,
     discriminator_field="type",
 ):
     pass
 
+
 class UserCreated(Event):
     type: ty.Literal["UserCreated"] = "UserCreated"
     user_id: int
 
+
 class Model(pydantic.BaseModel):
     event: dynapydantic.Polymorphic[Event]
 
+
 model = Model.model_validate({"event": {"type": "UserCreated", "user_id": 42}})
 assert isinstance(model.event, UserCreated)
-assert model.model_dump() == {
-    "event": {"type": "UserCreated", "user_id": 42}
-}
+assert model.model_dump() == {"event": {"type": "UserCreated", "user_id": 42}}
 
 round_trip = Model.model_validate(model.model_dump())
 assert isinstance(round_trip.event, UserCreated)
@@ -119,6 +121,7 @@ must depend on the package that defines the base model.
 # base_package/models.py
 import dynapydantic
 
+
 class Animal(
     dynapydantic.SubclassTrackingModel,
     discriminator_field="type",
@@ -140,6 +143,7 @@ cats-and-dogs = "animal_plugins"
 import typing as ty
 from base_package.models import Animal
 
+
 class Dog(Animal):
     type: ty.Literal["Dog"] = "Dog"
     bark_volume: int
@@ -154,8 +158,10 @@ from base_package.models import Animal
 
 dynapydantic.load_plugins(Animal)
 
+
 class Model(pydantic.BaseModel):
     animal: dynapydantic.Polymorphic[Animal]
+
 
 model = Model.model_validate({"animal": {"type": "Dog", "bark_volume": 100}})
 assert model.animal.type == "Dog"
@@ -189,28 +195,32 @@ import typing as ty
 import dynapydantic
 import pydantic
 
-mygroup = dynapydantic.TrackingGroup(
-    name="mygroup",
-    discriminator_field="name"
-)
+mygroup = dynapydantic.TrackingGroup(name="mygroup", discriminator_field="name")
+
 
 @mygroup.register("A")
 class A(pydantic.BaseModel):
     """A class to be tracked, will be tracked as "A"."""
+
     a: int
+
 
 @mygroup.register()
 class B(pydantic.BaseModel):
     """Another class, will be tracked as "B"."""
+
     name: ty.Literal["B"] = "B"
     a: int
 
+
 class Model(pydantic.BaseModel):
     """A model that can have A or B"""
+
     field: mygroup.union()  # call after all subclasses have been registered
 
-print(Model(field={"name": "A", "a": 4})) # field=A(a=4, name='A')
-print(Model(field={"name": "B", "a": 5})) # field=B(name='B', a=5)
+
+print(Model(field={"name": "A", "a": 4}))  # field=A(a=4, name='A')
+print(Model(field={"name": "B", "a": 5}))  # field=B(name='B', a=5)
 ```
 
 The `union()` method produces a [discriminated union](https://docs.pydantic.dev/latest/concepts/unions/#discriminated-unions)
@@ -248,6 +258,7 @@ import typing as ty
 import dynapydantic
 import pydantic
 
+
 class Base(
     dynapydantic.SubclassTrackingModel,
     discriminator_field="name",
@@ -269,14 +280,19 @@ class Base(
 class Intermediate(Base, exclude_from_union=True):
     """Subclasses can opt out of being tracked"""
 
+
 class Derived1(Intermediate):
     """Non-direct descendants are registered"""
+
     a: int
+
 
 class Derived2(Intermediate):
     """You can override the value generator if desired"""
+
     name: ty.Literal["Custom"] = "Custom"
     a: int
+
 
 print(dynapydantic.registered_models(Base))
 # {'Derived1': <class '__main__.Derived1'>, 'Custom': <class '__main__.Derived2'>}
@@ -284,9 +300,12 @@ print(dynapydantic.registered_models(Base))
 # if plugin_entry_point was specified, load plugin packages
 # Base.load_plugins()
 
+
 class Model(pydantic.BaseModel):
     """A model that can have any registered Base subclass"""
+
     field: dynapydantic.Polymorphic[Base]
+
 
 print(Model(field={"name": "Derived1", "a": 4}))
 # field=Derived1(a=4, name='Derived1')
@@ -334,20 +353,25 @@ modes as well via the `union_mode` argument:
 import dynapydantic
 import pydantic
 
+
 class Base(
     dynapydantic.SubclassTrackingModel,
     union_mode="smart",
 ):
     """dynapydantic.Polymorphic[Base] will be a "smart" A | B"""
 
+
 class A(Base):
     a: int
+
 
 class B(Base):
     b: int
 
+
 class Model(pydantic.BaseModel):
     field: dynapydantic.Polymorphic[Base]
+
 
 print(Model(field={"b": 5}))
 # field=B(b=5)
