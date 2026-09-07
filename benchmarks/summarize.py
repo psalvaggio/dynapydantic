@@ -265,7 +265,10 @@ def _append_registration_table(lines: list[str], results: ResultsManifest) -> No
     )
 
     lines += [
-        '## Class hierarchy creation (median ± IQR) <a id="registration"></a>',
+        (
+            "## Class hierarchy creation overhead (median ± IQR) "
+            '<a id="registration"></a>'
+        ),
         "",
         '<table class="benchmark-table">',
         "  <thead>",
@@ -357,6 +360,11 @@ def main() -> None:
 
     lines: list[str] = [
         "# `dynapydantic` Benchmarks",
+        "",
+        "This page shows the results of local benchmarking of this library.",
+        "Absolute performance is largely governed by pydantic-core, so the",
+        "figures reported here are measurments over a hand-rolled equivalent",
+        "solution.",
         "",
         "### Legend",
         "* MC = Model-construction time union realization",
