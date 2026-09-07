@@ -547,19 +547,23 @@ normally arises in user-implemented model reflection code and with
 <p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
 
+
 <span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span><span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span> <span class="n">union_mode</span><span class="o">=</span><span class="s2">"smart"</span><span class="p">):</span>
     <span class="k">pass</span>
+
 
 <span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
     <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
 
+
 <span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
     <span class="n">other</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">]</span>
 
-<span class="n">B</span><span class="p">(</span><span class="n">other</span><span class="o">=</span><span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}}})</span> <span class="c1"># ValidationError (union only has A)</span>
+
+<span class="n">B</span><span class="p">(</span><span class="n">other</span><span class="o">=</span><span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}}})</span>  <span class="c1"># ValidationError (union only has A)</span>
 
 <span class="n">B</span><span class="o">.</span><span class="n">model_rebuild</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">B</span><span class="p">(</span><span class="n">other</span><span class="o">=</span><span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}}})</span> <span class="c1"># B(other=B(other=B(other=A(a=2))))</span>
+<span class="n">B</span><span class="p">(</span><span class="n">other</span><span class="o">=</span><span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}}})</span>  <span class="c1"># B(other=B(other=B(other=A(a=2))))</span>
 </code></pre></div>
 if we used <code>Union[Base]</code>, the <code>model_rebuild()</code> call would do nothing, as
 the union had already been realized. To accomplish the same thing with
@@ -578,6 +582,7 @@ type.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
 
+
 <span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span>
     <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
     <span class="n">union_mode</span><span class="o">=</span><span class="s2">"smart"</span><span class="p">,</span>
@@ -585,13 +590,16 @@ type.</p>
 <span class="p">):</span>
     <span class="k">pass</span>
 
+
 <span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
     <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
+
 
 <span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
     <span class="n">other</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">]</span>
 
-<span class="n">B</span><span class="p">(</span><span class="n">other</span><span class="o">=</span><span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}}})</span> <span class="c1"># B(other=B(other=B(other=A(a=2))))</span>
+
+<span class="n">B</span><span class="p">(</span><span class="n">other</span><span class="o">=</span><span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"other"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}}})</span>  <span class="c1"># B(other=B(other=B(other=A(a=2))))</span>
 </code></pre></div>
 <p>This option has the cleanest syntax, as no <code>model_rebuild()</code> calls are
 needed, but does incur a runtime penalty for potentially multiple schema
@@ -615,6 +623,7 @@ base class.</p>
 <li>Via a class keyword argument to define the default behavior for a base type:
     <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
 
+
 <span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span>
     <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
     <span class="n">union_mode</span><span class="o">=</span><span class="s2">"smart"</span><span class="p">,</span>
@@ -622,7 +631,9 @@ base class.</p>
 <span class="p">):</span>
     <span class="k">pass</span>
 
+
 <span class="c1"># subclass definitions...</span>
+
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="n">field</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">]</span>  <span class="c1"># validation-time</span>
@@ -631,13 +642,16 @@ base class.</p>
     <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
 
+
 <span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span>
     <span class="n">dynapydantic</span><span class="o">.</span><span class="n">SubclassTrackingModel</span><span class="p">,</span>
     <span class="n">union_mode</span><span class="o">=</span><span class="s2">"smart"</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="k">pass</span>
 
+
 <span class="c1"># subclass definitions...</span>
+
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="n">field</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">,</span> <span class="s2">"validation"</span><span class="p">]</span>
