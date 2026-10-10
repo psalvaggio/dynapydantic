@@ -963,7 +963,7 @@ both class hierarchy construction and validation is minimal. Advanced features,
 such as discriminator field injection and validation-time union realization,
 come with a runtime overhead for their convenience.</p>
 <h2 id="installation-and-compatibility">Installation and compatibility<a class="headerlink" href="#installation-and-compatibility" title="Permanent link">&para;</a></h2>
-<p>The package declares support for Python &gt;=3.10 and Pydantic &gt;=2.8,&lt;3. Pydantic
+<p>The package declares support for Python &gt;=3.11 and Pydantic &gt;=2.8,&lt;3. Pydantic
 1 is not supported. The current CI matrix verifies compatibility up to the
 currently-available upper bounds. Install via PyPI or conda:</p>
 <div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>dynapydantic
@@ -1322,7 +1322,7 @@ testing (defined in <code>noxfile.py</code>):</p>
     <tr>
       <th></th>
       <th></th>
-      <th colspan="6" style="text-align: center;">Pydantic</th>
+      <th colspan="7" style="text-align: center;">Pydantic</th>
     </tr>
     <tr>
       <th></th>
@@ -1333,31 +1333,32 @@ testing (defined in <code>noxfile.py</code>):</p>
       <th scope="col">2.11</th>
       <th scope="col">2.12</th>
       <th scope="col">2.13</th>
+      <th scope="col">2.14</th>
     </tr>
   </thead>
   <tbody>
-     <th rowspan="7" style="text-align: center; vertical-align: middle;">
+     <th rowspan="6" style="text-align: center; vertical-align: middle;">
        Python
       </th>
     <tr>
-      <th scope="row">3.10</th>
-      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
-    </tr>
-    <tr>
       <th scope="row">3.11</th>
-      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
     </tr>
     <tr>
       <th scope="row">3.12</th>
-      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
     </tr>
     <tr>
       <th scope="row">3.13</th>
-      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
     </tr>
     <tr>
       <th scope="row">3.14</th>
-      <td></td><td></td><td></td><td></td><td>✓</td><td>✓</td>
+      <td></td><td></td><td></td><td></td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.14</th>
+      <td></td><td></td><td></td><td></td><td></td><td></td><td>✓</td>
     </tr>
   </tbody>
 </table>
