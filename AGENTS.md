@@ -13,7 +13,7 @@ matrix.
 
 ## Build, Test, and Development Commands
 
-Use Python 3.10+ and install the locked development environment with:
+Use Python 3.11+ and install the locked development environment with:
 
 ```sh
 uv sync --locked --all-extras --dev
@@ -40,7 +40,7 @@ Format Python with Ruff and follow its configured `ALL` lint rules and NumPy
 docstring convention. Use four-space indentation, `snake_case` for functions
 and modules, `PascalCase` for classes, and type annotations for public and
 internal APIs. Keep implementation modules focused and preserve the package's
-Python 3.10 compatibility (the generics-specific test targets Python 3.12).
+Python 3.11 compatibility (the generics-specific test targets Python 3.12).
 
 ## Testing Guidelines
 

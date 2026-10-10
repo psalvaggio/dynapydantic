@@ -1,6 +1,6 @@
 """Unit test for SubclassTrackingModel"""
 
-import datetime
+import datetime as dt
 import inspect
 import typing as ty
 from unittest import mock
@@ -270,7 +270,7 @@ def test_polymorphic_model_dump_json_mode(union_realization: str | None) -> None
 
     class A(Base):
         a: int
-        created_at: datetime.datetime
+        created_at: dt.datetime
 
     class B(Base):
         b: int
@@ -278,11 +278,7 @@ def test_polymorphic_model_dump_json_mode(union_realization: str | None) -> None
     class Outer(pydantic.BaseModel):
         val: dynapydantic.Polymorphic[Base]
 
-    m = Outer(
-        val=A(
-            a=1, created_at=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc)
-        )
-    )
+    m = Outer(val=A(a=1, created_at=dt.datetime(2024, 1, 1, tzinfo=dt.UTC)))
     dumped = m.model_dump(mode="json")
     assert dumped["val"]["created_at"] == "2024-01-01T00:00:00Z"
     assert dumped["val"]["a"] == 1
