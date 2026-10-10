@@ -1,12 +1,12 @@
 [project]
 name = "dynapydantic"
-version = "0.7.0"
+version = "0.8.0a1"
 description = "Runtime tracking and polymorphic validation for pydantic models"
 readme = "README.md"
 authors = [
     { name = "Philip Salvaggio", email = "salvaggio.philip@gmail.com" }
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2.8,<3",
 ]
@@ -24,12 +24,12 @@ dev = [
     "pip>=25.1.1",
     "prek>=0.3.8",
     "pymdown-extensions>=10.16",
-    "pyrefly>=0.44.1",
+    "pyrefly==1.3.2",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
     "pytest-codspeed>=4.2.0",
     "pytest-xdist>=3.8.0",
-    "ruff>=0.12.3",
+    "ruff==0.17.0",
     "snakeviz>=2.2.2",
 ]
 
@@ -43,7 +43,7 @@ testpaths = ["tests"]
 addopts = "--cov=dynapydantic --cov-report=html --cov-branch"
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = ["ALL"]

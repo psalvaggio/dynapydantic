@@ -84,7 +84,7 @@ come with a runtime overhead for their convenience.
 
 ## Installation and compatibility
 
-The package declares support for Python >=3.10 and Pydantic >=2.8,<3. Pydantic
+The package declares support for Python >=3.11 and Pydantic >=2.8,<3. Pydantic
 1 is not supported. The current CI matrix verifies compatibility up to the
 currently-available upper bounds. Install via PyPI or conda:
 
@@ -448,7 +448,7 @@ testing (defined in `noxfile.py`):
     <tr>
       <th></th>
       <th></th>
-      <th colspan="6" style="text-align: center;">Pydantic</th>
+      <th colspan="7" style="text-align: center;">Pydantic</th>
     </tr>
     <tr>
       <th></th>
@@ -459,31 +459,32 @@ testing (defined in `noxfile.py`):
       <th scope="col">2.11</th>
       <th scope="col">2.12</th>
       <th scope="col">2.13</th>
+      <th scope="col">2.14</th>
     </tr>
   </thead>
   <tbody>
-     <th rowspan="7" style="text-align: center; vertical-align: middle;">
+     <th rowspan="6" style="text-align: center; vertical-align: middle;">
        Python
       </th>
     <tr>
-      <th scope="row">3.10</th>
-      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
-    </tr>
-    <tr>
       <th scope="row">3.11</th>
-      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
     </tr>
     <tr>
       <th scope="row">3.12</th>
-      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
     </tr>
     <tr>
       <th scope="row">3.13</th>
-      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
     </tr>
     <tr>
       <th scope="row">3.14</th>
-      <td></td><td></td><td></td><td></td><td>✓</td><td>✓</td>
+      <td></td><td></td><td></td><td></td><td>✓</td><td>✓</td><td>✓</td>
+    </tr>
+    <tr>
+      <th scope="row">3.14</th>
+      <td></td><td></td><td></td><td></td><td></td><td></td><td>✓</td>
     </tr>
   </tbody>
 </table>

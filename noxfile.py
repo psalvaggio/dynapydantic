@@ -4,14 +4,16 @@ from __future__ import annotations
 
 import nox
 
-PYTHON_VERSIONS = ("3.10", "3.11", "3.12", "3.13", "3.14")
-PYDANTIC_VERSIONS = tuple(f"2.{minor}" for minor in range(8, 14))
+PYTHON_VERSIONS = ("3.11", "3.12", "3.13", "3.14", "3.15")
+PYDANTIC_VERSIONS = tuple(f"2.{minor}" for minor in range(8, 15))
 
 
 def pydantic_versions_for(python_version: str) -> tuple[str, ...]:
     """Return the Pydantic versions supported by a Python version."""
+    if python_version == "3.15":  # 3.15 support was first added in 2.14
+        return ("2.14",)
     if python_version == "3.14":  # 3.14 support was first added in 2.12
-        return ("2.12", "2.13")
+        return ("2.12", "2.13", "2.14")
     return PYDANTIC_VERSIONS
 
 
