@@ -50,15 +50,17 @@ class SimpleConfigBase(dynapydantic.SubclassTrackingModel):
 def test_basic(cls: type[dynapydantic.SubclassTrackingModel]) -> None:
     """Test the basic usage of SubclassTrackingModel"""
 
-    class Derived1(cls):
+    # ty doesn't like inheriting from a parameter, pyrefly doesn't care. Fair
+    # enough, as cls could be final.
+    class Derived1(cls):  # type: ignore[ty:unsupported-base]
         name: ty.Literal["A"] = "A"
         b: int
 
-    class Derived2(cls):
+    class Derived2(cls):  # type: ignore[ty:unsupported-base]
         name: ty.Literal["B"] = "B"
         b: int
 
-    class Derived3(cls, exclude_from_union=True):
+    class Derived3(cls, exclude_from_union=True):  # type: ignore[ty:unsupported-base]
         name: ty.Literal["C"] = "C"
         b: int
 
@@ -250,7 +252,7 @@ def test_subclass_tracking_with_frozen_base() -> None:
     c = Child(x=5)
     assert c.model_dump() == {"tag": "Child", "x": 5}
     with pytest.raises(pydantic.ValidationError):
-        c.x = 10  # type: ignore[read-only]
+        c.x = 10  # type: ignore[read-only, ty:invalid-assignment]
 
 
 @pytest.mark.parametrize(

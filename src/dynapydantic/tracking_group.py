@@ -15,6 +15,8 @@ from .exceptions import (
 )
 from .union_mode import DiscriminatedConfig, UnionMode
 
+_ModelT = ty.TypeVar("_ModelT", bound=pydantic.BaseModel)
+
 
 def _inject_discriminator_field(
     cls: type[pydantic.BaseModel],
@@ -208,15 +210,17 @@ class TrackingGroup(pydantic.BaseModel):
                 plugin()
 
     @ty.overload
-    def register(self, value: str | None = None) -> ty.Callable[[type], type]: ...
+    def register(
+        self, value: str | None = None
+    ) -> ty.Callable[[type[_ModelT]], type[_ModelT]]: ...
 
     @ty.overload
-    def register(self, value: type[pydantic.BaseModel]) -> type[pydantic.BaseModel]: ...
+    def register(self, value: type[_ModelT]) -> type[_ModelT]: ...
 
     def register(
         self,
-        value: str | type[pydantic.BaseModel] | None = None,
-    ) -> ty.Callable[[type], type] | type[pydantic.BaseModel]:
+        value: str | type[_ModelT] | None = None,
+    ) -> ty.Callable[[type[_ModelT]], type[_ModelT]] | type[_ModelT]:
         """Register a model into this group (decorator)
 
         Parameters
@@ -231,7 +235,7 @@ class TrackingGroup(pydantic.BaseModel):
             self.register_model(value)
             return value
 
-        def _wrapper(cls: type[pydantic.BaseModel]) -> type[pydantic.BaseModel]:
+        def _wrapper(cls: type[_ModelT]) -> type[_ModelT]:
             self.register_model(cls, value)
             return cls
 

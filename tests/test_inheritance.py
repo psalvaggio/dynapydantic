@@ -207,8 +207,8 @@ def test_changing_union_from_smart_to_discriminated() -> None:
 
     # redundant enum removed in: https://github.com/pydantic/pydantic/pull/11321
     if pydantic_lt((2, 10, 0)):
-        truth["$defs"]["B"]["properties"]["name"]["enum"] = ["B"]
-        truth["$defs"]["C"]["properties"]["name"]["enum"] = ["C"]
-        truth["$defs"]["MidA"]["properties"]["name"]["enum"] = ["MidA"]
+        truth["$defs"]["B"]["properties"]["name"]["enum"] = ["B"]  # type: ignore[ty:invalid-assignment]
+        truth["$defs"]["C"]["properties"]["name"]["enum"] = ["C"]  # type: ignore[ty:invalid-assignment]
+        truth["$defs"]["MidA"]["properties"]["name"]["enum"] = ["MidA"]  # type: ignore[ty:invalid-assignment]
 
     assert Container.model_json_schema() == truth

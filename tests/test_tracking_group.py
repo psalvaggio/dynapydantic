@@ -209,7 +209,7 @@ def test_non_str_discriminator_is_an_error() -> None:
         dynapydantic.RegistrationError,
         match="discriminator_value must be a str if given, was int",
     ):
-        group.register_model(A, 5)  # type: ignore[bad-argument-type]
+        group.register_model(A, 5)  # type: ignore[bad-argument-type, ty:invalid-argument-type]
 
     with pytest.raises(
         dynapydantic.RegistrationError,
@@ -225,7 +225,7 @@ def test_non_str_discriminator_is_an_error() -> None:
         match="discriminator_value must be a str if given, was float",
     ):
 
-        @group.register(1.23)  # type: ignore[bad-argument-type]
+        @group.register(1.23)  # type: ignore[no-matching-overload, ty:no-matching-overload]
         class C(pydantic.BaseModel):
             pass
 
@@ -354,7 +354,8 @@ def test_that_the_union_works() -> None:
         a: int
 
     class UserModel(pydantic.BaseModel):
-        field: dynapydantic.Union[group]
+        # ty doesn't understand this (fair, it's a runtime annotation)
+        field: dynapydantic.Union[group]  # type: ignore[ty:invalid-type-form]
 
     assert UserModel(field={"type": "A", "a": 5}).field == A(a=5)
     assert UserModel(field={"type": "B", "a": 5}).field == B(a=5)
@@ -480,15 +481,15 @@ def test_register_non_pydantic_class_raises() -> None:
 
     with pytest.raises(dynapydantic.RegistrationError):
 
-        @group.register()
+        @group.register()  # type: ignore[ty:invalid-argument-type]
         class Oops:  # not a BaseModel
             pass
 
     with pytest.raises(dynapydantic.RegistrationError):
-        group.register_model(5)  # type: ignore[bad-argument-type]
+        group.register_model(5)  # type: ignore[bad-argument-type, ty:invalid-argument-type]
 
     with pytest.raises(dynapydantic.RegistrationError):
-        group.register_model(int)  # type: ignore[bad-argument-type]
+        group.register_model(int)  # type: ignore[bad-argument-type, ty:invalid-argument-type]
 
 
 def test_round_trip_with_round_trip_flag() -> None:
@@ -508,7 +509,7 @@ def test_round_trip_with_round_trip_flag() -> None:
         b: int
 
     class Outer(pydantic.BaseModel):
-        val: group.union()  # type: ignore[not-a-type]
+        val: group.union()  # type: ignore[invalid-annotation, ty:invalid-type-form]
 
     m = Outer(val={"type": "A", "a": 3})
     raw = m.model_dump(round_trip=True)
