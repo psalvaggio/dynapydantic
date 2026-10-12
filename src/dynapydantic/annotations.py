@@ -149,7 +149,7 @@ def _polymorphic_cgi(
     return ty.Annotated[cls, adapter]  # type: ignore[bad-return]
 
 
-if ty.TYPE_CHECKING:
+if ty.TYPE_CHECKING:  # pragma: no cover
     Union = ty.Annotated[ModelT, ...]
 else:
 
