@@ -31,7 +31,7 @@ dev = [
     "pytest-xdist>=3.8.0",
     "ruff==0.17.0",
     "snakeviz>=2.2.2",
-    "ty>=0.0.86",
+    "ty==0.0.86",
 ]
 
 [build-system]

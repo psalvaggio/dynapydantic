@@ -459,7 +459,7 @@ dev = [
     { name = "pytest-xdist", specifier = ">=3.8.0" },
     { name = "ruff", specifier = "==0.17.0" },
     { name = "snakeviz", specifier = ">=2.2.2" },
-    { name = "ty", specifier = ">=0.0.86" },
+    { name = "ty", specifier = "==0.0.86" },
 ]
 
 [[package]]

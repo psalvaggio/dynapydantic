@@ -113,16 +113,18 @@ def _polymorphic_cgi(
     union_realization: UnionRealization | str | None = None,
 ) -> ty.Annotated[type[ModelT], ...]:
     is_annotated = ty.get_origin(cls) is ty.Annotated
-    if not isinstance(cls, type) and not is_annotated:
+    annotated_metadata: tuple[object, ...] = ()
+    if is_annotated:
+        args = ty.get_args(cls)
+        cls = args[0]
+        annotated_metadata = args[1:]
+
+    if not isinstance(cls, type):
         msg = (
             "dynapydantic.Polymorphic must be given a type or annotated "
             f"type, not {cls}"
         )
         raise TypeError(msg)
-
-    orig_cls = cls
-    if is_annotated:
-        cls = ty.get_args(cls)[0]
 
     if not issubclass(cls, SubclassTrackingModel):
         msg = f"Polymorphic was given {cls}, which was not a SubclassTrackingModel."
@@ -132,10 +134,17 @@ def _polymorphic_cgi(
     if union_realization is not None:
         union_realization = UnionRealization(union_realization)
     elif is_annotated:
-        args = ty.get_args(orig_cls)[1:]
-        if _MODEL_CONSTRUCTION_TIME_UNION in args:
+        mc = any(a is _MODEL_CONSTRUCTION_TIME_UNION for a in annotated_metadata)
+        val = any(a is _VALIDATION_TIME_UNION for a in annotated_metadata)
+        if mc and val:
+            msg = (
+                "Conflicting union realization overrides detected. Specify at "
+                "most one of: ModelConstructionTimeUnion, ValidationTimeUnion."
+            )
+            raise TypeError(msg)
+        if mc:
             union_realization = UnionRealization.MODEL_CONSTRUCTION
-        elif _VALIDATION_TIME_UNION in args:
+        elif val:
             union_realization = UnionRealization.VALIDATION
         else:
             union_realization = cfg.union_realization
@@ -146,7 +155,12 @@ def _polymorphic_cgi(
         if union_realization == UnionRealization.VALIDATION
         else ModelConstructionTimeAdapter
     )
-    return ty.Annotated[cls, adapter]  # type: ignore[bad-return]
+    metadata = tuple(
+        item
+        for item in annotated_metadata
+        if item not in (_MODEL_CONSTRUCTION_TIME_UNION, _VALIDATION_TIME_UNION)
+    )
+    return ty.Annotated[cls, *metadata, adapter]  # type: ignore[bad-return]
 
 
 if ty.TYPE_CHECKING:  # pragma: no cover

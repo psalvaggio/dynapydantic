@@ -102,10 +102,48 @@ def test_polymorphic_accepts_single_parameter_tuple_without_warning() -> None:
 
 
 def test_polymorphic_unknown_annotated_marker_uses_model_default() -> None:
-    """Unknown marker metadata leaves the model's union realization intact."""
+    """Unknown metadata is preserved without changing union realization."""
     annotation = dynapydantic.Polymorphic[ty.Annotated[Base, "unknown"]]
 
-    assert ty.get_args(annotation)[1] is ModelConstructionTimeAdapter
+    assert ty.get_args(annotation) == (
+        Base,
+        "unknown",
+        ModelConstructionTimeAdapter,
+    )
+
+
+@pytest.mark.parametrize(
+    "union_annotation",
+    [
+        dynapydantic.ModelConstructionTimeUnion,
+        dynapydantic.ValidationTimeUnion,
+    ],
+)
+def test_polymorphic_preserves_field_metadata(
+    union_annotation: ty.Any,  # noqa: ANN401 (no great way to annotate this)
+) -> None:
+    """Field metadata survives both union override annotations."""
+
+    class Model(pydantic.BaseModel):
+        field: dynapydantic.Polymorphic[
+            union_annotation[
+                ty.Annotated[Base, pydantic.Field(description="Base value")]
+            ]
+        ]
+
+    assert Model.model_json_schema()["properties"]["field"]["description"] == (
+        "Base value"
+    )
+
+
+def test_polymorphic_rejects_conflicting_union_realization_markers() -> None:
+    """A single annotation cannot request both union realization modes."""
+    with pytest.raises(TypeError, match="Conflicting union realization overrides"):
+        dynapydantic.Polymorphic[
+            dynapydantic.ModelConstructionTimeUnion[
+                dynapydantic.ValidationTimeUnion[Base]
+            ]
+        ]
 
 
 @pytest.mark.parametrize(
