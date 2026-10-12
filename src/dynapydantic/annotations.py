@@ -35,7 +35,11 @@ if ty.TYPE_CHECKING:  # pragma: no cover
 else:
 
     class ModelConstructionTimeUnion:
-        """Override the union realization to model-construction time."""
+        """Override the union realization to model-construction time.
+
+        Use this annotation to wrap a type inside of a ``Polymorphic``
+        annotation to override the default union realization mode for a field.
+        """
 
         def __class_getitem__(
             cls,
@@ -45,7 +49,11 @@ else:
             return ty.Annotated[item, _MODEL_CONSTRUCTION_TIME_UNION]
 
     class ValidationTimeUnion:
-        """Override the union realization to validation time."""
+        """Override the union realization to validation time.
+
+        Use this annotation to wrap a type inside of a ``Polymorphic``
+        annotation to override the default union realization mode for a field.
+        """
 
         def __class_getitem__(
             cls,
@@ -73,10 +81,6 @@ else:
         according to its actual type, not the field annotation type. In addition,
         parsing will function as if the field annotation type were the union of
         all tracked subclasses.
-
-        Passing a UnionRealization (or its string value) as a second argument is
-        deprecated. Use ModelConstructionTimeUnion or ValidationTimeUnion to
-        override the class's default union realization.
         """
 
         def __class_getitem__(
