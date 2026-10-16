@@ -37,7 +37,7 @@ else:
     class ModelConstructionTimeUnion:
         """Override the union realization to model-construction time.
 
-        Use this annotation to wrap a type inside of a ``Polymorphic``
+        Use this annotation to wrap a type inside of a `Polymorphic`
         annotation to override the default union realization mode for a field.
         """
 
@@ -51,7 +51,7 @@ else:
     class ValidationTimeUnion:
         """Override the union realization to validation time.
 
-        Use this annotation to wrap a type inside of a ``Polymorphic``
+        Use this annotation to wrap a type inside of a `Polymorphic`
         annotation to override the default union realization mode for a field.
         """
 
@@ -89,6 +89,12 @@ else:
         ) -> ty.Annotated[type[ModelT], ...]:
             """Get the annotation for the pydantic field"""
             if isinstance(item, tuple):
+                if len(item) > 2:  # noqa: PLR2004
+                    msg = (
+                        "dynapydantic.Polymorphic takes 1 or 2 arguments "
+                        f"({len(item)} given)"
+                    )
+                    raise TypeError(msg)
                 if len(item) > 1:
                     msg = (
                         "The multi-parameter form of Polymorphic is deprecated and "
@@ -96,13 +102,7 @@ else:
                         "Instead use dynapydantic.ModelConstructionTimeUnion or "
                         "dynapydantic.ValidationTimeUnion."
                     )
-                    warnings.warn(msg, DeprecationWarning, stacklevel=2)
-                if len(item) > 2:  # noqa: PLR2004
-                    msg = (
-                        "dynapydantic.Polymorphic takes 1 or 2 arguments "
-                        f"({len(item)} given)"
-                    )
-                    raise TypeError(msg)
+                    warnings.warn(msg, FutureWarning, stacklevel=2)
 
                 return _polymorphic_cgi(*item)
             return _polymorphic_cgi(item)
@@ -119,14 +119,7 @@ def _polymorphic_cgi(
         cls = args[0]
         annotated_metadata = args[1:]
 
-    if not isinstance(cls, type):
-        msg = (
-            "dynapydantic.Polymorphic must be given a type or annotated "
-            f"type, not {cls}"
-        )
-        raise TypeError(msg)
-
-    if not issubclass(cls, SubclassTrackingModel):
+    if not (isinstance(cls, type) and issubclass(cls, SubclassTrackingModel)):
         msg = f"Polymorphic was given {cls}, which was not a SubclassTrackingModel."
         raise PydanticSchemaGenerationError(msg)
 
@@ -163,24 +156,23 @@ def _polymorphic_cgi(
     return ty.Annotated[cls, *metadata, adapter]  # type: ignore[bad-return]
 
 
-if ty.TYPE_CHECKING:  # pragma: no cover
-    Union = ty.Annotated[ModelT, ...]
-else:
+_UnionT = ty.TypeVar("_UnionT", bound=TrackingGroup | SubclassTrackingModel)
 
-    class Union:
-        """Annotation used to get the union out of a dynapydantic entity
 
-        This annotation is primarily used for using the union of all models in
-        a `TrackingGroup` as a field annotation. It can be used with
-        `SubclassTrackingModel`, but in general, `Polymorphic` is preferable.
-        """
+class Union(ty.Generic[_UnionT]):
+    """Annotation used to get the union out of a dynapydantic entity
 
-        @ty.overload
-        def __class_getitem__(cls, item: type[ModelT]) -> type[ModelT]: ...
+    This annotation is primarily used for using the union of all models in
+    a `TrackingGroup` as a field annotation. It can be used with
+    `SubclassTrackingModel`, but in general, `Polymorphic` is preferable.
+    """
 
-        @ty.overload
-        def __class_getitem__(cls, item: TrackingGroup) -> ty.Any: ...  # noqa: ANN401
+    @ty.overload
+    def __class_getitem__(cls, item: type[ModelT]) -> type[ModelT]: ...
 
-        def __class_getitem__(cls, item: TrackingGroup | type[ModelT]) -> object:
-            """Return the union"""
-            return union(item)
+    @ty.overload
+    def __class_getitem__(cls, item: TrackingGroup) -> ty.Any: ...  # noqa: ANN401
+
+    def __class_getitem__(cls, item: TrackingGroup | type[ModelT]) -> object:
+        """Return the union"""
+        return union(item)

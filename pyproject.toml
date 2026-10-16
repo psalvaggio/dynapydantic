@@ -86,7 +86,7 @@ search-path = [
 # pyrefly covers our internal code, running multiple type checkers against the
 # test suite is the better strategy for external-facing compliance.
 include = [
-    "tests/"
+    "tests/",
 ]
 
 [tool.ty.environment]

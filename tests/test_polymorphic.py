@@ -75,22 +75,6 @@ def test_polymorphic_round_trip_json() -> None:
     assert Model.model_validate_json(m.model_dump_json()) == m
 
 
-def test_polymorphic_with_other_type() -> None:
-    """Polymorphic should only work on SubclassTrackingModel's"""
-    with pytest.raises(
-        pydantic.errors.PydanticSchemaGenerationError,
-        match="not a SubclassTrackingModel",
-    ):
-
-        class _Model(pydantic.BaseModel):
-            field: dynapydantic.Polymorphic[str]  # type: ignore[bad-specialization, ty:invalid-type-arguments]
-
-    with pytest.raises(TypeError, match="Polymorphic must be given a type"):
-
-        class _Model(pydantic.BaseModel):
-            field: dynapydantic.Polymorphic[5]  # type: ignore[bad-specialization, ty:invalid-type-form]
-
-
 def test_polymorphic_accepts_single_parameter_tuple_without_warning() -> None:
     """A one-item tuple remains an un-deprecated spelling of the type."""
     with warnings.catch_warnings(record=True) as caught:
@@ -372,3 +356,25 @@ def test_incorrect_num_args() -> None:
         dynapydantic.Polymorphic.__class_getitem__(
             ty.cast("ty.Any", (Base, "validation", "foo")),
         )
+
+
+@pytest.mark.parametrize(
+    "inner_type",
+    [
+        5,
+        int,
+        list[int],
+        pydantic.BaseModel,
+        ty.Annotated[pydantic.BaseModel, list[int]],
+    ],
+)
+def test_polymorphic_rejects_invalid_inner_types(
+    inner_type: ty.Any,  # noqa: ANN401
+) -> None:
+    """Polymorphic rejects the inner types with the correct message."""
+    with pytest.raises(
+        pydantic.PydanticSchemaGenerationError, match="Polymorphic was given"
+    ):
+
+        class Model(pydantic.BaseModel):
+            field: dynapydantic.Polymorphic[inner_type]
