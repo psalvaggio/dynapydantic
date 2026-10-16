@@ -2,11 +2,13 @@
 
 import json
 import typing as ty
+import warnings
 
 import pydantic
 import pytest
 
 import dynapydantic
+from dynapydantic.annotations import ModelConstructionTimeAdapter
 
 
 class Base(
@@ -73,20 +75,59 @@ def test_polymorphic_round_trip_json() -> None:
     assert Model.model_validate_json(m.model_dump_json()) == m
 
 
-def test_polymorphic_with_other_type() -> None:
-    """Polymorphic should only work on SubclassTrackingModel's"""
-    with pytest.raises(
-        pydantic.errors.PydanticSchemaGenerationError,
-        match="not a SubclassTrackingModel",
-    ):
+def test_polymorphic_accepts_single_parameter_tuple_without_warning() -> None:
+    """A one-item tuple remains an un-deprecated spelling of the type."""
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always", FutureWarning)
+        annotation = dynapydantic.Polymorphic[Base,]
 
-        class _Model(pydantic.BaseModel):
-            field: dynapydantic.Polymorphic[str]  # type: ignore[bad-specialization]
+    assert ty.get_args(annotation)[1] is ModelConstructionTimeAdapter
+    assert not caught
 
-    with pytest.raises(TypeError, match="Polymorphic must be given a type"):
 
-        class _Model(pydantic.BaseModel):
-            field: dynapydantic.Polymorphic[5]  # type: ignore[bad-specialization]
+def test_polymorphic_unknown_annotated_marker_uses_model_default() -> None:
+    """Unknown metadata is preserved without changing union realization."""
+    annotation = dynapydantic.Polymorphic[ty.Annotated[Base, "unknown"]]
+
+    assert ty.get_args(annotation) == (
+        Base,
+        "unknown",
+        ModelConstructionTimeAdapter,
+    )
+
+
+@pytest.mark.parametrize(
+    "union_annotation",
+    [
+        dynapydantic.ModelConstructionTimeUnion,
+        dynapydantic.ValidationTimeUnion,
+    ],
+)
+def test_polymorphic_preserves_field_metadata(
+    union_annotation: ty.Any,  # noqa: ANN401 (no great way to annotate this)
+) -> None:
+    """Field metadata survives both union override annotations."""
+
+    class Model(pydantic.BaseModel):
+        field: dynapydantic.Polymorphic[
+            union_annotation[
+                ty.Annotated[Base, pydantic.Field(description="Base value")]
+            ]
+        ]
+
+    assert Model.model_json_schema()["properties"]["field"]["description"] == (
+        "Base value"
+    )
+
+
+def test_polymorphic_rejects_conflicting_union_realization_markers() -> None:
+    """A single annotation cannot request both union realization modes."""
+    with pytest.raises(TypeError, match="Conflicting union realization overrides"):
+        dynapydantic.Polymorphic[
+            dynapydantic.ModelConstructionTimeUnion[
+                dynapydantic.ValidationTimeUnion[Base]
+            ]
+        ]
 
 
 @pytest.mark.parametrize(
@@ -248,30 +289,55 @@ def test_polymorphic_union_realization_overrides_class_default() -> None:
 
     class B(Base):
         b: int
-        other: dynapydantic.Polymorphic[
-            Base,
-            "model-construction",  # type: ignore[unknown-name] # noqa: F821
-        ]
+        other: dynapydantic.Polymorphic[dynapydantic.ModelConstructionTimeUnion[Base]]
 
     # No B in the schema because the union was eaglerly made
     b_schema = B.model_json_schema()
     assert b_schema["properties"]["other"] == {"$ref": "#/$defs/A"}
 
-    class C(Base):
-        c: int
-        other: dynapydantic.Polymorphic[
-            Base, dynapydantic.UnionRealization.MODEL_CONSTRUCTION
-        ]
+    class DynamicBase(
+        dynapydantic.SubclassTrackingModel,
+        union_mode="smart",
+        union_realization=dynapydantic.UnionRealization.MODEL_CONSTRUCTION,
+    ):
+        pass
 
-    # Same story with no C
-    c_schema = C.model_json_schema()
-    assert c_schema["properties"]["other"] == {
-        "anyOf": [
-            {"$ref": "#/$defs/A"},
-            {"$ref": "#/$defs/B"},
-        ],
-        "title": "Other",
-    }
+    class DynamicA(DynamicBase):
+        a: int
+
+    class Outer(pydantic.BaseModel):
+        other: dynapydantic.Polymorphic[dynapydantic.ValidationTimeUnion[DynamicBase]]
+
+    class DynamicB(DynamicBase):
+        b: int
+
+    assert Outer(other={"b": 2}).other == DynamicB(b=2)
+
+
+def test_polymorphic_deprecated_union_realization_override() -> None:
+    """The deprecated multi-parameter form still works and warns."""
+
+    class Base(
+        dynapydantic.SubclassTrackingModel,
+        union_mode="smart",
+        union_realization=dynapydantic.UnionRealization.VALIDATION,
+    ):
+        pass
+
+    class A(Base):
+        a: int
+
+    with pytest.warns(FutureWarning, match="multi-parameter form"):
+
+        class B(Base):
+            b: int
+            other: dynapydantic.Polymorphic[  # type: ignore[bad-specialization]
+                Base,
+                dynapydantic.UnionRealization.MODEL_CONSTRUCTION,  # type: ignore[not-a-type, ty:invalid-type-arguments, ty:invalid-type-form]
+            ]
+
+    schema = B.model_json_schema()
+    assert schema["properties"]["other"] == {"$ref": "#/$defs/A"}
 
 
 def test_incorrect_num_args() -> None:
@@ -283,11 +349,31 @@ def test_incorrect_num_args() -> None:
     class A(Base):
         a: int
 
-    with pytest.raises(TypeError, match="Polymorphic takes 1 or 2 arguments"):
+    with (
+        pytest.raises(TypeError, match="Polymorphic takes 1 or 2 arguments"),
+    ):
+        dynapydantic.Polymorphic.__class_getitem__(
+            ty.cast("ty.Any", (Base, "validation", "foo")),
+        )
+
+
+@pytest.mark.parametrize(
+    "inner_type",
+    [
+        5,
+        int,
+        list[int],
+        pydantic.BaseModel,
+        ty.Annotated[pydantic.BaseModel, list[int]],
+    ],
+)
+def test_polymorphic_rejects_invalid_inner_types(
+    inner_type: ty.Any,  # noqa: ANN401
+) -> None:
+    """Polymorphic rejects the inner types with the correct message."""
+    with pytest.raises(
+        pydantic.PydanticSchemaGenerationError, match="Polymorphic was given"
+    ):
 
         class Model(pydantic.BaseModel):
-            val: dynapydantic.Polymorphic[
-                Base,  # type: ignore[bad-index]
-                "validation",  # type: ignore[unknown-name] # noqa: F821
-                "foo",  # type: ignore[unknown-name] # noqa: F821
-            ]
+            field: dynapydantic.Polymorphic[inner_type]

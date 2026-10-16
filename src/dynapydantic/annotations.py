@@ -1,6 +1,8 @@
 """Custom annotations for dynapydantic"""
 
+import enum
 import typing as ty
+import warnings
 
 from pydantic import GetCoreSchemaHandler, PydanticSchemaGenerationError
 from pydantic_core import core_schema
@@ -28,65 +30,144 @@ class ModelConstructionTimeAdapter:
         return handler(union(source_type))
 
 
-class Polymorphic:
-    """Annotation used to mark a type as having duck-typing behavior
+if ty.TYPE_CHECKING:  # pragma: no cover
+    ModelConstructionTimeUnion = ty.Annotated[ModelT, ...]
+    ValidationTimeUnion = ty.Annotated[ModelT, ...]
+else:
 
-    This annotation is only valid for SubclassTrackingModel's.
+    class ModelConstructionTimeUnion:
+        """Override the union realization to model-construction time.
 
-    Similar to SerializeAsAny, a field annotated with this shall serialize as
-    according to its actual type, not the field annotation type. In addition,
-    parsing will function as if the field annotation type were the union of
-    all tracked subclasses.
+        Use this annotation to wrap a type inside of a `Polymorphic`
+        annotation to override the default union realization mode for a field.
+        """
 
-    If a UnionRealization (or the string value of one) is passed as the
-    second argument, it will override the default value for the union
-    realization that is stored in the class.
-    """
+        def __class_getitem__(
+            cls,
+            item: type[ModelT],
+        ) -> ty.Annotated[type[ModelT], ...]:
+            """Produce a custom annotation."""
+            return ty.Annotated[item, _MODEL_CONSTRUCTION_TIME_UNION]
 
-    def __class_getitem__(
-        cls,
-        item: type[ModelT] | tuple[type[ModelT], UnionRealization | str],
-    ) -> ty.Annotated[type[ModelT], ...]:
-        """Get the annotation for the pydantic field"""
-        if isinstance(item, tuple):
-            if len(item) > 2:  # noqa: PLR2004
-                msg = (
-                    "dynapydantic.Polymorphic takes 1 or 2 arguments "
-                    f"({len(item)} given)"
-                )
-                raise TypeError(msg)
+    class ValidationTimeUnion:
+        """Override the union realization to validation time.
 
-            return _polymorphic_cgi(*item)
-        return _polymorphic_cgi(item)
+        Use this annotation to wrap a type inside of a `Polymorphic`
+        annotation to override the default union realization mode for a field.
+        """
+
+        def __class_getitem__(
+            cls,
+            item: type[ModelT],
+        ) -> ty.Annotated[type[ModelT], ...]:
+            """Produce a custom annotation."""
+            return ty.Annotated[item, _VALIDATION_TIME_UNION]
+
+
+class _UnionRealizationOverride(enum.Enum):
+    """Private, stable markers for union realization overrides."""
+
+    MODEL_CONSTRUCTION = enum.auto()
+    VALIDATION = enum.auto()
+
+
+_MODEL_CONSTRUCTION_TIME_UNION = _UnionRealizationOverride.MODEL_CONSTRUCTION
+_VALIDATION_TIME_UNION = _UnionRealizationOverride.VALIDATION
+
+
+if ty.TYPE_CHECKING:  # pragma: no cover
+    Polymorphic = ty.Annotated[ModelT, ...]
+else:
+
+    class Polymorphic:
+        """Annotation used to mark a type as having duck-typing behavior
+
+        This annotation is only valid for SubclassTrackingModel's.
+
+        Similar to SerializeAsAny, a field annotated with this shall serialize as
+        according to its actual type, not the field annotation type. In addition,
+        parsing will function as if the field annotation type were the union of
+        all tracked subclasses.
+        """
+
+        def __class_getitem__(
+            cls,
+            item: type[ModelT],
+        ) -> ty.Annotated[type[ModelT], ...]:
+            """Get the annotation for the pydantic field"""
+            if isinstance(item, tuple):
+                if len(item) > 2:  # noqa: PLR2004
+                    msg = (
+                        "dynapydantic.Polymorphic takes 1 or 2 arguments "
+                        f"({len(item)} given)"
+                    )
+                    raise TypeError(msg)
+                if len(item) > 1:
+                    msg = (
+                        "The multi-parameter form of Polymorphic is deprecated and "
+                        "will be removed in 0.9.0 or 1.0.0, whichever comes first. "
+                        "Instead use dynapydantic.ModelConstructionTimeUnion or "
+                        "dynapydantic.ValidationTimeUnion."
+                    )
+                    warnings.warn(msg, FutureWarning, stacklevel=2)
+
+                return _polymorphic_cgi(*item)
+            return _polymorphic_cgi(item)
 
 
 def _polymorphic_cgi(
-    cls: type[ModelT],
+    cls: type[ModelT] | ty.Annotated[type[ModelT], ...],
     union_realization: UnionRealization | str | None = None,
 ) -> ty.Annotated[type[ModelT], ...]:
-    if not isinstance(cls, type):
-        msg = f"dynapydantic.Polymorphic must be given a type, not {cls}"
-        raise TypeError(msg)
+    is_annotated = ty.get_origin(cls) is ty.Annotated
+    annotated_metadata: tuple[object, ...] = ()
+    if is_annotated:
+        args = ty.get_args(cls)
+        cls = args[0]
+        annotated_metadata = args[1:]
 
-    if not issubclass(cls, SubclassTrackingModel):
+    if not (isinstance(cls, type) and issubclass(cls, SubclassTrackingModel)):
         msg = f"Polymorphic was given {cls}, which was not a SubclassTrackingModel."
         raise PydanticSchemaGenerationError(msg)
 
     cfg = cls.__DYNAPYDANTIC_STM_CONFIG__
-    union_realization = (
-        UnionRealization(union_realization)
-        if union_realization is not None
-        else cfg.union_realization
-    )
+    if union_realization is not None:
+        union_realization = UnionRealization(union_realization)
+    elif is_annotated:
+        mc = any(a is _MODEL_CONSTRUCTION_TIME_UNION for a in annotated_metadata)
+        val = any(a is _VALIDATION_TIME_UNION for a in annotated_metadata)
+        if mc and val:
+            msg = (
+                "Conflicting union realization overrides detected. Specify at "
+                "most one of: ModelConstructionTimeUnion, ValidationTimeUnion."
+            )
+            raise TypeError(msg)
+        if mc:
+            union_realization = UnionRealization.MODEL_CONSTRUCTION
+        elif val:
+            union_realization = UnionRealization.VALIDATION
+        else:
+            union_realization = cfg.union_realization
+    else:
+        union_realization = cfg.union_realization
     adapter = (
         ValidationTimeAdapter
         if union_realization == UnionRealization.VALIDATION
         else ModelConstructionTimeAdapter
     )
-    return ty.Annotated[cls, adapter]  # type: ignore[bad-return]
+    metadata = tuple(
+        item
+        for item in annotated_metadata
+        if item is not _MODEL_CONSTRUCTION_TIME_UNION
+        and item is not _VALIDATION_TIME_UNION
+    )
+    return ty.Annotated[cls, *metadata, adapter]  # type: ignore[bad-return]
 
 
-class Union:
+_UnionT = ty.TypeVar("_UnionT", bound=TrackingGroup | SubclassTrackingModel)
+
+
+class Union(ty.Generic[_UnionT]):
     """Annotation used to get the union out of a dynapydantic entity
 
     This annotation is primarily used for using the union of all models in

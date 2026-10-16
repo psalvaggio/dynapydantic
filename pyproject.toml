@@ -31,6 +31,7 @@ dev = [
     "pytest-xdist>=3.8.0",
     "ruff==0.17.0",
     "snakeviz>=2.2.2",
+    "ty==0.0.86",
 ]
 
 [build-system]
@@ -76,6 +77,22 @@ convention = "numpy"
 # We have a few embedded packages in our tests to test out plugins
 search-path = [
     ".",
+    "tests/example/animal-plugins",
+    "tests/example/base-package",
+    "tests/example/shape-plugins",
+]
+
+[tool.ty.src]
+# pyrefly covers our internal code, running multiple type checkers against the
+# test suite is the better strategy for external-facing compliance.
+include = [
+    "tests/",
+]
+
+[tool.ty.environment]
+python-version = "3.12"  # we have tests that are >=3.12
+# We have a few embedded packages in our tests to test out plugins
+extra-paths = [
     "tests/example/animal-plugins",
     "tests/example/base-package",
     "tests/example/shape-plugins",

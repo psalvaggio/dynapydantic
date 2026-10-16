@@ -8,6 +8,7 @@ import pydantic
 import pytest
 
 import dynapydantic
+import dynapydantic.subclass_tracking_model as stm
 from dynapydantic.subclass_tracking_model import _validation_kwargs
 from dynapydantic.version_check import pydantic_le, pydantic_lt
 
@@ -37,6 +38,17 @@ def test_validation_kwargs_without_model_config() -> None:
     info = mock.Mock(context={"offset": 3}, config=None)
 
     assert _validation_kwargs(info) == {"context": {"offset": 3}}
+
+
+def test_validation_kwargs_without_newer_pydantic_options() -> None:
+    """Older Pydantic versions only receive supported validation options."""
+    info = mock.Mock(
+        context=None,
+        config={"validate_by_alias": True, "from_attributes": True},
+    )
+
+    with mock.patch.object(stm, "pydantic_ge", return_value=False):
+        assert _validation_kwargs(info) == {"from_attributes": True}
 
 
 def test_validation_time_realization_inherits() -> None:

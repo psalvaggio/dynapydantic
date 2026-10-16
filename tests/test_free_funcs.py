@@ -59,7 +59,7 @@ def test_union_stm() -> None:
 def test_union_other() -> None:
     """Test union raises with a bad argument"""
     with pytest.raises(TypeError):
-        dynapydantic.union("foo")  # type: ignore[bad-argument-type]
+        dynapydantic.union("foo")  # type: ignore[bad-argument-type, ty:invalid-argument-type]
 
 
 # ------ load_plugins() --------------------------------------------------------
@@ -104,7 +104,7 @@ def test_load_plugins_stm() -> None:
 def test_load_plugins_other() -> None:
     """Test union raises with a bad argument"""
     with pytest.raises(TypeError):
-        dynapydantic.load_plugins("foo")  # type: ignore[bad-argument-type]
+        dynapydantic.load_plugins("foo")  # type: ignore[bad-argument-type, ty:invalid-argument-type]
 
 
 # ------ registered_models() ---------------------------------------------------
@@ -153,4 +153,4 @@ def test_registered_models_stm() -> None:
 def test_registered_models_other() -> None:
     """Test registered_models raises with a bad argument"""
     with pytest.raises(TypeError):
-        dynapydantic.registered_models("foo")  # type: ignore[bad-argument-type]
+        dynapydantic.registered_models("foo")  # type: ignore[bad-argument-type, ty:no-matching-overload]

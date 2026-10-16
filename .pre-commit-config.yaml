@@ -38,3 +38,9 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
+      - id: ty
+        name: ty type check
+        entry: uv run ty check
+        language: system
+        types: [python]
+        pass_filenames: false
