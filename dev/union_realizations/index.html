@@ -638,7 +638,7 @@ base class.</p>
 <span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="n">field</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">]</span>  <span class="c1"># validation-time</span>
 </code></pre></div></li>
-<li>Via a per-usage override via the <code>dynapydantic.Polymorphic</code> annotation:
+<li>Via a per-usage override:
     <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynapydantic</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
 
@@ -654,11 +654,11 @@ base class.</p>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">field</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">Base</span><span class="p">,</span> <span class="s2">"validation"</span><span class="p">]</span>
+    <span class="n">field</span><span class="p">:</span> <span class="n">dynapydantic</span><span class="o">.</span><span class="n">Polymorphic</span><span class="p">[</span><span class="n">dynapydantic</span><span class="o">.</span><span class="n">ValidationTimeUnion</span><span class="p">[</span><span class="n">Base</span><span class="p">]]</span>
 </code></pre></div></li>
 </ol>
-<p>The supported options are <code>"model-construction"</code> (default) or <code>"validation"</code>
-(or their corresponding <code>UnionRealization</code> enum values).</p>
+<p>The supported overrides are <code>ModelConstructionTimeUnion</code> and
+<code>ValidationTimeUnion</code>.</p>
 
 
 

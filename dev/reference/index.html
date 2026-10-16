@@ -512,6 +512,34 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#dynapydantic.ModelConstructionTimeUnion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ModelConstructionTimeUnion
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ModelConstructionTimeUnion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynapydantic.ModelConstructionTimeUnion.__class_getitem__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __class_getitem__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#dynapydantic.Polymorphic" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -553,6 +581,34 @@
         
           <li class="md-nav__item">
   <a href="#dynapydantic.Union.__class_getitem__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __class_getitem__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynapydantic.ValidationTimeUnion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ValidationTimeUnion
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ValidationTimeUnion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynapydantic.ValidationTimeUnion.__class_getitem__" class="md-nav__link">
     <span class="md-ellipsis">
       
         __class_getitem__
@@ -953,6 +1009,34 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#dynapydantic.ModelConstructionTimeUnion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ModelConstructionTimeUnion
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ModelConstructionTimeUnion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynapydantic.ModelConstructionTimeUnion.__class_getitem__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __class_getitem__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#dynapydantic.Polymorphic" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -994,6 +1078,34 @@
         
           <li class="md-nav__item">
   <a href="#dynapydantic.Union.__class_getitem__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __class_getitem__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynapydantic.ValidationTimeUnion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ValidationTimeUnion
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ValidationTimeUnion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynapydantic.ValidationTimeUnion.__class_getitem__" class="md-nav__link">
     <span class="md-ellipsis">
       
         __class_getitem__
@@ -1399,6 +1511,116 @@
 
 
 
+<h3 id="dynapydantic.ModelConstructionTimeUnion" class="doc doc-heading">
+            <code>ModelConstructionTimeUnion</code>
+
+
+<a href="#dynapydantic.ModelConstructionTimeUnion" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Override the union realization to model-construction time.</p>
+<p>Use this annotation to wrap a type inside of a <code>Polymorphic</code>
+annotation to override the default union realization mode for a field.</p>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/dynapydantic/annotations.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ModelConstructionTimeUnion</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Override the union realization to model-construction time.</span>
+
+<span class="sd">    Use this annotation to wrap a type inside of a `Polymorphic`</span>
+<span class="sd">    annotation to override the default union realization mode for a field.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__class_getitem__</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">item</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Produce a custom annotation."""</span>
+        <span class="k">return</span> <span class="n">ty</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">item</span><span class="p">,</span> <span class="n">_MODEL_CONSTRUCTION_TIME_UNION</span><span class="p">]</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="dynapydantic.ModelConstructionTimeUnion.__class_getitem__" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">__class_getitem__</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span></code>
+
+<a href="#dynapydantic.ModelConstructionTimeUnion.__class_getitem__" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Produce a custom annotation.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/dynapydantic/annotations.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">__class_getitem__</span><span class="p">(</span>
+    <span class="bp">cls</span><span class="p">,</span>
+    <span class="n">item</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Produce a custom annotation."""</span>
+    <span class="k">return</span> <span class="n">ty</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">item</span><span class="p">,</span> <span class="n">_MODEL_CONSTRUCTION_TIME_UNION</span><span class="p">]</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
 <h3 id="dynapydantic.Polymorphic" class="doc doc-heading">
             <code>Polymorphic</code>
 
@@ -1416,9 +1638,6 @@
 according to its actual type, not the field annotation type. In addition,
 parsing will function as if the field annotation type were the union of
 all tracked subclasses.</p>
-<p>If a UnionRealization (or the string value of one) is passed as the
-second argument, it will override the default value for the union
-realization that is stored in the class.</p>
 
 
 
@@ -1429,36 +1648,40 @@ realization that is stored in the class.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/dynapydantic/annotations.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Polymorphic</span><span class="p">:</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Polymorphic</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Annotation used to mark a type as having duck-typing behavior</span>
 
 <span class="sd">    This annotation is only valid for SubclassTrackingModel's.</span>
@@ -1467,15 +1690,11 @@ realization that is stored in the class.</p>
 <span class="sd">    according to its actual type, not the field annotation type. In addition,</span>
 <span class="sd">    parsing will function as if the field annotation type were the union of</span>
 <span class="sd">    all tracked subclasses.</span>
-
-<span class="sd">    If a UnionRealization (or the string value of one) is passed as the</span>
-<span class="sd">    second argument, it will override the default value for the union</span>
-<span class="sd">    realization that is stored in the class.</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__class_getitem__</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
-        <span class="n">item</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span> <span class="n">UnionRealization</span> <span class="o">|</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">item</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Get the annotation for the pydantic field"""</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
@@ -1485,6 +1704,14 @@ realization that is stored in the class.</p>
                     <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="si">}</span><span class="s2"> given)"</span>
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">"The multi-parameter form of Polymorphic is deprecated and "</span>
+                    <span class="s2">"will be removed in 0.9.0 or 1.0.0, whichever comes first. "</span>
+                    <span class="s2">"Instead use dynapydantic.ModelConstructionTimeUnion or "</span>
+                    <span class="s2">"dynapydantic.ValidationTimeUnion."</span>
+                <span class="p">)</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
             <span class="k">return</span> <span class="n">_polymorphic_cgi</span><span class="p">(</span><span class="o">*</span><span class="n">item</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_polymorphic_cgi</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
@@ -1508,7 +1735,7 @@ realization that is stored in the class.</p>
 
 
 <h4 id="dynapydantic.Polymorphic.__class_getitem__" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">__class_getitem__</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span> <span class="n">UnionRealization</span> <span class="o">|</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span></code>
+            <code class="highlight language-python"><span class="n">__class_getitem__</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span></code>
 
 <a href="#dynapydantic.Polymorphic.__class_getitem__" class="headerlink" title="Permanent link">&para;</a></h4>
 
@@ -1520,23 +1747,31 @@ realization that is stored in the class.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/dynapydantic/annotations.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">__class_getitem__</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">__class_getitem__</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">,</span>
-    <span class="n">item</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span> <span class="n">UnionRealization</span> <span class="o">|</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="n">item</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Get the annotation for the pydantic field"""</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
@@ -1546,6 +1781,14 @@ realization that is stored in the class.</p>
                 <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="si">}</span><span class="s2"> given)"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">"The multi-parameter form of Polymorphic is deprecated and "</span>
+                <span class="s2">"will be removed in 0.9.0 or 1.0.0, whichever comes first. "</span>
+                <span class="s2">"Instead use dynapydantic.ModelConstructionTimeUnion or "</span>
+                <span class="s2">"dynapydantic.ValidationTimeUnion."</span>
+            <span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">_polymorphic_cgi</span><span class="p">(</span><span class="o">*</span><span class="n">item</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">_polymorphic_cgi</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
@@ -1575,6 +1818,8 @@ realization that is stored in the class.</p>
 
 
     <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="typing.Generic">Generic</span>[<span title="dynapydantic.annotations._UnionT">_UnionT</span>]</code></p>
 
 
 
@@ -1592,23 +1837,23 @@ a <code>TrackingGroup</code> as a field annotation. It can be used with
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/dynapydantic/annotations.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 89</span>
-<span class="normal"> 90</span>
-<span class="normal"> 91</span>
-<span class="normal"> 92</span>
-<span class="normal"> 93</span>
-<span class="normal"> 94</span>
-<span class="normal"> 95</span>
-<span class="normal"> 96</span>
-<span class="normal"> 97</span>
-<span class="normal"> 98</span>
-<span class="normal"> 99</span>
-<span class="normal">100</span>
-<span class="normal">101</span>
-<span class="normal">102</span>
-<span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Union</span><span class="p">:</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Union</span><span class="p">(</span><span class="n">ty</span><span class="o">.</span><span class="n">Generic</span><span class="p">[</span><span class="n">_UnionT</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">"""Annotation used to get the union out of a dynapydantic entity</span>
 
 <span class="sd">    This annotation is primarily used for using the union of all models in</span>
@@ -1661,11 +1906,121 @@ a <code>TrackingGroup</code> as a field annotation. It can be used with
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/dynapydantic/annotations.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">__class_getitem__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">TrackingGroup</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">__class_getitem__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">TrackingGroup</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return the union"""</span>
     <span class="k">return</span> <span class="n">union</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="dynapydantic.ValidationTimeUnion" class="doc doc-heading">
+            <code>ValidationTimeUnion</code>
+
+
+<a href="#dynapydantic.ValidationTimeUnion" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Override the union realization to validation time.</p>
+<p>Use this annotation to wrap a type inside of a <code>Polymorphic</code>
+annotation to override the default union realization mode for a field.</p>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/dynapydantic/annotations.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ValidationTimeUnion</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Override the union realization to validation time.</span>
+
+<span class="sd">    Use this annotation to wrap a type inside of a `Polymorphic`</span>
+<span class="sd">    annotation to override the default union realization mode for a field.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__class_getitem__</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">item</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Produce a custom annotation."""</span>
+        <span class="k">return</span> <span class="n">ty</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">item</span><span class="p">,</span> <span class="n">_VALIDATION_TIME_UNION</span><span class="p">]</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="dynapydantic.ValidationTimeUnion.__class_getitem__" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">__class_getitem__</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span></code>
+
+<a href="#dynapydantic.ValidationTimeUnion.__class_getitem__" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Produce a custom annotation.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/dynapydantic/annotations.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">__class_getitem__</span><span class="p">(</span>
+    <span class="bp">cls</span><span class="p">,</span>
+    <span class="n">item</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">ModelT</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Produce a custom annotation."""</span>
+    <span class="k">return</span> <span class="n">ty</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">item</span><span class="p">,</span> <span class="n">_VALIDATION_TIME_UNION</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2328,9 +2683,7 @@ supported:</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/dynapydantic/tracking_group.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 54</span>
-<span class="normal"> 55</span>
-<span class="normal"> 56</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 56</span>
 <span class="normal"> 57</span>
 <span class="normal"> 58</span>
 <span class="normal"> 59</span>
@@ -2730,7 +3083,11 @@ supported:</p>
 <span class="normal">453</span>
 <span class="normal">454</span>
 <span class="normal">455</span>
-<span class="normal">456</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrackingGroup</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrackingGroup</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Tracker for pydantic models"""</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span>
@@ -2887,15 +3244,17 @@ supported:</p>
                 <span class="n">plugin</span><span class="p">()</span>
 
     <span class="nd">@ty</span><span class="o">.</span><span class="n">overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">type</span><span class="p">],</span> <span class="nb">type</span><span class="p">]:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]],</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]]:</span> <span class="o">...</span>
 
     <span class="nd">@ty</span><span class="o">.</span><span class="n">overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">]:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]:</span> <span class="o">...</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">type</span><span class="p">],</span> <span class="nb">type</span><span class="p">]</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">]:</span>
+        <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]],</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Register a model into this group (decorator)</span>
 
 <span class="sd">        Parameters</span>
@@ -2910,7 +3269,7 @@ supported:</p>
             <span class="bp">self</span><span class="o">.</span><span class="n">register_model</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">value</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">_wrapper</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_wrapper</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">register_model</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">cls</span>
 
@@ -3341,9 +3700,7 @@ supported:</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/dynapydantic/tracking_group.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">200</span>
 <span class="normal">201</span>
 <span class="normal">202</span>
 <span class="normal">203</span>
@@ -3351,7 +3708,9 @@ supported:</p>
 <span class="normal">205</span>
 <span class="normal">206</span>
 <span class="normal">207</span>
-<span class="normal">208</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_plugins</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_plugins</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Load plugins to discover/register additional models"""</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plugin_entry_point</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span>
@@ -3372,16 +3731,14 @@ supported:</p>
 
 
 <h4 id="dynapydantic.TrackingGroup.register" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">register</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">type</span><span class="p">],</span> <span class="nb">type</span><span class="p">]</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">]</span></code>
+            <code class="highlight language-python"><span class="n">register</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]],</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]</span></code>
 
 <a href="#dynapydantic.TrackingGroup.register" class="headerlink" title="Permanent link">&para;</a></h4>
           <div class="doc-overloads">
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">register</span><span class="p">(</span>
     <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">type</span><span class="p">],</span> <span class="nb">type</span><span class="p">]</span>
-</code></pre></div><div class="doc-signature highlight"><pre><span></span><code><span class="nf">register</span><span class="p">(</span>
-    <span class="n">value</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">],</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]],</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]]</span>
+</code></pre></div><div class="doc-signature highlight"><pre><span></span><code><span class="nf">register</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]</span>
 </code></pre></div>          </div>
 
 
@@ -3406,7 +3763,7 @@ supported:</p>
                 <code>value</code>
             </td>
             <td>
-                  <code><span title="str">str</span> | <span title="type">type</span>[<span title="pydantic.BaseModel">BaseModel</span>] | None</code>
+                  <code><span title="str">str</span> | <span title="type">type</span>[<span title="dynapydantic.tracking_group._ModelT">_ModelT</span>] | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3426,11 +3783,7 @@ itself to register (if the ()'s are omitted from the decorator).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/dynapydantic/tracking_group.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">220</span>
 <span class="normal">221</span>
 <span class="normal">222</span>
 <span class="normal">223</span>
@@ -3448,10 +3801,14 @@ itself to register (if the ()'s are omitted from the decorator).</p>
 <span class="normal">235</span>
 <span class="normal">236</span>
 <span class="normal">237</span>
-<span class="normal">238</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
-    <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">type</span><span class="p">],</span> <span class="nb">type</span><span class="p">]</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">]:</span>
+    <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ty</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]],</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Register a model into this group (decorator)</span>
 
 <span class="sd">    Parameters</span>
@@ -3466,7 +3823,7 @@ itself to register (if the ()'s are omitted from the decorator).</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">register_model</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">value</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_wrapper</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_wrapper</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">_ModelT</span><span class="p">]:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">register_model</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span>
 
@@ -3542,11 +3899,7 @@ discriminator field must be declared by hand.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/dynapydantic/tracking_group.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">240</span>
-<span class="normal">241</span>
-<span class="normal">242</span>
-<span class="normal">243</span>
-<span class="normal">244</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">244</span>
 <span class="normal">245</span>
 <span class="normal">246</span>
 <span class="normal">247</span>
@@ -3621,7 +3974,11 @@ discriminator field must be declared by hand.</p>
 <span class="normal">316</span>
 <span class="normal">317</span>
 <span class="normal">318</span>
-<span class="normal">319</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">register_model</span><span class="p">(</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">register_model</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="bp">cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">],</span>
     <span class="n">discriminator_value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -3804,11 +4161,7 @@ union of all registered types. This union may be annotated if
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/dynapydantic/tracking_group.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">321</span>
-<span class="normal">322</span>
-<span class="normal">323</span>
-<span class="normal">324</span>
-<span class="normal">325</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">325</span>
 <span class="normal">326</span>
 <span class="normal">327</span>
 <span class="normal">328</span>
@@ -3860,7 +4213,11 @@ union of all registered types. This union may be annotated if
 <span class="normal">374</span>
 <span class="normal">375</span>
 <span class="normal">376</span>
-<span class="normal">377</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">union</span><span class="p">(</span>
+<span class="normal">377</span>
+<span class="normal">378</span>
+<span class="normal">379</span>
+<span class="normal">380</span>
+<span class="normal">381</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">union</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">plain</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>

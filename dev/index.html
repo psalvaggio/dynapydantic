@@ -1308,7 +1308,8 @@ that several limitations exist:</p>
 <li>Plugin discovery depends on Python entry points.</li>
 <li>Runtime-generated unions are not fully visible to static type checkers. The
   field is generally typed as the base class, so use <code>isinstance()</code> or the
-  discriminator value when narrowing to a concrete subclass.</li>
+  discriminator value when narrowing to a concrete subclass. Type checker support
+  is currently limited to <code>pyrefly</code> and <code>ty</code>.</li>
 </ul>
 <p>Both normal and JSON Pydantic workflows are supported. For example, the
 polymorphic field can be serialized with <code>model_dump_json()</code> and reconstructed
