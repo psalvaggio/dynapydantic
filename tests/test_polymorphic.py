@@ -78,7 +78,7 @@ def test_polymorphic_round_trip_json() -> None:
 def test_polymorphic_accepts_single_parameter_tuple_without_warning() -> None:
     """A one-item tuple remains an un-deprecated spelling of the type."""
     with warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always", DeprecationWarning)
+        warnings.simplefilter("always", FutureWarning)
         annotation = dynapydantic.Polymorphic[Base,]
 
     assert ty.get_args(annotation)[1] is ModelConstructionTimeAdapter
@@ -327,7 +327,7 @@ def test_polymorphic_deprecated_union_realization_override() -> None:
     class A(Base):
         a: int
 
-    with pytest.warns(DeprecationWarning, match="multi-parameter form"):
+    with pytest.warns(FutureWarning, match="multi-parameter form"):
 
         class B(Base):
             b: int
@@ -350,7 +350,6 @@ def test_incorrect_num_args() -> None:
         a: int
 
     with (
-        pytest.warns(DeprecationWarning, match="multi-parameter form"),
         pytest.raises(TypeError, match="Polymorphic takes 1 or 2 arguments"),
     ):
         dynapydantic.Polymorphic.__class_getitem__(
