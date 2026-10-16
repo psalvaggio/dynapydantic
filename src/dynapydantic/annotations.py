@@ -1,5 +1,6 @@
 """Custom annotations for dynapydantic"""
 
+import enum
 import typing as ty
 import warnings
 
@@ -63,9 +64,15 @@ else:
             return ty.Annotated[item, _VALIDATION_TIME_UNION]
 
 
-# Custom markers for union overrides
-_MODEL_CONSTRUCTION_TIME_UNION = object()
-_VALIDATION_TIME_UNION = object()
+class _UnionRealizationOverride(enum.Enum):
+    """Private, stable markers for union realization overrides."""
+
+    MODEL_CONSTRUCTION = enum.auto()
+    VALIDATION = enum.auto()
+
+
+_MODEL_CONSTRUCTION_TIME_UNION = _UnionRealizationOverride.MODEL_CONSTRUCTION
+_VALIDATION_TIME_UNION = _UnionRealizationOverride.VALIDATION
 
 
 if ty.TYPE_CHECKING:  # pragma: no cover
@@ -151,7 +158,8 @@ def _polymorphic_cgi(
     metadata = tuple(
         item
         for item in annotated_metadata
-        if item not in (_MODEL_CONSTRUCTION_TIME_UNION, _VALIDATION_TIME_UNION)
+        if item is not _MODEL_CONSTRUCTION_TIME_UNION
+        and item is not _VALIDATION_TIME_UNION
     )
     return ty.Annotated[cls, *metadata, adapter]  # type: ignore[bad-return]
 

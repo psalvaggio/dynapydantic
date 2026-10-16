@@ -149,7 +149,7 @@ The union realization mode can be configured in the following ways:
 
 
     class Model(pydantic.BaseModel):
-        field: dynapydantic.Polymorphic[dynapydantc.ValidationTimeUnion[Base]]
+        field: dynapydantic.Polymorphic[dynapydantic.ValidationTimeUnion[Base]]
     ```
 
 The supported overrides are `ModelConstructionTimeUnion` and
